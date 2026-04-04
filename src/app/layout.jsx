@@ -83,7 +83,7 @@ export default async function RootLayout({ children }) {
     const setupExists = checkSetupPath();
 
     // Check if setup path exists and redirect if it does, avoiding loops
-    if (setupExists && currentPath !== '/setup' && !siteSettings?.key) { 
+    if (setupExists && currentPath !== '/setup' && !siteSettings?.setup_complete) { 
         // server-side redirect avoids client-only hooks
         redirect('/setup');
     }
