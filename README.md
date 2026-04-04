@@ -170,7 +170,7 @@ This platform serves as:
 
 1. **Clone the Repository**:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/pigmilcom/next-cms.git
     cd next-cms
     ```
 
@@ -296,7 +296,7 @@ The easiest and most portable way to deploy NextCMS. Includes automatic `NEXTAUT
 
 1. **Clone and configure**:
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/pigmilcom/next-cms.git
     cd next-cms
     cp .env-sample .env.local
     # Edit .env.local with your production values
