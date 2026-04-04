@@ -45,13 +45,20 @@ export const LayoutProvider = ({ children }) => {
 
 // Inner component that renders the actual layout structure, separated for better organization
 const LayoutInner = ({ children }) => { 
+    const attractiveTitles = [
+        "🚀 Build faster with a modern Next.js stack",
+        "⚡ Turn ideas into production-ready apps instantly",
+        "🧠 Smart CMS for developers and creators",
+        "📦 All-in-one platform to manage your content",
+        "🔥 Launch scalable apps without the headache"
+    ];
     return (
         <div className={font.variable} data-frontend-layout>
             <main> 
                 {children}  
             </main> 
             <CookieConsentBanner />
-            <DynamicPageTitle />
+            <DynamicPageTitle titles={attractiveTitles} />
         </div>
     );
 };
