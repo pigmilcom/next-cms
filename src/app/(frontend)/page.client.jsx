@@ -11,7 +11,6 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { CircleChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -59,9 +58,6 @@ const HomePageClient = () => {
             {/* Page Header */}
             <div className="flex flex-col gap-4 mb-6">
                 <h1 className="text-3xl font-bold flex flex-nowrap items-center gap-4">
-                    <Link href="/" className="hover:text-primary transition-colors duration-200">
-                        <CircleChevronLeft className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors duration-200" />
-                    </Link>
                     Home Page
                 </h1>
                 <p className="text-muted-foreground">Minimal boilerplate for the home page</p>
