@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import DBService from '@/data/rest.db.js';
 import { encryptPassword, generateSalt } from '@/lib/crypt';
 import { sendWelcomeEmail } from '@/lib/server/email';
+import { cacheFunctions } from '@/lib/shared/cache';
 import { v6 as uuidv6 } from 'uuid';
 
 const timeNow = () => new Date().toISOString();
@@ -111,8 +112,10 @@ export async function POST(request) {
             );
         }
         
-        // Send welcome email (non-blocking)
+        // Update site settings to mark setup as complete and clear cache
         try {
+            const { updateWithCacheClear } = await cacheFunctions();
+            await updateWithCacheClear('site_settings', { setup_complete: true },'site_settings');
             await sendWelcomeEmail(userRegisterData.email, userRegisterData.displayName);
         } catch (e) {
             console.log('Welcome email failed:', e.message);

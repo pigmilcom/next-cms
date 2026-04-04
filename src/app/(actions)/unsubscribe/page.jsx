@@ -1,4 +1,4 @@
-// @/app/(frontend)/unsubscribe/page.jsx (Server Component)
+// @/app/(actions)/unsubscribe/page.jsx (Server Component)
 
 import { notFound } from 'next/navigation';
 import { getSubscriber, updateSubscriberPreferences } from '@/lib/server/newsletter';

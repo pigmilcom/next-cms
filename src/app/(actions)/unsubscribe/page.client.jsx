@@ -1,4 +1,4 @@
-// @/app/(frontend)/unsubscribe/page.client.jsx (Client Component)
+// @/app/(actions)/unsubscribe/page.client.jsx (Client Component)
 'use client';
 
 import { CheckCircle2, Loader2, Mail, MessageSquare } from 'lucide-react';

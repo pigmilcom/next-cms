@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/loading.js (Checkout Page Loading State)
+// @/app/(actions)/cart/checkout/loading.js (Checkout Page Loading State)
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';

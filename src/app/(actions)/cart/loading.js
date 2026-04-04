@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/loading.js
+// @/app/(actions)/cart/loading.js
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Free shipping progress bar skeleton

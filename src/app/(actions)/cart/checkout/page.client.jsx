@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/page.client.jsx
+// @/app/(actions)/cart/checkout/page.client.jsx
 'use client';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';

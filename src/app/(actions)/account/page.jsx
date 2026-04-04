@@ -1,4 +1,4 @@
-// @/app/(frontend)/account/page.jsx (Server Component)
+// @/app/(actions)/account/page.jsx (Server Component)
 
 import { auth } from '@/auth'; 
 import { getAllOrders } from '@/lib/server/orders';

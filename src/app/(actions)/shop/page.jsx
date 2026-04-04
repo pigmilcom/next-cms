@@ -1,4 +1,4 @@
-// @/app/(frontend)/shop/page.jsx (Shop Server Component)
+// @/app/(actions)/shop/page.jsx (Shop Server Component)
 
 import { getCatalog, getCategories, getCollections } from '@/lib/server/store.js';
 import { getTranslations } from 'next-intl/server';

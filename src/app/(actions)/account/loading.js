@@ -1,4 +1,4 @@
-// @/app/(frontend)/account/loading.js
+// @/app/(actions)/account/loading.js
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Header skeleton

@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/page.client.jsx
+// @/app/(actions)/cart/page.client.jsx
 
 'use client';
 
@@ -10,8 +10,8 @@ import { FaTrash } from 'react-icons/fa';
 import { useCart } from 'react-use-cart';
 import { CircleChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import FreeShippingProgressBar from '@/app/(frontend)/cart/partials/FreeShippingProgressBar';
-import HotProducts from '@/app/(frontend)/cart/partials/HotProducts';
+import FreeShippingProgressBar from './partials/FreeShippingProgressBar';
+import HotProducts from './partials/HotProducts';
 import { Button } from '@/components/ui/button';
 import { useSettings } from '@/context/providers';
 

@@ -1,4 +1,4 @@
-// @/app/(frontend)/preview/page.client.jsx (Client Component)
+// @/app/(actions)/preview/page.client.jsx (Client Component)
 'use client';
 
 import { ArrowLeft, Calendar, Eye, Globe, Mail, User } from 'lucide-react';

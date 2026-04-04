@@ -1,4 +1,4 @@
-// @/app/(frontend)/booking/success/page.client.jsx
+// @/app/(actions)/booking/success/page.client.jsx
 
 'use client';
 

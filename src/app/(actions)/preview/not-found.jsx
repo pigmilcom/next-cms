@@ -1,4 +1,4 @@
-// @/app/(frontend)/preview/not-found.jsx
+// @/app/(actions)/preview/not-found.jsx
 
 import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';

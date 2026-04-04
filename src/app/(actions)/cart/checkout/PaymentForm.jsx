@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/PaymentForm.jsx
+// @/app/(actions)/cart/checkout/PaymentForm.jsx
 'use client';
 import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { AnimatePresence, motion } from 'framer-motion';

@@ -1,4 +1,4 @@
-// @/app/(frontend)/account/AccessDenied.jsx
+// @/app/(actions)/account/AccessDenied.jsx
 'use client';
 
 import { motion } from 'framer-motion';

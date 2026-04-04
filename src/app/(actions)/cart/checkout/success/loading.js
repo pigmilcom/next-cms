@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/success/loading.js (Checkout Success Loading State)
+// @/app/(actions)/cart/checkout/success/loading.js (Checkout Success Loading State)
 
 import { Skeleton } from '@/components/ui/skeleton';
 

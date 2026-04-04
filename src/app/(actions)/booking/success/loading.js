@@ -1,4 +1,4 @@
-// @/app/(frontend)/booking/success/loading.js
+// @/app/(actions)/booking/success/loading.js
 
 import { Skeleton } from '@/components/ui/skeleton';
 

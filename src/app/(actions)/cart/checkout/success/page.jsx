@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/success/page.jsx (Checkout Success Server Component)
+// @/app/(actions)/cart/checkout/success/page.jsx (Checkout Success Server Component)
 
 import { getOrder } from '@/lib/server/orders.js';
 import CheckoutSuccessPageClient from './page.client';

@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/page.jsx
+// @/app/(actions)/cart/page.jsx
 
 import { getSettings } from '@/lib/server/settings';
 import { generatePageMetadata } from '@/utils/metadata';

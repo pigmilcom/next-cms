@@ -1,4 +1,4 @@
-﻿// @/app/(frontend)/shop/[productId]/page.client.jsx
+﻿// @/app/(actions)/shop/[categorySlug]/[productSlug]/page.client.jsx
 'use client';
 
 import { motion } from 'framer-motion';
@@ -11,7 +11,7 @@ import { ProductJsonLd } from 'next-seo';
 import { useEffect, useRef, useState } from 'react';
 import { useCart } from 'react-use-cart';
 import { toast } from 'sonner'; 
-import RelatedProducts from '@/app/(frontend)/shop/partials/RelatedProducts';
+import RelatedProducts from '@/app/(actions)/shop/partials/RelatedProducts';
 import Swiper from '@/components/common/Swiper';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

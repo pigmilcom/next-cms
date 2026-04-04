@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/success/page.client.jsx
+// @/app/(actions)/cart/checkout/success/page.client.jsx
 
 'use client';
 

@@ -1,4 +1,4 @@
-// @/app/(frontend)/shop/partials/ShopLayout.jsx (Shared Shop Layout Component)
+// @/app/(actions)/shop/partials/ShopLayout.jsx (Shared Shop Layout Component)
 'use client';
 
 import Link from 'next/link';

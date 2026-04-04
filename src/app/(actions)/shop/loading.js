@@ -1,4 +1,4 @@
-// @/app/(frontend)/shop/loading.js (Shop Loading State)
+// @/app/(actions)/shop/loading.js (Shop Loading State)
 
 import { Skeleton } from '@/components/ui/skeleton';
 

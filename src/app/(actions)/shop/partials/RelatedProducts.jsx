@@ -1,4 +1,4 @@
-// @/app/(frontend)/components/RelatedProducts.jsx
+// @/app/(actions)/shop/partials/RelatedProducts.jsx
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';

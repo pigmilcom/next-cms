@@ -1,4 +1,4 @@
-// @/app/(frontend)/account/page.client.jsx (Client Component)
+// @/app/(actions)/account/page.client.jsx (Client Component)
 'use client';
 
 import {

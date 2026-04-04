@@ -1,4 +1,4 @@
-// @/app/(frontend)/preview/page.jsx (Server Component)
+// @/app/(actions)/preview/page.jsx (Server Component)
 
 import { notFound } from 'next/navigation';
 import { getCampaign } from '@/lib/server/newsletter';

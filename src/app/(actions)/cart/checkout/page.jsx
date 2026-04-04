@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/page.jsx (Checkout Server Component)
+// @/app/(actions)/cart/checkout/page.jsx (Checkout Server Component)
 
 import { getCatalog } from '@/lib/server/store.js';
 import CheckoutPageClient from './page.client';

@@ -1,4 +1,4 @@
-// @/app/(frontend)/shop/[categorySlug]/[productSlug]/page.jsx (Product Detail Server Component)
+// @/app/(actions)/shop/[categorySlug]/[productSlug]/page.jsx (Product Detail Server Component)
 
 import { notFound } from 'next/navigation';
 import { auth } from '@/auth';

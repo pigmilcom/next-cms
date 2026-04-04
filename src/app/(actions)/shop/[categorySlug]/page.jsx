@@ -1,4 +1,4 @@
-// @/app/(frontend)/shop/[categorySlug]/page.jsx (Category Server Component)
+// @/app/(actions)/shop/[categorySlug]/page.jsx (Category Server Component)
 
 import { notFound } from 'next/navigation';
 import { getCatalog, getCategories, getCollections } from '@/lib/server/store.js';

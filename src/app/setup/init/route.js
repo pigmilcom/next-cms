@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server';
 import DBService from '@/data/rest.db.js';
 import { v6 as uuidv6 } from 'uuid';
 import { encryptPassword, generateSalt } from '@/lib/crypt';
-import { createWallet, loadWeb3Config } from '@/lib/server/web3';
-import { sendWelcomeEmail } from '@/lib/server/email'; 
+import { createWallet, loadWeb3Config } from '@/lib/server/web3'; 
 
 const timeNow = () => new Date().toISOString();
 
@@ -54,8 +53,8 @@ async function web3WalletHandler() {
 
 // Default data structures based on admin pages
 const getDefaultSiteSettings = () => ({
-    id: "site_settings",
-    siteName: 'My CMS Platform',
+    id: "site_settings", 
+    siteName: 'My App',
     siteTitle: '',
     siteKeywords: '',
     siteDescription: '',

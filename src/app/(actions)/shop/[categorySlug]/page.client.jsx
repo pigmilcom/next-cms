@@ -1,4 +1,4 @@
-// @/app/(frontend)/shop/[categorySlug]/page.client.jsx (Category Client Component)
+// @/app/(actions)/shop/[categorySlug]/page.client.jsx (Category Client Component)
 'use client';
 
 import ShopLayout from '../partials/ShopLayout';

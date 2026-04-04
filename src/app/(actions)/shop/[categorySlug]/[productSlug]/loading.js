@@ -1,4 +1,4 @@
-﻿// @/app/(frontend)/shop/[productId]/loading.js (Product Page Loading State)
+﻿// @/app/(actions)/shop/[categorySlug]/[productSlug]/loading.js (Product Page Loading State)
 
 import { Skeleton } from '@/components/ui/skeleton';
 

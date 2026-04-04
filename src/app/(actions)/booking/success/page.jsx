@@ -1,4 +1,4 @@
-// @/app/(frontend)/booking/success/page.jsx
+// @/app/(actions)/booking/success/page.jsx
 
 import { getAllAppointments } from '@/lib/server/admin.js';
 import BookingSuccessPageClient from './page.client';

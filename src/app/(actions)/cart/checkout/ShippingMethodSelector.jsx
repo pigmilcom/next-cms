@@ -1,4 +1,4 @@
-// @/app/(frontend)/cart/checkout/ShippingMethodSelector.jsx
+// @/app/(actions)/cart/checkout/ShippingMethodSelector.jsx
 'use client';
 
 import { motion } from 'framer-motion';

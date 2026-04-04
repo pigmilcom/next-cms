@@ -1,4 +1,4 @@
-// @/app/(frontend)/preview/loading.js
+// @/app/(actions)/preview/loading.js
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';

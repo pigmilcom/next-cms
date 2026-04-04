@@ -1,4 +1,4 @@
-// @/app/(frontend)/account/layout.jsx (Access Control Layout for Account Pages)
+// @/app/(actions)/account/layout.jsx (Access Control Layout for Account Pages)
 
 import { auth } from '@/auth';
 import AccessDenied from './AccessDenied';
