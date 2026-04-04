@@ -8,8 +8,9 @@ import { useEffect } from 'react';
  * Changes the page title with attractive messages when user leaves the tab,
  * and restores the original title when they return.
  */
-const DynamicPageTitle = (attractiveTitles = null) => {
-    if(!attractiveTitles) return;
+const DynamicPageTitle = (titles = null, data = null) => {
+    if(!titles && !data) return;
+    const attractiveTitles = titles || data;
     useEffect(() => {
         let originalTitle = document.title;
         let currentTitleIndex = 0;
