@@ -84,7 +84,7 @@ export const getSiteSettings = async (params = {}, includeAdminData = false) => 
             ? settings.adminLanguage 
             : selectedBackendLanguages[0];
 
-        const isNewSetup = !settings.id;
+        const isNewSetup = !settings.key;
 
         // Determine which settings to return based on includeAdminData flag
         let processedSettings = {
