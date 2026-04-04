@@ -114,8 +114,8 @@ export async function POST(request) {
         
         // Update site settings to mark setup as complete and clear cache
         try {
-            const { updateWithCacheClear } = await cacheFunctions();
-            await updateWithCacheClear('site_settings', { setup_complete: true },'site_settings');
+            const { clearAllCache } = await cacheFunctions();
+            await clearAllCache();
             await sendWelcomeEmail(userRegisterData.email, userRegisterData.displayName);
         } catch (e) {
             console.log('Welcome email failed:', e.message);
