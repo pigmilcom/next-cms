@@ -178,9 +178,10 @@ const ConditionalThemeProvider = ({ children }) => {
     return (
         <ThemeProvider
             attribute="class"
-            enableSystem={false}
             defaultTheme="light"
-            forcedTheme={isAdminRoute ? undefined : 'light'}>
+            enableSystem={true}
+            // forcedTheme={isAdminRoute ? undefined : 'light'}
+        >
             {children}
         </ThemeProvider>
     ) }
