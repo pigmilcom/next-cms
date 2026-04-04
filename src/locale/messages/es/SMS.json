@@ -1,0 +1,19 @@
+{
+    "SMS": {
+        "greeting": "Hola",
+        "hi": "Hola",
+        "verification": {
+            "message": "Tu código de verificación es: {{code}}. No compartas este código con nadie."
+        },
+        "orderStatus": {
+            "processing": "Tu pedido está siendo procesado y será enviado pronto.",
+            "delivered": "¡Tu pedido ha sido entregado! Esperamos que disfrutes tu compra.",
+            "complete": "Tu pedido está completo. ¡Gracias por tu compra!",
+            "cancelled": "Tu pedido ha sido cancelado. Si tienes preguntas, por favor contáctanos.",
+            "pending": "Tu pedido está pendiente de confirmación.",
+            "default": "El estado de tu pedido ha sido actualizado a: {{status}}.",
+            "tracking": "Seguimiento",
+            "trackOrder": "Rastrear pedido"
+        }
+    }
+}

@@ -1,0 +1,1495 @@
+{
+    "Admin": {
+        "Overview": {
+            "title": "Visão Geral",
+            "description": "Bem-vindo de volta! Aqui está o que se passa no teu website.",
+            "viewSite": "Ver Site",
+            "stats": {
+                "customers": {
+                    "label": "Clientes",
+                    "description": "Total de clientes"
+                },
+                "orders": {
+                    "label": "Encomendas",
+                    "description": "Total de encomendas"
+                },
+                "catalog": {
+                    "label": "Catálogo",
+                    "description": "Artigos no catálogo"
+                },
+                "revenue": {
+                    "label": "Receita",
+                    "description": "Receita total"
+                },
+                "categories": "Categorias",
+                "collections": "Coleções",
+                "uptime": "Tempo Ativo",
+                "loadTime": "Tempo de Carregamento"
+            },
+            "quickActions": {
+                "title": "Ações Rápidas",
+                "description": "Acesso rápido às tarefas administrativas mais comuns",
+                "manageCatalog": {
+                    "title": "Gerir Catálogo",
+                    "description": "Ver e gerir produtos/serviços"
+                },
+                "manageUsers": {
+                    "title": "Gerir Utilizadores",
+                    "description": "Ver e gerir contas de utilizadores"
+                },
+                "viewOrders": {
+                    "title": "Ver Encomendas",
+                    "description": "Verificar encomendas recentes e fulfillment"
+                },
+                "siteSettings": {
+                    "title": "Definições do Site",
+                    "description": "Configurar definições do website"
+                },
+                "systemMaintenance": {
+                    "title": "Manutenção do Sistema",
+                    "description": "Backup, cache e ferramentas do sistema"
+                }
+            },
+            "recentActivity": {
+                "title": "Atividade Recente",
+                "description": "Últimas atualizações e alterações no teu website",
+                "noActivity": "Sem atividade recente para mostrar",
+                "noActivityHint": "A atividade vai aparecer aqui conforme uses o painel admin"
+            },
+            "systemStatus": {
+                "title": "Estado do Sistema",
+                "description": "Estado atual da saúde do sistema e notificações importantes",
+                "database": {
+                    "title": "Estado da Base de Dados",
+                    "operational": "Todos os sistemas operacionais"
+                },
+                "api": {
+                    "title": "Estado da API",
+                    "responding": "Todos os endpoints a responder"
+                },
+                "cache": {
+                    "title": "Estado da Cache",
+                    "optimizationRecommended": "Otimização recomendada"
+                }
+            }
+        },
+        "Navigation": {
+            "home": {
+                "dashboard": "Dashboard",
+                "analyticsReports": "Análises e Relatórios"
+            },
+            "main": {
+                "access": "Acesso",
+                "users": "Utilizadores",
+                "rolesPermissions": "Funções e Permissões",
+                "store": "Loja",
+                "orders": "Encomendas",
+                "catalog": "Catálogo",
+                "categories": "Categorias",
+                "collections": "Coleções",
+                "attributes": "Atributos",
+                "customers": "Clientes",
+                "coupons": "Cupões",
+                "reviews": "Avaliações",
+                "testimonials": "Testemunhos",
+                "storeSettings": "Definições da Loja",
+                "media": "Media",
+                "workspace": "Workspace",
+                "agenda": "Agenda",
+                "taskBoard": "Quadro de Tarefas",
+                "schedule": "Agenda",
+                "marketing": "Marketing",
+                "campaigns": "Campanhas",
+                "templates": "Modelos",
+                "subscribers": "Subscritores",
+                "club": "Clube",
+                "supportTickets": "Tickets de Suporte"
+            },
+            "developer": {
+                "database": "Base de Dados",
+                "blocks": "Blocos",
+                "interface": "Interface",
+                "aiAgent": "Agente IA",
+                "api": "API",
+                "endpoints": "Endpoints",
+                "createApiKey": "Criar Chave API",
+                "cronjobs": "Cronjobs"
+            },
+            "system": {
+                "settings": "Definições",
+                "maintenance": "Manutenção"
+            }
+        },
+        "Analytics": {
+            "header": {
+                "title": "Análises",
+                "description": "Ver análises do website e estatísticas de visitantes"
+            },
+            "common": {
+                "selectedPeriod": "período selecionado",
+                "to": "até",
+                "now": "Agora"
+            },
+            "timePeriods": {
+                "last7days": "Últimos 7 Dias",
+                "lastweek": "Última Semana",
+                "last30days": "Últimos 30 Dias",
+                "lastmonth": "Último Mês",
+                "last3months": "Últimos 3 Meses",
+                "last6months": "Últimos 6 Meses",
+                "lastyear": "Último Ano"
+            },
+            "toasts": {
+                "fetchError": "Falha ao obter dados de análises",
+                "filterApplied": "Filtro aplicado com sucesso",
+                "filterCleared": "Filtro limpo",
+                "showingPeriod": "A mostrar {period}",
+                "selectDateRange": "Seleciona a data de início e fim",
+                "clearSuccess": "Dados de análises limpos com sucesso",
+                "clearError": "Falha ao limpar dados de análises"
+            },
+            "confirm": {
+                "clearAll": "Tens a certeza que queres eliminar TODOS os dados de análises? Esta ação não pode ser desfeita.",
+                "clearRange": "Tens a certeza que queres eliminar dados de análises de {start} até {end}?"
+            },
+            "tabs": {
+                "overview": "Visão Geral",
+                "website": "Website",
+                "marketing": "Marketing",
+                "ecommerce": "E-commerce",
+                "users": "Utilizadores"
+            },
+            "filters": {
+                "dateRangeTitle": "Filtro por Intervalo de Datas",
+                "dateRangeDescription": "Filtra dados de análises por intervalo de datas",
+                "startDate": "Data Inicial",
+                "endDate": "Data Final",
+                "pickDate": "Escolher data",
+                "apply": "Aplicar Filtro",
+                "quickPeriods": "Períodos Rápidos",
+                "selectTimePeriod": "Selecionar período",
+                "clear": "Limpar Filtro",
+                "active": "Ativo:",
+                "allTime": "Todo o período"
+            },
+            "charts": {
+                "visitors": "Visitantes",
+                "revenue": "Receita",
+                "email": "Email",
+                "sms": "SMS"
+            },
+            "aria": {
+                "areaChart": "Gráfico de área",
+                "lineChart": "Gráfico de linha",
+                "barChart": "Gráfico de barras",
+                "pieChart": "Gráfico circular",
+                "radialChart": "Gráfico radial"
+            },
+            "empty": {
+                "visitorData": "Sem dados de visitantes",
+                "revenueData": "Sem dados de receita",
+                "countryData": "Sem dados por país",
+                "browserData": "Sem dados de navegador",
+                "deviceData": "Sem dados de dispositivo",
+                "hourlyData": "Sem dados horários",
+                "pageData": "Sem dados de páginas"
+            },
+            "stats": {
+                "uniqueVisitors": {
+                    "title": "Visitantes Únicos",
+                    "description": "Endereços IP únicos"
+                },
+                "pageViews": {
+                    "title": "Visualizações de Página",
+                    "description": "Total de visualizações"
+                },
+                "campaignsSent": {
+                    "title": "Campanhas Enviadas",
+                    "description": "Total de campanhas enviadas"
+                },
+                "totalOrders": {
+                    "title": "Total de Encomendas",
+                    "description": "Encomendas de sempre"
+                },
+                "totalRevenue": {
+                    "title": "Receita Total",
+                    "description": "Encomendas concluídas"
+                },
+                "subscribers": {
+                    "title": "Subscritores",
+                    "description": "Subscritores ativos"
+                },
+                "avgPagesSession": {
+                    "title": "Média de Páginas/Sessão",
+                    "description": "Páginas por visitante"
+                },
+                "bounceRate": {
+                    "title": "Taxa de Rejeição",
+                    "description": "Visitas de uma só página"
+                }
+            },
+            "overviewCharts": {
+                "dailyVisitors": {
+                    "title": "Visitantes Diários",
+                    "description": "Tráfego de visitantes ao longo do tempo"
+                },
+                "revenueOverTime": {
+                    "title": "Receita ao Longo do Tempo",
+                    "description": "Desempenho diário de receita"
+                }
+            },
+            "website": {
+                "dailyVisitors": {
+                    "title": "Visitantes Diários",
+                    "description": "Tráfego de visitantes ao longo do tempo"
+                },
+                "topCountries": {
+                    "title": "Top Países",
+                    "description": "Visitantes por país"
+                },
+                "browserUsage": {
+                    "title": "Uso de Navegadores",
+                    "description": "Navegadores mais usados"
+                },
+                "deviceTypes": {
+                    "title": "Tipos de Dispositivo",
+                    "description": "Tráfego desktop vs mobile"
+                },
+                "hourlyTraffic": {
+                    "title": "Tráfego por Hora",
+                    "description": "Distribuição de tráfego por hora"
+                },
+                "topPages": {
+                    "title": "Top Páginas",
+                    "description": "Páginas mais visitadas"
+                }
+            },
+            "clearSection": {
+                "websiteMetrics": {
+                    "title": "Métricas do Website",
+                    "description": "Controla e gere os dados de métricas analíticas do website com opções para filtrar por datas ou eliminar dados históricos de forma permanente."
+                },
+                "close": "Fechar",
+                "clearData": "Limpar Dados",
+                "clearMetricsTitle": "Limpar Dados de Métricas",
+                "clearMetricsDescription": "Elimina permanentemente os dados de métricas analíticas. Esta ação não pode ser desfeita.",
+                "clearOption": "Opção de Limpeza",
+                "selectClearOption": "Selecionar opção de limpeza",
+                "deleteAll": "Eliminar Todos os Dados de Métricas",
+                "deleteByRange": "Eliminar por Intervalo de Datas",
+                "clearing": "A limpar...",
+                "confirmClear": "Confirmar Limpeza",
+                "cancel": "Cancelar"
+            },
+            "marketing": {
+                "cards": {
+                    "emailsSent": {
+                        "title": "Emails Enviados",
+                        "description": "Total de campanhas de email"
+                    },
+                    "smsSent": {
+                        "title": "SMS Enviados",
+                        "description": "Total de campanhas SMS"
+                    },
+                    "openRate": {
+                        "title": "Taxa de Abertura",
+                        "description": "Taxa de abertura das campanhas"
+                    },
+                    "clickRate": {
+                        "title": "Taxa de Cliques",
+                        "description": "Taxa de cliques das campanhas"
+                    }
+                },
+                "campaignPerformance": {
+                    "title": "Desempenho de Campanhas",
+                    "description": "Campanhas de Email vs SMS",
+                    "sent": "Enviadas",
+                    "opened": "Abertas",
+                    "clicked": "Clicadas"
+                },
+                "engagementRates": {
+                    "title": "Taxas de Envolvimento",
+                    "description": "Taxas de abertura e cliques"
+                }
+            },
+            "ecommerce": {
+                "cards": {
+                    "pendingOrders": {
+                        "title": "Encomendas Pendentes",
+                        "description": "Encomendas pendentes"
+                    },
+                    "completedOrders": {
+                        "title": "Encomendas Concluídas",
+                        "description": "Encomendas concluídas"
+                    }
+                },
+                "orderStatus": {
+                    "title": "Estado das Encomendas",
+                    "description": "Distribuição por estado"
+                },
+                "status": {
+                    "pending": "Pendente",
+                    "completed": "Concluída",
+                    "other": "Outro"
+                },
+                "revenueMetrics": {
+                    "title": "Métricas de Receita",
+                    "description": "Valor médio por encomenda e conversão",
+                    "averageOrderValue": "Valor Médio da Encomenda",
+                    "conversionRate": "Taxa de Conversão",
+                    "completionRate": "Taxa de Conclusão"
+                }
+            },
+            "users": {
+                "cards": {
+                    "totalUsers": {
+                        "title": "Total de Utilizadores",
+                        "description": "Utilizadores registados"
+                    },
+                    "newUsers": {
+                        "title": "Novos Utilizadores",
+                        "description": "No período selecionado"
+                    },
+                    "totalSubscribers": {
+                        "title": "Total de Subscritores",
+                        "description": "Subscritores da newsletter"
+                    },
+                    "activeSubscribers": {
+                        "title": "Subscritores Ativos",
+                        "description": "Subscritores ativos"
+                    }
+                },
+                "userGrowth": {
+                    "title": "Crescimento de Utilizadores",
+                    "description": "Novos vs existentes",
+                    "existingUsers": "Utilizadores Existentes"
+                },
+                "subscriberStatus": {
+                    "title": "Estado dos Subscritores",
+                    "description": "Ativos vs inativos",
+                    "active": "Ativo",
+                    "inactive": "Inativo"
+                }
+            }
+        },
+        "Orders": {
+            "header": {
+                "title": "Encomendas",
+                "description": "Gere e acompanha as tuas encomendas"
+            },
+            "common": {
+                "yes": "Sim",
+                "no": "Não",
+                "na": "N/D",
+                "invalidDate": "Data inválida"
+            },
+            "status": {
+                "order": {
+                    "pending": "Pendente",
+                    "processing": "Em processamento",
+                    "delivered": "Entregue",
+                    "complete": "Concluída",
+                    "cancelled": "Cancelada"
+                },
+                "payment": {
+                    "pending": "Pendente",
+                    "processing": "Em processamento",
+                    "paid": "Pago",
+                    "failed": "Falhou",
+                    "refunded": "Reembolsado",
+                    "cancelled": "Cancelado"
+                },
+                "method": {
+                    "none": "Nenhum/Pendente",
+                    "card": "Cartão de crédito/débito",
+                    "bank_transfer": "Transferência bancária",
+                    "pay_on_delivery": "Pagamento na entrega",
+                    "cash": "Dinheiro",
+                    "crypto": "Criptomoeda",
+                    "eupago_mb": "Multibanco (EuPago)",
+                    "eupago_mbway": "MB WAY (EuPago)"
+                }
+            },
+            "actions": {
+                "viewDetails": "Ver detalhes",
+                "editNotes": "Editar notas",
+                "editStatus": "Editar estado",
+                "editPayment": "Editar pagamento",
+                "generateInvoice": "Gerar fatura",
+                "deleteOrder": "Eliminar encomenda",
+                "retrying": "A tentar novamente...",
+                "retryConnection": "Tentar ligação novamente",
+                "retryNow": "Tentar agora",
+                "resetFilters": "Repor todos os filtros",
+                "reset": "Repor",
+                "hideFilters": "Ocultar filtros",
+                "showFilters": "Mostrar filtros",
+                "refreshPaymentStatus": "Atualizar estado dos pagamentos",
+                "refreshing": "A atualizar...",
+                "refresh": "Atualizar",
+                "exportCsv": "Exportar CSV",
+                "newOrder": "Nova encomenda",
+                "cancel": "Cancelar",
+                "saving": "A guardar...",
+                "saveNotes": "Guardar notas",
+                "updating": "A atualizar...",
+                "updateStatus": "Atualizar estado",
+                "updatePayment": "Atualizar pagamento",
+                "creating": "A criar...",
+                "createOrder": "Criar encomenda"
+            },
+            "errors": {
+                "connectionErrorTitle": "Erro de ligação",
+                "connectionFailed": "A ligação falhou. Verifica a tua internet e tenta novamente.",
+                "connectionIssuesDetected": "Foram detetados problemas de ligação. Os dados podem não estar atualizados.",
+                "selectedCustomerInvalid": "Cliente selecionado não encontrado. Seleciona um cliente válido ou cria um novo."
+            },
+            "table": {
+                "columns": {
+                    "orderId": "ID da encomenda",
+                    "customer": "Cliente",
+                    "total": "Total",
+                    "status": "Estado",
+                    "createdAt": "Criada em"
+                },
+                "emptyMessage": "Nenhuma encomenda encontrada"
+            },
+            "filters": {
+                "status": { "placeholder": "Estado", "all": "Todos os estados" },
+                "paymentStatus": { "placeholder": "Pagamento", "all": "Todos os pagamentos" },
+                "paymentMethod": { "placeholder": "Método", "all": "Todos os métodos" },
+                "dateRange": {
+                    "placeholder": "Intervalo de datas",
+                    "all": "Todas as datas",
+                    "today": "Hoje",
+                    "yesterday": "Ontem",
+                    "last7days": "Últimos 7 dias",
+                    "last30days": "Últimos 30 dias",
+                    "thismonth": "Este mês",
+                    "lastmonth": "Mês passado"
+                },
+                "orderBy": {
+                    "placeholder": "Ordenar por",
+                    "newest": "Mais recentes primeiro",
+                    "oldest": "Mais antigas primeiro",
+                    "highestTotal": "Maior total",
+                    "lowestTotal": "Menor total",
+                    "customerName": "Nome do cliente"
+                },
+                "tags": {
+                    "status": "Estado",
+                    "payment": "Pagamento",
+                    "method": "Método",
+                    "date": "Data",
+                    "sort": "Ordenação"
+                }
+            },
+            "dialogs": {
+                "orderDetails": {
+                    "title": "Detalhes da encomenda",
+                    "tabs": {
+                        "details": "Detalhes",
+                        "customer": "Cliente",
+                        "payment": "Pagamento",
+                        "status": "Estado"
+                    },
+                    "copyOrderId": "Copiar ID completo da encomenda",
+                    "copyTransactionId": "Copiar ID completo da transação",
+                    "internalNotesPlaceholder": "Adicionar notas internas (visível apenas para administradores)..."
+                },
+                "editStatus": {
+                    "title": "Editar estado da encomenda",
+                    "description": "Atualiza o estado e o tracking da encomenda #{orderId}",
+                    "selectStatus": "Selecionar estado",
+                    "tracking": "Introduzir número de tracking",
+                    "trackingOptional": "Introduzir número de tracking (opcional)",
+                    "trackingOptionalLabel": "Número de tracking (opcional)",
+                    "verifyingPhone": "A verificar número de telefone...",
+                    "selectSmsPhone": "Seleciona o número para enviar SMS:",
+                    "phonePlaceholder": "+351 912 345 678"
+                },
+                "editPayment": {
+                    "title": "Editar informação de pagamento",
+                    "description": "Atualiza o estado e método de pagamento da encomenda #{orderId}",
+                    "selectPaymentStatus": "Selecionar estado de pagamento",
+                    "selectPaymentMethod": "Selecionar método de pagamento"
+                },
+                "createOrder": {
+                    "title": "Criar nova encomenda",
+                    "description": "Cria uma nova encomenda manualmente e envia opcionalmente um email ao cliente.",
+                    "selectCustomer": "Selecionar cliente existente ou criar novo",
+                    "createNewCustomer": "Criar novo cliente",
+                    "unnamedCustomer": "Cliente sem nome",
+                    "addItemFromCatalog": "Adicionar item do catálogo",
+                    "addCustomItem": "Adicionar item personalizado",
+                    "selectPaymentMethod": "Selecionar método de pagamento",
+                    "discountPercentagePlaceholder": "0-100",
+                    "discountFixedPlaceholder": "0.00",
+                    "taxRatePlaceholder": "20.00"
+                },
+                "confirmStatusChange": {
+                    "title": "Confirmar alteração de estado",
+                    "description": "Tens a certeza que queres alterar o estado da encomenda {orderId} para \"{status}\"?",
+                    "trackingPlaceholder": "Introduzir número de tracking..."
+                }
+            },
+            "confirm": {
+                "deleteOrder": {
+                    "title": "Eliminar encomenda",
+                    "description": "Tens a certeza que queres eliminar a encomenda #{orderId}? Esta ação não pode ser desfeita.",
+                    "confirmText": "Eliminar"
+                },
+                "editStatus": {
+                    "title": "Editar estado da encomenda",
+                    "description": "Esta encomenda já está {status}. Tens a certeza que queres modificar o estado de uma encomenda {status}?",
+                    "confirmText": "Continuar"
+                }
+            },
+            "confirmStatus": {
+                "includeTrackingNumber": "Incluir número de tracking",
+                "optional": "opcional",
+                "recommendedTracking": "Recomendado para encomendas entregues/concluídas"
+            },
+            "create": {
+                "customerInfo": "Informação do cliente",
+                "firstName": "Primeiro nome",
+                "lastName": "Último nome",
+                "email": "Email",
+                "phone": "Telefone",
+                "shippingAddress": "Morada de envio",
+                "streetAddress": "Morada",
+                "apartmentUnit": "Apartamento/Unidade",
+                "city": "Cidade",
+                "state": "Distrito/Estado",
+                "zipCode": "Código postal",
+                "country": "País",
+                "orderDetails": "Detalhes da encomenda",
+                "addCustomItem": "Adicionar item personalizado",
+                "product": "Produto",
+                "quantity": "Qtd",
+                "price": "Preço",
+                "remove": "Remover",
+                "paymentMethod": "Método de pagamento",
+                "orderStatus": "Estado da encomenda",
+                "sendConfirmationEmail": "Enviar email de confirmação",
+                "applyTax": "Aplicar imposto",
+                "taxRate": "Taxa de imposto (%)",
+                "taxIncluded": "O imposto está incluído no preço dos itens",
+                "taxExtracted": "O valor do imposto será extraído do subtotal",
+                "taxAdded": "O valor do imposto será adicionado ao subtotal",
+                "shippingCost": "Custo de envio",
+                "discount": "Desconto",
+                "fixed": "Fixo",
+                "subtotal": "Subtotal",
+                "subtotalExclTax": "Subtotal (sem imposto)",
+                "tax": "Imposto",
+                "shipping": "Envio",
+                "total": "Total"
+            },
+            "details": {
+                "customer": {
+                    "email": "Email",
+                    "phone": "Telefone",
+                    "shippingAddress": "Morada de envio",
+                    "deliveryNotes": "Notas de entrega",
+                    "internalNotes": "Notas internas",
+                    "noInternalNotes": "Sem notas internas"
+                },
+                "payment": {
+                    "title": "Detalhes de pagamento",
+                    "paymentStatus": "Estado do pagamento",
+                    "paymentMethod": "Método de pagamento",
+                    "method": "Método",
+                    "mobile": "Telemóvel",
+                    "reference": "Referência",
+                    "entity": "Entidade",
+                    "transactionId": "ID da transação",
+                    "transactionFee": "Taxa de transação",
+                    "incFees": "(incl. taxas)",
+                    "subtotal": "Subtotal",
+                    "discount": "Desconto",
+                    "shipping": "Envio",
+                    "orderTotal": "Total da encomenda",
+                    "revenue": "Receita",
+                    "orderSummary": "Resumo da encomenda",
+                    "eupagoInfo": "Informação de pagamento EuPago",
+                    "mbway": "MB WAY",
+                    "multibanco": "Multibanco",
+                    "vatIncludedText": "O IVA está incluído no preço dos itens",
+                    "vatAddedText": "O IVA é adicionado ao preço dos itens"
+                },
+                "status": {
+                    "title": "Estado da encomenda",
+                    "orderDate": "Data da encomenda",
+                    "currentStatus": "Estado atual",
+                    "orderStatus": "Estado da encomenda",
+                    "trackPackage": "Rastrear encomenda",
+                    "trackingNumber": "Número de tracking",
+                    "includeTrackingInfo": "Incluir informação de tracking",
+                    "sendEmailToCustomer": "Enviar notificação por email ao cliente",
+                    "sendSmsToCustomer": "Enviar notificação por SMS ao cliente",
+                    "confirmSmsPhone": "Seleciona o número para SMS",
+                    "orderPhone": "Telefone da encomenda",
+                    "userAccountPhone": "Telefone da conta do utilizador",
+                    "enterManually": "Introduzir manualmente",
+                    "noPhoneInOrder": "Sem telefone na encomenda"
+                }
+            },
+            "invoice": {
+                "previewTitle": "Pré-visualização da fatura #{orderId}",
+                "invoice": "Fatura",
+                "order": "Encomenda #{orderId}",
+                "invoiceDate": "Data da fatura",
+                "orderDate": "Data da encomenda",
+                "status": "Estado",
+                "customer": "Cliente",
+                "billTo": "Faturar a",
+                "details": "Detalhes",
+                "description": "Descrição",
+                "qty": "Qtd",
+                "price": "Preço",
+                "paymentMethod": "Método de pagamento",
+                "reference": "Referência",
+                "entity": "Entidade",
+                "subtotal": "Subtotal",
+                "discount": "Desconto",
+                "shipping": "Envio",
+                "tax": "Imposto",
+                "total": "Total",
+                "totalAmount": "Valor total",
+                "thankYou": "Obrigado pela tua compra!",
+                "yourBusiness": "a tua confiança",
+                "downloadPdf": "Descarregar PDF",
+                "printInvoice": "Imprimir fatura",
+                "emailInvoice": "Enviar fatura por email",
+                "emailSubject": "Fatura da encomenda #{orderId}",
+                "emailBody": "Olá {customerName},\n\nSegue abaixo os detalhes da tua fatura:\n\nEncomenda: #{orderId}\nTotal: {total}\nData: {date}\n\nObrigado pela tua compra.",
+                "generating": "A gerar..."
+            },
+            "csv": {
+                "dialog": {
+                    "title": "Exportar encomendas para CSV",
+                    "description": "Seleciona os campos que queres incluir na exportação CSV"
+                },
+                "groups": {
+                    "orderId": "ID da encomenda",
+                    "customerInfo": "Informação do cliente",
+                    "orderDate": "Data da encomenda",
+                    "orderStatus": "Estado da encomenda",
+                    "paymentInfo": "Informação de pagamento",
+                    "financialDetails": "Detalhes financeiros",
+                    "eupagoDetails": "Detalhes EuPago",
+                    "shippingInfo": "Informação de envio",
+                    "addressDetails": "Detalhes de morada",
+                    "itemsDetails": "Detalhes dos itens",
+                    "timestamps": "Carimbos temporais"
+                },
+                "headers": {
+                    "customerName": "Nome do cliente",
+                    "customerEmail": "Email do cliente",
+                    "customerPhone": "Telefone do cliente",
+                    "paymentMethod": "Método de pagamento",
+                    "paymentStatus": "Estado do pagamento",
+                    "subtotal": "Subtotal",
+                    "discountType": "Tipo de desconto",
+                    "discountValue": "Valor do desconto",
+                    "discountAmount": "Montante do desconto",
+                    "couponCode": "Código do cupão",
+                    "shippingCost": "Custo de envio",
+                    "vatEnabled": "IVA ativo",
+                    "vatPercentage": "Percentagem IVA",
+                    "vatAmount": "Montante IVA",
+                    "vatIncluded": "IVA incluído",
+                    "orderTotal": "Total da encomenda",
+                    "clubPoints": "Pontos do clube",
+                    "currency": "Moeda",
+                    "eupagoMethod": "Método EuPago",
+                    "eupagoReference": "Referência EuPago",
+                    "eupagoEntity": "Entidade EuPago",
+                    "eupagoTransactionId": "ID de transação EuPago",
+                    "eupagoTransactionFee": "Taxa de transação EuPago",
+                    "revenue": "Receita (após taxas e imposto)",
+                    "trackingNumber": "Número de tracking",
+                    "deliveryNotes": "Notas de entrega",
+                    "shippingNotes": "Notas de envio",
+                    "streetAddress": "Morada",
+                    "apartmentUnit": "Apartamento/Unidade",
+                    "city": "Cidade",
+                    "state": "Distrito/Estado",
+                    "zipCode": "Código postal",
+                    "country": "País",
+                    "countryIso": "ISO do país",
+                    "itemsCount": "Quantidade de itens",
+                    "itemsDetails": "Detalhes dos itens",
+                    "updatedAt": "Atualizado em"
+                }
+            },
+            "toasts": {
+                "fetchOrdersFailed": "Falha ao obter encomendas",
+                "fetchCustomersFailed": "Falha ao obter clientes",
+                "fetchCatalogFailed": "Falha ao obter catálogo",
+                "dataRefreshed": "Dados atualizados com sucesso",
+                "refreshFailed": "Falha ao atualizar dados",
+                "paymentsConfirmed": "{count} pagamento(s) confirmado(s)",
+                "expiredOrdersCancelled": "{count} encomenda(s) expirada(s) cancelada(s)",
+                "noPendingPayments": "Não há pagamentos pendentes para atualizar",
+                "autoCompletedDeliveredOrders": "Foram concluídas automaticamente {count} encomendas entregues há mais de 30 dias",
+                "newOrdersReceived": "{count} nova(s) encomenda(s) recebida(s)",
+                "ordersUpdated": "{count} encomenda(s) atualizada(s)",
+                "checkPaymentsFailed": "Falha ao verificar pagamentos",
+                "refreshPaymentStatusFailed": "Falha ao atualizar estado dos pagamentos",
+                "completedOrdersUpdated": "{count} encomenda(s) concluída(s) atualizada(s)",
+                "createOrderFailed": "Falha ao criar encomenda",
+                "createCustomerFailed": "Falha ao criar cliente",
+                "customerFieldsRequired": "Preenche todos os campos obrigatórios do cliente",
+                "selectCustomerRequired": "Seleciona um cliente existente ou cria um novo",
+                "addItemRequired": "Adiciona pelo menos um item à encomenda",
+                "orderCreated": "Encomenda criada com sucesso",
+                "noChangesDetected": "Sem alterações detetadas. Seleciona um estado diferente para atualizar.",
+                "statusUpdatedEmailSms": "Estado da encomenda atualizado. Notificações por email e SMS enviadas.",
+                "statusUpdatedEmail": "Estado da encomenda atualizado e cliente notificado por email",
+                "statusUpdatedSms": "Estado da encomenda atualizado e cliente notificado por SMS",
+                "orderUpdatedNotificationsFailed": "Encomenda atualizada, mas as notificações falharam",
+                "statusUpdated": "Estado da encomenda atualizado com sucesso",
+                "statusUpdatedCustomerNotified": "Estado da encomenda atualizado e cliente notificado",
+                "statusUpdatedEmailFailed": "Estado da encomenda atualizado, mas a notificação por email falhou",
+                "statusUpdatedSmsSkippedNoPhone": "Estado atualizado, SMS ignorado: sem número de telefone fornecido",
+                "updateOrderStatusFailed": "Falha ao atualizar estado da encomenda",
+                "invoiceGenerated": "PDF da fatura gerado com sucesso",
+                "invoiceGenerateFailed": "Falha ao gerar fatura",
+                "orderIdCopied": "ID da encomenda copiado para a área de transferência",
+                "copyOrderIdFailed": "Falha ao copiar ID da encomenda",
+                "orderNotesUpdated": "Notas da encomenda atualizadas com sucesso",
+                "updateOrderNotesFailed": "Falha ao atualizar notas da encomenda",
+                "transactionIdCopied": "ID da transação copiado para a área de transferência",
+                "paymentDetailsUpdated": "Detalhes de pagamento atualizados com sucesso",
+                "updatePaymentDetailsFailed": "Falha ao atualizar detalhes de pagamento",
+                "paymentInformationUpdated": "Informação de pagamento atualizada com sucesso",
+                "updatePaymentInformationFailed": "Falha ao atualizar informação de pagamento",
+                "selectedCustomerNotFound": "Cliente selecionado não encontrado. Tenta novamente.",
+                "emailClientOpened": "Cliente de email aberto com detalhes da fatura",
+                "prepareEmailFailed": "Falha ao preparar email",
+                "orderDeleted": "Encomenda eliminada com sucesso",
+                "deleteOrderFailed": "Falha ao eliminar encomenda",
+                "orderAlreadyHasAppointment": "Esta encomenda já tem um agendamento",
+                "orderAddedToAgenda": "Encomenda adicionada à agenda com sucesso",
+                "addToAgendaFailed": "Falha ao adicionar encomenda à agenda"
+            }
+        },
+        "Catalog": {
+            "header": {
+                "title": "Itens",
+                "description": "Gere os itens do teu catálogo"
+            },
+            "common": {
+                "untitled": "Sem título",
+                "yes": "Sim",
+                "no": "Não",
+                "na": "N/D",
+                "invalidDate": "Data inválida"
+            },
+            "status": {
+                "active": "Ativo",
+                "inactive": "Inativo"
+            },
+            "stock": {
+                "na": "N/D",
+                "unlimited": "Ilimitado",
+                "available": "Disponível",
+                "notAvailable": "Indisponível",
+                "inStock": "{count} em stock",
+                "outOfStock": "Sem stock"
+            },
+            "table": {
+                "image": "Imagem",
+                "name": "Nome",
+                "price": "Preço",
+                "category": "Categoria",
+                "collections": "Coleções",
+                "stockStatus": "Estado do stock",
+                "emptyMessage": "Nenhum item encontrado no catálogo",
+                "searchPlaceholder": "Pesquisar itens..."
+            },
+            "errors": {
+                "loadData": "Falha ao carregar os dados. Tenta novamente.",
+                "refreshData": "Falha ao atualizar os dados. Tenta novamente.",
+                "failedLoadTitle": "Falha ao carregar dados"
+            },
+            "toasts": {
+                "fetchFailed": "Falha ao obter dados do catálogo",
+                "dataRefreshed": "Dados atualizados com sucesso",
+                "refreshFailed": "Falha ao atualizar dados",
+                "waitUpload": "Aguarda a conclusão do upload atual",
+                "noFiles": "Nenhum ficheiro fornecido",
+                "fileTooLarge": "{name} é demasiado grande (máx. 10MB)",
+                "fileTypeNotAllowed": "{name}: o tipo de ficheiro {extension} não é permitido",
+                "notImageFile": "{name} não é um ficheiro de imagem",
+                "noValidImages": "Sem imagens válidas para upload",
+                "uploadSuccess": "{count} imagem(ns) carregada(s) com sucesso",
+                "uploadFailed": "Falha ao carregar imagens",
+                "slugRequired": "O slug é obrigatório. Fornece um slug válido.",
+                "slugExists": "O slug já existe. Escolhe um slug diferente.",
+                "itemUpdated": "Item atualizado com sucesso!",
+                "updateFailed": "Falha ao atualizar item",
+                "itemCreated": "Item criado com sucesso!",
+                "createFailed": "Falha ao criar item",
+                "saveFailed": "Falha ao guardar item",
+                "itemDeleted": "Item eliminado com sucesso",
+                "deleteFailed": "Falha ao eliminar item"
+            },
+            "actions": {
+                "editItem": "Editar item",
+                "deleteItem": "Eliminar item",
+                "retrying": "A tentar novamente...",
+                "tryAgain": "Tentar novamente",
+                "resetFilters": "Repor todos os filtros",
+                "reset": "Repor",
+                "hideFilters": "Ocultar filtros",
+                "showFilters": "Mostrar filtros",
+                "refreshData": "Atualizar dados do catálogo",
+                "refreshing": "A atualizar...",
+                "refresh": "Atualizar",
+                "exportCsv": "Exportar CSV",
+                "addItem": "Adicionar item",
+                "cancel": "Cancelar",
+                "uploading": "A carregar...",
+                "updating": "A atualizar...",
+                "creating": "A criar...",
+                "updateItem": "Atualizar item",
+                "createItem": "Criar item"
+            },
+            "filters": {
+                "type": {
+                    "placeholder": "Tipo",
+                    "all": "Todos os tipos",
+                    "physical": "Físico",
+                    "digital": "Digital",
+                    "service": "Serviço"
+                },
+                "category": {
+                    "placeholder": "Categoria",
+                    "all": "Todas as categorias"
+                },
+                "collection": {
+                    "placeholder": "Coleção",
+                    "all": "Todas as coleções"
+                },
+                "status": {
+                    "placeholder": "Estado",
+                    "all": "Todos os estados"
+                },
+                "featured": {
+                    "placeholder": "Destaque",
+                    "all": "Todos os itens",
+                    "only": "Apenas em destaque",
+                    "notFeatured": "Sem destaque"
+                },
+                "stock": {
+                    "placeholder": "Stock",
+                    "all": "Todo o stock",
+                    "inStock": "Em stock",
+                    "outOfStock": "Sem stock",
+                    "unlimited": "Ilimitado"
+                },
+                "discount": {
+                    "placeholder": "Desconto",
+                    "all": "Todos os itens",
+                    "withDiscount": "Com desconto",
+                    "noDiscount": "Sem desconto"
+                },
+                "priceRange": {
+                    "placeholder": "Intervalo de preço",
+                    "all": "Todos os preços",
+                    "under10": "Até 10€",
+                    "10to50": "10€ - 50€",
+                    "50to100": "50€ - 100€",
+                    "over100": "Mais de 100€"
+                },
+                "sort": {
+                    "placeholder": "Ordenar por",
+                    "newest": "Mais recentes primeiro",
+                    "oldest": "Mais antigos primeiro",
+                    "nameAZ": "Nome A-Z",
+                    "priceLowHigh": "Preço crescente",
+                    "priceHighLow": "Preço decrescente"
+                },
+                "badges": {
+                    "type": "Tipo",
+                    "category": "Categoria",
+                    "collection": "Coleção",
+                    "status": "Estado",
+                    "featured": "Destaque",
+                    "stock": "Stock",
+                    "discount": "Desconto",
+                    "price": "Preço",
+                    "sort": "Ordenação"
+                }
+            },
+            "dialog": {
+                "editItemTitle": "Editar item",
+                "addNewItemTitle": "Adicionar novo item",
+                "description": "Adiciona ou atualiza itens do catálogo e gere os respetivos detalhes."
+            },
+            "deleteDialog": {
+                "title": "Eliminar item",
+                "description": "Tens a certeza de que queres eliminar \"{item}\"? Esta ação não pode ser desfeita e vai remover permanentemente o item do teu catálogo.",
+                "thisItem": "este item",
+                "confirmText": "Eliminar"
+            },
+            "csv": {
+                "dialogTitle": "Exportar catálogo para CSV",
+                "dialogDescription": "Seleciona os campos de dados que queres incluir na exportação CSV do catálogo",
+                "itemId": "ID do item",
+                "type": "Tipo",
+                "sku": "SKU",
+                "currency": "Moeda",
+                "discountType": "Tipo de desconto",
+                "discountAmount": "Valor do desconto",
+                "stock": "Stock",
+                "lowStockAlert": "Alerta de stock baixo",
+                "quantity": "Quantidade",
+                "quantityUnit": "Unidade de quantidade",
+                "statusTitle": "Estado",
+                "featured": "Destaque",
+                "active": "Ativo",
+                "metaTitle": "Título meta",
+                "metaDescription": "Descrição meta",
+                "metaKeywords": "Palavras-chave meta",
+                "createdAt": "Criado em",
+                "updatedAt": "Atualizado em",
+                "basicInfo": {
+                    "label": "Informação básica"
+                },
+                "pricing": {
+                    "label": "Preços"
+                },
+                "inventory": {
+                    "label": "Inventário"
+                },
+                "categoryInfo": {
+                    "label": "Categoria e coleções"
+                },
+                "status": {
+                    "label": "Estado e funcionalidades"
+                },
+                "seoData": {
+                    "label": "Dados SEO"
+                },
+                "timestamps": {
+                    "label": "Registos de tempo"
+                }
+            }
+        },
+        "CatalogForm": {
+            "common": {
+                "language": "Idioma",
+                "translationHint": "Tradução para {lang}. Deixa vazio para usar o idioma predefinido.",
+                "note": "Nota",
+                "yes": "Sim"
+            },
+            "tabs": {
+                "basic": "Informação básica",
+                "pricing": "Preços",
+                "details": "Detalhes",
+                "images": "Imagens",
+                "attributes": "Atributos",
+                "seo": "SEO"
+            },
+            "itemTypes": {
+                "physical": "Produto físico",
+                "digital": "Produto digital",
+                "service": "Serviço"
+            },
+            "actions": {
+                "updating": "A atualizar...",
+                "creating": "A criar...",
+                "updateItem": "Atualizar item",
+                "createItem": "Criar item"
+            },
+            "toasts": {
+                "uploadFailed": "Falha ao carregar imagens",
+                "discountPercentageMax": "A percentagem de desconto não pode ser superior a 100%",
+                "fixedDiscountInvalid": "O valor de desconto fixo não pode ser igual ou superior ao preço do item",
+                "metaTitleGenerated": "Título meta gerado e atualizado para todos os idiomas",
+                "metaTitleFailed": "Falha ao atualizar o título meta",
+                "metaDescriptionGenerated": "Descrição meta gerada e atualizada para todos os idiomas",
+                "metaDescriptionFailed": "Falha ao atualizar a descrição meta",
+                "coverImageUpdated": "Imagem de capa atualizada",
+                "imageRemoved": "Imagem removida"
+            },
+            "basic": {
+                "itemTypeRequired": "Tipo de item *",
+                "selectItemType": "Selecionar tipo de item",
+                "sectionTitle": "Informação básica",
+                "nameRequired": "Nome *",
+                "slug": "Slug",
+                "slugHelp": "Versão do nome amigável para URL. Gerada automaticamente a partir do nome, mas pode ser editada.",
+                "description": "Descrição",
+                "activeItem": "Item ativo",
+                "featuredItem": "Item em destaque",
+                "placeholders": {
+                    "name": "Introduz o nome do item ({lang})",
+                    "slug": "item-slug",
+                    "description": "Introduz a descrição do item ({lang})"
+                }
+            },
+            "pricing": {
+                "sectionTitle": "Preços e descontos",
+                "currency": "Moeda",
+                "selectCurrency": "Selecionar moeda",
+                "unitType": "Tipo de unidade",
+                "selectUnit": "Selecionar unidade",
+                "unitTypeHelp": "Este tipo de unidade será aplicado a todos os escalões de preço",
+                "quantityValue": "Quantidade/Valor",
+                "basePriceOriginalRequired": "Preço base (original) *",
+                "basePriceRequired": "Preço base *",
+                "quantityBasedTitle": "Preços por quantidade",
+                "quantityBasedDescription": "Define preços diferentes para quantidades diferentes (desconto de grossista)",
+                "quantity": "Quantidade",
+                "priceOriginal": "Preço (original)",
+                "base": "Base",
+                "removeTier": "Remover escalão",
+                "addPriceTier": "Adicionar escalão de preço",
+                "tiersNote": "O primeiro escalão é o preço e quantidade base do teu produto. Escalões adicionais são para preços de volume/grossista. O stock é partilhado entre todos os escalões de preço — quando os clientes compram quantidades diferentes, obtêm melhores preços usando o mesmo stock. O tipo de unidade é definido globalmente acima.",
+                "discountSettings": "Configurações de desconto",
+                "discountType": "Tipo de desconto",
+                "selectType": "Selecionar tipo",
+                "discountAmount": "Valor do desconto",
+                "finalPrice": "Preço final:",
+                "save": "Guardar",
+                "discount": {
+                    "none": "Sem desconto",
+                    "percentage": "Percentagem (%)",
+                    "fixed": "Valor fixo"
+                },
+                "placeholders": {
+                    "quantity": "1.00",
+                    "price": "0.00",
+                    "one": "1",
+                    "percentage": "0-100"
+                }
+            },
+            "details": {
+                "sectionTitle": "Detalhes específicos por tipo",
+                "category": "Categoria",
+                "selectCategory": "Selecionar categoria",
+                "noCategory": "Sem categoria",
+                "collections": "Coleções",
+                "addToCollections": "Adicionar a coleções",
+                "unknownCollection": "Coleção desconhecida",
+                "sku": "SKU",
+                "enterSku": "Introduzir SKU",
+                "generateSku": "Gerar SKU",
+                "skuHelp": "Stock Keeping Unit. Clica no botão para gerar automaticamente.",
+                "stockManagement": "Gestão de stock",
+                "stockQuantity": "Quantidade em stock",
+                "unlimitedStock": "Stock ilimitado",
+                "lowStockThreshold": "Limite de alerta de stock baixo",
+                "downloadLink": "Link de download",
+                "downloadNotes": "Notas de download",
+                "serviceType": "Tipo de serviço",
+                "selectServiceType": "Selecionar tipo de serviço",
+                "serviceTypes": {
+                    "standard": "Serviço padrão",
+                    "consultation": "Consultoria",
+                    "workshop": "Workshop/Formação",
+                    "maintenance": "Manutenção",
+                    "custom": "Serviço personalizado",
+                    "subscription": "Subscrição"
+                },
+                "duration": "Duração",
+                "serviceHasDuration": "O serviço tem duração fixa",
+                "durationUnits": {
+                    "minutes": "Minutos",
+                    "hours": "Horas",
+                    "days": "Dias",
+                    "weeks": "Semanas"
+                },
+                "durationDetermined": "A duração será definida com base nos requisitos",
+                "deliveryMethod": "Método de entrega",
+                "selectDeliveryMethod": "Selecionar método de entrega",
+                "deliveryMethods": {
+                    "inPerson": "Presencial",
+                    "remote": "Remoto/Online",
+                    "hybrid": "Híbrido",
+                    "onSite": "No local (instalações do cliente)"
+                },
+                "platformTool": "Plataforma/Ferramenta",
+                "maxParticipants": "Número máximo de participantes",
+                "limitParticipants": "Limitar número de participantes",
+                "prerequisites": "Pré-requisitos",
+                "whatsIncluded": "O que está incluído",
+                "additionalNotes": "Notas adicionais",
+                "requiresAppointment": "Requer marcação de agendamento",
+                "appointmentSettings": "Definições de agendamento",
+                "allowOnlineBooking": "Permitir marcação online",
+                "bufferTimeMinutes": "Tempo de intervalo (minutos)",
+                "advanceBookingDays": "Marcação antecipada (dias)",
+                "workingHours": "Horário de trabalho",
+                "to": "até",
+                "placeholders": {
+                    "zero": "0",
+                    "five": "5",
+                    "downloadLink": "https://example.com/download",
+                    "downloadNotes": "Instruções para clientes",
+                    "sixty": "60",
+                    "platform": "ex.: Zoom, Google Meet, Microsoft Teams",
+                    "fifteen": "15",
+                    "thirty": "30",
+                    "prerequisites": "Quaisquer requisitos ou preparações necessárias antes do serviço",
+                    "whatsIncluded": "Lista do que está incluído neste serviço (materiais, ferramentas, acompanhamento, etc.)",
+                    "additionalNotes": "Informações adicionais do serviço, termos ou instruções especiais"
+                }
+            },
+            "images": {
+                "sectionTitle": "Imagens",
+                "uploading": "A carregar imagens...",
+                "clickToUpload": "Clica para carregar imagens",
+                "uploadHelp": "PNG, JPG, WEBP até 10MB cada",
+                "uploadedImages": "Imagens carregadas",
+                "cover": "Capa",
+                "setAsCover": "Definir como imagem de capa",
+                "removeImage": "Remover imagem",
+                "noImagesYet": "Ainda não há imagens carregadas"
+            },
+            "attributes": {
+                "sectionTitle": "Atributos do produto",
+                "description": "Seleciona atributos predefinidos das definições da tua loja ou adiciona atributos personalizados para descrever melhor o teu produto.",
+                "selectAttribute": "Selecionar {name}",
+                "enterAttribute": "Introduzir {name}",
+                "customTitle": "Atributos personalizados",
+                "attributeName": "Nome do atributo ({lang})",
+                "attributeValue": "Valor do atributo ({lang})",
+                "enterAttributeName": "Introduz o nome do atributo ({lang})",
+                "enterAttributeValue": "Introduz o valor do atributo ({lang})",
+                "addCustomAttribute": "Adicionar atributo personalizado"
+            },
+            "seo": {
+                "sectionTitle": "SEO e informação meta",
+                "metaTitle": "Título meta ({language})",
+                "metaDescription": "Descrição meta ({language})",
+                "generateMetaTitlePlaceholder": "Gera um título meta otimizado para SEO para este produto...",
+                "generateMetaDescriptionPlaceholder": "Gera uma descrição meta otimizada para SEO para este produto...",
+                "metaTitlePlaceholder": "Título otimizado para SEO (50-60 caracteres) - {lang}",
+                "metaDescriptionPlaceholder": "Descrição breve para resultados de pesquisa (150-160 caracteres) - {lang}",
+                "characters": "caracteres",
+                "translationFor": "Tradução para {lang}",
+                "ogImageUrl": "URL da imagem OG",
+                "ogImagePlaceholder": "https://example.com/image.jpg",
+                "searchPreview": "Pré-visualização do resultado de pesquisa ({language})",
+                "yourProductTitle": "Título do teu produto",
+                "productSlug": "product-slug",
+                "productDescriptionPreview": "A descrição do teu produto aparecerá aqui nos resultados de pesquisa...",
+                "previewForLanguage": "Pré-visualização para a versão em {lang}"
+            }
+        },
+        "Settings": {
+            "header": {
+                "title": "Definições do Sistema",
+                "description": "Configura as definições da tua aplicação"
+            },
+            "tabs": {
+                "site": "Site",
+                "seo": "SEO",
+                "location": "Localização",
+                "language": "Idioma",
+                "social": "Social",
+                "email": "Email",
+                "sms": "SMS",
+                "oauth": "OAuth",
+                "web3": "Web3",
+                "security": "Segurança",
+                "services": "Serviços",
+                "storage": "Armazenamento"
+            },
+            "actions": {
+                "saveChanges": "Guardar Alterações",
+                "saving": "A guardar...",
+                "savingSettings": "A guardar definições..."
+            },
+            "toasts": {
+                "siteNameEmailRequired": "O nome do site e o email são obrigatórios",
+                "countryRequired": "A seleção de país é obrigatória",
+                "settingsUpdated": "Definições atualizadas com sucesso",
+                "failedRefetchSettings": "Falha ao recarregar definições",
+                "failedSaveSettings": "Falha ao guardar definições",
+                "failedClearWeb3Cache": "Falha ao limpar cache Web3",
+                "locationDetected": "Localização detetada com sucesso",
+                "failedGetLocation": "Falha ao obter localização. Ativa os serviços de localização.",
+                "geolocationNotSupported": "A geolocalização não é suportada neste navegador.",
+                "phoneNumberRequired": "Por favor introduz um número de teléfone",
+                "testSmsSent": "SMS de teste enviado com sucesso!",
+                "failedSendTestSms": "Falha ao enviar SMS de teste",
+                "emailRequired": "Por favor introduz um endereço de email",
+                "testEmailSent": "Email de teste enviado com sucesso!",
+                "failedSendTestEmail": "Falha ao enviar email de teste",
+                "invalidImageFile": "Por favor seleciona um ficheiro de imagem válido (JPEG, PNG, GIF ou WebP)",
+                "imageTooLarge": "A imagem deve ter menos de 10MB",
+                "ogImageUploaded": "Imagem OG carregada com sucesso!",
+                "failedUploadImage": "Falha ao carregar imagem",
+                "ogImageRemoved": "Imagem OG removida",
+                "invalidLogoFile": "Por favor seleciona um ficheiro de imagem válido (JPEG, PNG, GIF, WebP ou SVG)",
+                "logoTooLarge": "A imagem deve ter menos de 10MB",
+                "logoUploaded": "Logo carregado com sucesso!",
+                "failedUploadLogo": "Falha ao carregar logo",
+                "logoRemoved": "Logo removido",
+                "atLeastOneLanguage": "Pelo menos um idioma deve ser selecionado",
+                "cannotRemoveDefault": "Não é possível remover o idioma predefinido. Define outro idioma como predefinido primeiro.",
+                "setAsDefaultLanguage": "{language} definido como idioma predefinido"
+            },
+            "site": {
+                "title": "Informação do Site",
+                "description": "Informação básica sobre o teu negócio",
+                "siteName": "Nome do Site *",
+                "siteNamePlaceholder": "Nome do Teu Negócio",
+                "contactEmail": "Email de Contacto *",
+                "contactEmailPlaceholder": "contacto@exemplo.com",
+                "contactPhone": "Telefone de Contacto",
+                "contactPhonePlaceholder": "+351912345678",
+                "siteLogo": "Logo do Site",
+                "uploadLogo": "Carregar Logo",
+                "uploading": "A carregar...",
+                "removeLogo": "Remover",
+                "removingLogo": "A remover...",
+                "logoUrl": "URL do Logo",
+                "logoUrlPlaceholder": "https://exemplo.com/logo.png",
+                "logoDescription": "Carrega o logo do teu negócio ou fornece uma URL. Tamanho recomendado: 200x200px, máx 10MB.",
+                "uploadMethod": "Método de Carregamento",
+                "uploadImageFile": "Carregar Ficheiro de Imagem",
+                "enterImageUrl": "Introduzir URL da Imagem",
+                "currentLogo": "Logo Atual",
+                "siteLogoAlt": "Logo do Site"
+            },
+            "seo": {
+                "title": "SEO e Informação Meta",
+                "description": "Otimiza o teu site para motores de busca e partilha em redes sociais",
+                "siteTitle": "Título do Site",
+                "siteTitlePlaceholder": "Título do Teu Site",
+                "siteTitleDescription": "O título principal do teu website, mostrado nos separadores do navegador e nos resultados de pesquisa",
+                "siteDescription": "Descrição do Site",
+                "siteDescriptionPlaceholder": "Uma breve descrição do teu website...",
+                "siteDescriptionDescription": "Descrição breve (150-160 caracteres) mostrada nos resultados de pesquisa e partilhas em redes sociais",
+                "siteKeywords": "Palavras-chave do Site",
+                "siteKeywordsPlaceholder": "palavra1, palavra2, palavra3",
+                "siteKeywordsDescription": "Lista de palavras-chave separadas por vírgulas, até 10 palavras-chave.",
+                "ogImage": "Imagem Open Graph",
+                "uploadOgImage": "Carregar Imagem",
+                "removeOgImage": "Remover",
+                "ogImageUrl": "URL da Imagem OG",
+                "ogImageUrlPlaceholder": "https://exemplo.com/og-image.jpg",
+                "ogImageDescription": "Imagem usada ao partilhar em redes sociais (recomendado: 1200x630px, máx 10MB)",
+                "uploadMethod": "Método de Carregamento",
+                "uploadImageFile": "Carregar Ficheiro de Imagem",
+                "enterImageUrl": "Introduzir URL da Imagem"
+            },
+            "location": {
+                "title": "Localização e Área de Serviço",
+                "description": "Informação geográfica e cobertura de serviço",
+                "businessAddress": "Morada do Negócio",
+                "businessAddressPlaceholder": "Rua Principal 123",
+                "city": "Cidade",
+                "cityPlaceholder": "A Tua Cidade",
+                "postalCode": "Código Postal",
+                "postalCodePlaceholder": "XXXX-XXX",
+                "latitude": "Latitude",
+                "latitudePlaceholder": "40.7128",
+                "getCurrentLocation": "Obter localização atual",
+                "longitude": "Longitude",
+                "longitudePlaceholder": "-74.0060",
+                "country": "País *",
+                "countryPlaceholder": "Seleciona um país",
+                "serviceArea": "Área de Serviço",
+                "serviceAreaPlaceholder": "Área Metropolitana",
+                "serviceAreaDescription": "Descreve a tua área de cobertura de serviço",
+                "serviceRadius": "Raio de Serviço (km)",
+                "serviceRadiusPlaceholder": "50",
+                "serviceRadiusDescription": "Distância máxima para serviços (em quilómetros)",
+                "defaultCurrency": "Moeda Predefinida",
+                "selectCurrency": "Seleciona moeda",
+                "currencyDescription": "Moeda predefinida para preços e transações",
+                "defaultLanguage": "Idioma Predefinido",
+                "selectLanguage": "Seleciona idioma",
+                "defaultLanguageDescription": "Idioma predefinido para o website frontend"
+            },
+            "language": {
+                "title": "Definições de Idioma",
+                "description": "Configura preferências de idioma para frontend e backend",
+                "languageType": "Tipo de Idioma",
+                "frontend": "Frontend",
+                "backend": "Backend",
+                "frontendLanguages": "Idiomas do Frontend *",
+                "frontendLanguagesDescription": "Seleciona quais idiomas do frontend estão disponíveis. Podes adicionar/remover idiomas e definir um predefinido.",
+                "backendLanguages": "Idiomas do Backend (Admin) *",
+                "backendLanguagesDescription": "Seleciona quais idiomas do backend estão disponíveis. Podes adicionar/remover idiomas e definir um predefinido.",
+                "availableLanguagesFilesystem": "Idiomas Disponíveis (do sistema de ficheiros)",
+                "selectedLanguages": "Idiomas Selecionados",
+                "availableLanguages": "Idiomas Disponíveis",
+                "setDefault": "Definir como Predefinido",
+                "default": "PREDEFINIDO",
+                "remove": "Remover"
+            },
+            "social": {
+                "title": "Redes Sociais",
+                "description": "Adiciona os teus perfis de redes sociais",
+                "platformPlaceholder": "Plataforma (ex., Facebook)",
+                "urlPlaceholder": "URL",
+                "addSocialNetwork": "Adicionar Rede Social",
+                "workingHours": "Horário de Funcionamento",
+                "workingHoursDescription": "Define o horário de funcionamento do teu negócio",
+                "day": "Dia",
+                "selectDay": "Seleciona dia",
+                "opens": "Abre",
+                "closes": "Fecha",
+                "addWorkingHours": "Adicionar Horário",
+                "allDaysAdded": "Todos os dias foram adicionados",
+                "allDaysUsed": "Todos os dias já estão em uso",
+                "monday": "Segunda-feira",
+                "tuesday": "Terça-feira",
+                "wednesday": "Quarta-feira",
+                "thursday": "Quinta-feira",
+                "friday": "Sexta-feira",
+                "saturday": "Sábado",
+                "sunday": "Domingo"
+            },
+            "email": {
+                "title": "Configuração de Email",
+                "description": "Configura o fornecedor de email para enviar emails transacionais",
+                "emailProvider": "Fornecedor de Email",
+                "selectEmailProvider": "Seleciona fornecedor de email",
+                "emailProviderDescription": "Escolhe o teu fornecedor de serviço de email para enviar emails",
+                "testEmailConfig": "Testar Configuração de Email",
+                "testEmailDescription": "Envia um email de teste para verificar que a tua configuração de email funciona corretamente",
+                "testEmailPlaceholder": "teste@exemplo.com",
+                "sendTest": "Enviar Teste",
+                "sendingTest": "A enviar...",
+                "smtpHost": "Host SMTP",
+                "smtpHostPlaceholder": "smtp.gmail.com",
+                "smtpHostDescription": "Nome do host do teu servidor SMTP",
+                "smtpPort": "Porto SMTP",
+                "smtpPortDescription": "Porto do servidor SMTP (tipicamente 587 para TLS ou 465 para SSL)",
+                "smtpSecure": "Usar SSL/TLS",
+                "smtpSecureDescription": "Ativar conexão segura (recomendado)",
+                "emailUser": "Utilizador de Email",
+                "emailUserPlaceholder": "teu-email@gmail.com",
+                "emailUserDescription": "O teu nome de utilizador da conta de email",
+                "emailPass": "Palavra-passe de Email",
+                "emailPassPlaceholder": "tua-palavra-passe-app",
+                "emailPassDescription": "A tua palavra-passe da conta de email ou palavra-passe específica da aplicação"
+            },
+            "sms": {
+                "title": "Configuração de SMS",
+                "description": "Configura o fornecedor de SMS (Twilio) e ativa funcionalidades de SMS",
+                "enableSms": "Ativar Integração de SMS",
+                "enableSmsDescription": "Ativar envio de SMS via Twilio",
+                "twilioAccountSid": "SID da Conta Twilio",
+                "twilioAccountSidPlaceholder": "ACxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "twilioAccountSidDescription": "O teu SID de conta Twilio da consola Twilio",
+                "twilioAuthToken": "Token de Autenticação Twilio",
+                "twilioAuthTokenPlaceholder": "********************************",
+                "twilioAuthTokenDescription": "O teu token de autenticação Twilio da consola Twilio",
+                "twilioPhoneNumber": "Número de Telefone Twilio",
+                "twilioPhoneNumberPlaceholder": "+15551234567",
+                "twilioPhoneNumberDescription": "Descrição do número de telefone Twilio com código de país (ex.: +15551234567)",
+                "testSmsConfig": "Testar Configuração de SMS",
+                "testSmsDescription": "Envia um SMS de teste para verificar que a tua configuração Twilio funciona corretamente. Inclui código de país (ex., +351912345678).",
+                "testSmsPlaceholder": "+351912345678",
+                "sendTest": "Enviar Teste",
+                "sendingTest": "A enviar..."
+            },
+            "oauth": {
+                "title": "Fornecedores OAuth",
+                "description": "Configura fornecedores de login social para autenticação de utilizadores",
+                "enableProvider": "Ativar {provider}",
+                "clientId": "ID de Cliente",
+                "clientIdPlaceholder": "teu-id-cliente",
+                "clientSecret": "Segredo de Cliente",
+                "clientSecretPlaceholder": "teu-segredo-cliente",
+                "setupInstructions": "Instruções de configuração para {provider}"
+            },
+            "web3": {
+                "title": "Integração Web3",
+                "description": "Configura integração blockchain para funcionalidades Web3 (NFTs, tokens, contratos inteligentes)",
+                "enableWeb3": "Ativar Web3",
+                "enableWeb3Description": "Ativa funcionalidades Web3 para a tua aplicação",
+                "blockchainNetwork": "Rede Blockchain",
+                "selectBlockchain": "Seleciona rede blockchain",
+                "blockchainDescription": "Seleciona a rede blockchain para funcionalidades Web3",
+                "contractAddress": "Endereço do Contrato",
+                "contractAddressPlaceholder": "0x...",
+                "contractAddressDescription": "Endereço do contrato inteligente para a tua coleção de tokens/NFT",
+                "tokenSymbol": "Símbolo do Token",
+                "tokenSymbolPlaceholder": "TOKEN",
+                "tokenSymbolDescription": "Símbolo para o teu token (ex., ETH, BTC)",
+                "chainSymbol": "Símbolo da Cadeia",
+                "chainSymbolPlaceholder": "ETH",
+                "chainSymbolDescription": "Símbolo da moeda nativa da cadeia",
+                "rpcUrl": "URL RPC (Opcional)",
+                "rpcUrlPlaceholder": "https://mainnet.infura.io/v3/O-TEU-ID-PROJETO",
+                "rpcUrlDescription": "Endpoint RPC personalizado (Infura, Alchemy, etc.) - deixar vazio para usar predefinido"
+            },
+            "security": {
+                "title": "Segurança e Acesso",
+                "description": "Protege e segura o teu website",
+                "enableTurnstile": "Ativar Turnstile",
+                "enableTurnstileDescription": "Ativar verificação de segurança Cloudflare Turnstile",
+                "turnstileSiteKey": "Chave de Site Turnstile",
+                "turnstileSiteKeyPlaceholder": "1x00000000000000000000",
+                "allowRegistration": "Permitir Registo de Utilizadores",
+                "allowRegistrationDescription": "Permitir que novos utilizadores criem contas",
+                "enableFrontend": "Ativar Frontend",
+                "enableFrontendDescription": "Permitir acesso ao website público",
+                "baseUrl": "URL Base",
+                "baseUrlPlaceholder": "https://teusite.com",
+                "baseUrlDescription": "Para substituir a URL, atualiza a tua variável de ambiente NEXTAUTH_URL"
+            },
+            "services": {
+                "title": "Serviços de Terceiros",
+                "description": "Configura integrações com serviços externos (Google Analytics, Google Maps, etc.)",
+                "googleAnalytics": {
+                    "title": "Google Analytics",
+                    "enableAnalytics": "Ativar Google Analytics",
+                    "enableAnalyticsDescription": "Rastreia análises de visitantes do website usando Google Analytics",
+                    "measurementId": "ID de Medição",
+                    "measurementIdDescription": "O teu ID de medição do Google Analytics (começa com G-)",
+                    "measurementIdPlaceholder": "G-XXXXXXXXXX",
+                    "howToGetId": "Como obter o teu ID de Medição:",
+                    "step1": "Vai às definições de Administrador do Google Analytics",
+                    "step2": "Seleciona a tua propriedade",
+                    "step3": "Em Propriedade, clica em Fluxos de Dados",
+                    "step4": "Clica no teu fluxo web",
+                    "step5": "Copia o ID de Medição (começa com G-)"
+                },
+                "googleMaps": {
+                    "title": "Integração Google Maps",
+                    "description": "Ativa Google Maps e fornece chave API para serviços de Lugares/Mapas",
+                    "enableMaps": "Ativar Google Maps",
+                    "enableMapsDescription": "Ativar integração Google Maps para serviços de localização",
+                    "mapsApiKey": "Chave API Google Maps",
+                    "mapsApiKeyPlaceholder": "AIza..."
+                }
+            },
+            "storage": {
+                "title": "Armazenamento de Ficheiros",
+                "description": "Configura armazenamento compatível com S3 para uploads de ficheiros (Cloudflare R2, AWS S3, DigitalOcean Spaces, etc.)",
+                "enableS3": "Ativar Armazenamento S3/R2",
+                "enableS3Description": "Usa armazenamento compatível com S3 para uploads de ficheiros em vez de variáveis de ambiente",
+                "configNote": "As credenciais de armazenamento configuradas aqui substituirão as variáveis de ambiente. Deixa os campos vazios para usar variáveis de ambiente.",
+                "endpoint": "URL do Endpoint",
+                "endpointDescription": "URL do endpoint compatível com S3 (ex: Cloudflare R2, AWS S3, DigitalOcean Spaces)",
+                "region": "Região",
+                "regionDescription": "Região de armazenamento (usa 'auto' para Cloudflare R2)",
+                "accessKey": "Access Key ID",
+                "accessKeyPlaceholder": "Introduz a tua access key",
+                "accessKeyDescription": "O teu ID de access key compatível com S3",
+                "secretKey": "Secret Access Key",
+                "secretKeyPlaceholder": "Introduz a tua secret key",
+                "secretKeyDescription": "A tua secret access key compatível com S3 (mantém isto seguro)",
+                "bucket": "Nome do Bucket",
+                "bucketPlaceholder": "meu-bucket-nome",
+                "bucketDescription": "O nome do teu bucket de armazenamento",
+                "publicUrl": "URL Público (Opcional)",
+                "publicUrlDescription": "Domínio personalizado para acesso a ficheiros públicos (ex: cdn.teudominio.com)"
+            }
+        }
+    }
+}

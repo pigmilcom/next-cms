@@ -1,0 +1,54 @@
+{
+    "GDPR": {
+        "consentModal": {
+            "title": "On utilise des cookies 🍪",
+            "description": "C'est pour rendre ton expérience plus cool. Tu peux gérer tes prefs ci-dessous.",
+            "acceptAllBtn": "Tout accepter",
+            "acceptNecessaryBtn": "Tout refuser",
+            "showPreferencesBtn": "Gérer mes prefs",
+            "footer": "Politique de confidentialité"
+        },
+        "preferencesModal": {
+            "title": "Gère tes cookies",
+            "acceptAllBtn": "Tout accepter",
+            "acceptNecessaryBtn": "Tout refuser",
+            "savePreferencesBtn": "Valider mes choix",
+            "closeIconLabel": "Fermer",
+            "serviceCounterLabel": "Service|Services",
+            "sections": {
+                "privacyChoices": {
+                    "title": "Tes choix de vie privée",
+                    "description": "Ici tu peux dire comment tu veux qu'on gère tes infos persos. Tu peux changer ça quand tu veux avec le lien. Si tu veux rien partager, coupe les switchs ou clique sur « Tout refuser » puis confirme."
+                },
+                "necessary": {
+                    "title": "Strictement nécessaires",
+                    "description": "Ces cookies sont vitaux pour que le site marche bien, impossible de les désactiver."
+                },
+                "analytics": {
+                    "title": "Perf' et Analytics",
+                    "description": "Ces cookies servent à capter comment tu utilises le site. Tout est anonyme, t'inquiète pas, personne peut t'identifier."
+                },
+                "advertising": {
+                    "title": "Pub & ciblage",
+                    "description": "Ces cookies rendent la pub plus adaptée à toi et tes goûts. L'idée c'est de te montrer des pubs utiles et pas relou."
+                },
+                "moreInfo": {
+                    "title": "Plus d'infos",
+                    "description": "Si t'as des questions sur ma politique cookies ou tes choix, contacte-nous."
+                }
+            },
+            "cookieTable": {
+                "caption": "Table des cookies",
+                "headers": {
+                    "name": "Cookie",
+                    "domain": "Domaine",
+                    "desc": "Description"
+                },
+                "cookies": {
+                    "ga": "Cookie de suivi Google Analytics",
+                    "gid": "Cookie d'identifiant Google Analytics"
+                }
+            }
+        }
+    }
+}

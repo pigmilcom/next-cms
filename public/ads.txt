@@ -1,0 +1,23 @@
+# ads.txt file for your domain
+# This file declares authorized digital sellers for advertising on this website
+# Format: <FIELD #1>, <FIELD #2>, <FIELD #3>, <FIELD #4>
+# FIELD #1: Domain name of the advertising system
+# FIELD #2: Publisher Account ID
+# FIELD #3: Type of Account/Relationship (DIRECT or RESELLER)
+# FIELD #4: Certification Authority ID (optional)
+
+# Example entries - Replace with your actual advertising partners:
+# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+# appnexus.com, 12345, RESELLER, f5ab79cb980f11d1
+
+# If you don't use ads yet, you can leave this file with just comments
+# or add a placeholder line to indicate the file is intentional:
+placeholder.example, 0000000000, DIRECT
+
+# Instructions:
+# 1. If you use Google AdSense, add your publisher ID from AdSense dashboard
+# 2. If you work with ad networks, ask them for their ads.txt entry
+# 3. Each advertising partner should provide their specific line to add here
+# 4. Remove the placeholder line above when you add real entries
+
+# For more information, visit: https://iabtechlab.com/ads-txt/

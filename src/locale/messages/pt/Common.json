@@ -1,0 +1,61 @@
+
+{
+    "Common": { 
+        "Errors": { 
+            "404": {
+                "title": "Oops!",
+                "message": "A página que procura não existe ou foi movida para outra localização.",
+                "goBack": "Voltar",
+                "tryThesePages": "Ou experimenta uma destas páginas:",
+                "links": {
+                    "homepage": "Página Inicial",
+                    "examplePage": "Página de Exemplo",
+                    "blankPage": "Página em Branco",
+                    "myAccount": "A Minha Conta",
+                    "logout": "Sair",
+                    "login": "Entrar",
+                    "register": "Criar nova conta"
+                }
+            },
+            "500": {
+                "title": "Oops!",
+                "message": "Algo correu mal. Ocorreu um erro inesperado no servidor.",
+                "notification": "A nossa equipa foi notificada e está a trabalhar para resolver o problema.",
+                "tryAgain": "Tentar novamente",
+                "goBack": "Voltar",
+                "tryThesePages": "Ou experimenta uma destas páginas:"
+            },
+            "admin": {
+                "404": {
+                    "title": "404",
+                    "subtitle": "Página Não Encontrada",
+                    "message": "A página que estás a tentar aceder não existe ou foi removida.",
+                    "checkUrl": "Verifica o URL ou utiliza a navegação abaixo para encontrar o que procuras.",
+                    "adminDashboard": "Dashboard Admin",
+                    "quickLinks": "Links Rápidos:",
+                    "returnToSite": "Voltar ao Site Principal"
+                },
+                "500": {
+                    "title": "500",
+                    "subtitle": "Erro do Servidor",
+                    "message": "Ocorreu um erro inesperado no painel de administração.",
+                    "tryReload": "Por favor, tenta recarregar a página ou volta ao dashboard principal.",
+                    "errorDetails": "Detalhes do erro (desenvolvimento):",
+                    "tryAgain": "Tentar Novamente",
+                    "adminDashboard": "Dashboard Admin",
+                    "quickLinks": "Links Rápidos:",
+                    "returnToSite": "Voltar ao Site Principal"
+                },
+                "links": {
+                    "users": "Utilizadores",
+                    "orders": "Encomendas",
+                    "catalog": "Catálogo",
+                    "analytics": "Analytics",
+                    "marketing": "Marketing",
+                    "settings": "Definições",
+                    "database": "Base de Dados"
+                }
+            }
+        }
+    }
+}

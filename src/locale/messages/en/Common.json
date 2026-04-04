@@ -1,0 +1,61 @@
+
+{
+    "Common": { 
+        "Errors": { 
+            "404": {
+                "title": "Oops!",
+                "message": "The page you are looking for does not exist or has been moved to another location.",
+                "goBack": "Go back",
+                "tryThesePages": "Or try one of these pages:",
+                "links": {
+                    "homepage": "Homepage",
+                    "examplePage": "Example Page",
+                    "blankPage": "Blank Page",
+                    "myAccount": "My Account",
+                    "logout": "Logout",
+                    "login": "Login",
+                    "register": "Create new account"
+                }
+            },
+            "500": {
+                "title": "Oops!",
+                "message": "Something went wrong. An unexpected error occurred on the server.",
+                "notification": "Our team has been notified and is working to resolve the issue.",
+                "tryAgain": "Try again",
+                "goBack": "Go back",
+                "tryThesePages": "Or try one of these pages:"
+            },
+            "admin": {
+                "404": {
+                    "title": "404",
+                    "subtitle": "Page Not Found",
+                    "message": "The page you are trying to access does not exist or has been removed.",
+                    "checkUrl": "Check the URL or use the navigation below to find what you are looking for.",
+                    "adminDashboard": "Admin Dashboard",
+                    "quickLinks": "Quick Links:",
+                    "returnToSite": "Return to Main Site"
+                },
+                "500": {
+                    "title": "500",
+                    "subtitle": "Server Error",
+                    "message": "An unexpected error occurred in the admin panel.",
+                    "tryReload": "Please try reloading the page or return to the main dashboard.",
+                    "errorDetails": "Error details (development):",
+                    "tryAgain": "Try Again",
+                    "adminDashboard": "Admin Dashboard",
+                    "quickLinks": "Quick Links:",
+                    "returnToSite": "Return to Main Site"
+                },
+                "links": {
+                    "users": "Users",
+                    "orders": "Orders",
+                    "catalog": "Catalog",
+                    "analytics": "Analytics",
+                    "marketing": "Marketing",
+                    "settings": "Settings",
+                    "database": "Database"
+                }
+            }
+        }
+    }
+}

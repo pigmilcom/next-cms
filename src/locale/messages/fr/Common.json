@@ -1,0 +1,61 @@
+
+{
+    "Common": { 
+        "Errors": { 
+            "404": {
+                "title": "Oups !",
+                "message": "La page que vous recherchez n'existe pas ou a été déplacée vers un autre emplacement.",
+                "goBack": "Retour",
+                "tryThesePages": "Ou essayez l'une de ces pages :",
+                "links": {
+                    "homepage": "Page d'Accueil",
+                    "examplePage": "Page d'Exemple",
+                    "blankPage": "Page Vierge",
+                    "myAccount": "Mon Compte",
+                    "logout": "Déconnexion",
+                    "login": "Connexion",
+                    "register": "Créer un nouveau compte"
+                }
+            },
+            "500": {
+                "title": "Oups !",
+                "message": "Quelque chose s'est mal passé. Une erreur inattendue s'est produite sur le serveur.",
+                "notification": "Notre équipe a été notifiée et travaille à résoudre le problème.",
+                "tryAgain": "Réessayer",
+                "goBack": "Retour",
+                "tryThesePages": "Ou essayez l'une de ces pages :"
+            },
+            "admin": {
+                "404": {
+                    "title": "404",
+                    "subtitle": "Page Non Trouvée",
+                    "message": "La page à laquelle vous essayez d'accéder n'existe pas ou a été supprimée.",
+                    "checkUrl": "Vérifiez l'URL ou utilisez la navigation ci-dessous pour trouver ce que vous cherchez.",
+                    "adminDashboard": "Tableau de Bord Admin",
+                    "quickLinks": "Liens Rapides :",
+                    "returnToSite": "Retour au Site Principal"
+                },
+                "500": {
+                    "title": "500",
+                    "subtitle": "Erreur du Serveur",
+                    "message": "Une erreur inattendue s'est produite dans le panneau d'administration.",
+                    "tryReload": "Veuillez essayer de recharger la page ou retourner au tableau de bord principal.",
+                    "errorDetails": "Détails de l'erreur (développement) :",
+                    "tryAgain": "Réessayer",
+                    "adminDashboard": "Tableau de Bord Admin",
+                    "quickLinks": "Liens Rapides :",
+                    "returnToSite": "Retour au Site Principal"
+                },
+                "links": {
+                    "users": "Utilisateurs",
+                    "orders": "Commandes",
+                    "catalog": "Catalogue",
+                    "analytics": "Analyses",
+                    "marketing": "Marketing",
+                    "settings": "Paramètres",
+                    "database": "Base de Données"
+                }
+            }
+        }
+    }
+}

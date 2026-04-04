@@ -1,0 +1,61 @@
+
+{
+    "Common": { 
+        "Errors": { 
+            "404": {
+                "title": "¡Ups!",
+                "message": "La página que estás buscando no existe o ha sido movida a otra ubicación.",
+                "goBack": "Volver",
+                "tryThesePages": "O prueba una de estas páginas:",
+                "links": {
+                    "homepage": "Página Principal",
+                    "examplePage": "Página de Ejemplo",
+                    "blankPage": "Página en Blanco",
+                    "myAccount": "Mi Cuenta",
+                    "logout": "Cerrar Sesión",
+                    "login": "Iniciar Sesión",
+                    "register": "Crear nueva cuenta"
+                }
+            },
+            "500": {
+                "title": "¡Ups!",
+                "message": "Algo salió mal. Ocurrió un error inesperado en el servidor.",
+                "notification": "Nuestro equipo ha sido notificado y está trabajando para resolver el problema.",
+                "tryAgain": "Intentar de nuevo",
+                "goBack": "Volver",
+                "tryThesePages": "O prueba una de estas páginas:"
+            },
+            "admin": {
+                "404": {
+                    "title": "404",
+                    "subtitle": "Página No Encontrada",
+                    "message": "La página a la que intentas acceder no existe o ha sido eliminada.",
+                    "checkUrl": "Verifica la URL o utiliza la navegación a continuación para encontrar lo que buscas.",
+                    "adminDashboard": "Panel de Administración",
+                    "quickLinks": "Enlaces Rápidos:",
+                    "returnToSite": "Volver al Sitio Principal"
+                },
+                "500": {
+                    "title": "500",
+                    "subtitle": "Error del Servidor",
+                    "message": "Ocurrió un error inesperado en el panel de administración.",
+                    "tryReload": "Por favor, intenta recargar la página o vuelve al panel principal.",
+                    "errorDetails": "Detalles del error (desarrollo):",
+                    "tryAgain": "Intentar de Nuevo",
+                    "adminDashboard": "Panel de Administración",
+                    "quickLinks": "Enlaces Rápidos:",
+                    "returnToSite": "Volver al Sitio Principal"
+                },
+                "links": {
+                    "users": "Usuarios",
+                    "orders": "Pedidos",
+                    "catalog": "Catálogo",
+                    "analytics": "Analíticas",
+                    "marketing": "Marketing",
+                    "settings": "Configuración",
+                    "database": "Base de Datos"
+                }
+            }
+        }
+    }
+}

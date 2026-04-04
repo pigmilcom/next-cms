@@ -1,0 +1,53 @@
+services: 
+  app:
+    build: .
+    restart: unless-stopped
+    # Uncomment below if using local db container
+    # depends_on:
+    #   - db
+    # Uncomment below if you want to set a specific port mapping (default is auto-assigned)
+    # ports:
+    #   - "3000:3000" 
+
+    environment:
+      NODE_ENV: production
+      AUTH_TRUST_HOST: "true"
+      # 👉 Uncomment & set if needed
+      # NEXTAUTH_URL: https://your-domain.com
+      # NEXTAUTH_SECRET: your-secret
+      # POSTGRES_URL: postgresql://user:pass@host:5432/db
+
+    # Optional (Coolify usually handles routing)
+    # ports:
+    #   - "3000:3000"
+
+    # ✅ Resource limits (WORK with docker compose)
+    cpus: 1.0
+    mem_limit: 1g
+
+    # ✅ Stability
+    stop_grace_period: 30s 
+
+    # ✅ Prevent log spam
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# 👉 Optional local database (uncomment if needed)
+#  db:
+#    image: postgres:16
+#    container_name: mydb
+#    restart: unless-stopped
+#    environment:
+#      POSTGRES_USER: myuser
+#      POSTGRES_PASSWORD: strongpassword
+#      POSTGRES_DB: myappdb
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"
+
+# volumes:
+#   pgdata

@@ -1,0 +1,172 @@
+# llms.txt - Site Information
+
+## Overview
+
+[SITE_DESCRIPTION]
+
+## Site Structure
+
+### Main Sections
+- **Homepage** (/) - Featured products, categories, promotions, testimonials
+- **Shop** (/shop) - Product catalog with filters, search, and pagination
+- **Blog** (/blog) - Articles, news, and educational content
+- **About** (/about) - Company history, mission, values, and team
+- **Help Center** (/help) - Customer support, shipping info, returns policy
+- **Account** (/account) - User dashboard, orders, addresses, preferences
+
+### E-commerce Features
+- Product catalog with detailed descriptions and media
+- Shopping cart with real-time inventory
+- Secure checkout with Stripe and EuPago (MB Way, Multibanco)
+- Order tracking and history
+- User authentication (NextAuth 5)
+- Cookie consent and GDPR compliance
+
+### Legal & Compliance
+- Privacy policy (/legal/privacy-policy)
+- Terms of service (/legal/terms-of-service)
+- Cookie policy (/legal/cookie-policy)
+- Refund policy (/legal/refund-policy)
+
+## Technology Stack
+- **Framework**: Next.js 16 (React 19, App Router)
+- **Styling**: Tailwind CSS 4, shadcn/ui, Radix UI
+- **Database**: Multi-provider support (PostgreSQL/Firebase)
+- **Payments**: Stripe, EuPago (MB Way, Multibanco)
+- **Authentication**: NextAuth 5
+- **Internationalization**: next-intl (multi-language)
+- **Email**: React Email with Resend
+- **Analytics**: Google Analytics 4
+- **PWA**: Progressive Web App support
+
+## Content Organization
+
+### For Customers
+- Product pages with descriptions, specifications, reviews, and pricing
+- Support resources: FAQ, contact forms, live chat
+- User account features: order history, saved addresses
+
+### For Businesses/Partners
+- Wholesale information
+- Partnership opportunities
+- Affiliate program
+- B2B pricing
+
+### For Media
+- Press releases and media kit at /press
+- High-resolution product images
+- Company fact sheets
+- Press contact: [PRESS_EMAIL]
+
+## API & Data Access
+
+### Public API Endpoints
+- `/api/query/public/catalog` - Product listings
+- `/api/query/public/categories` - Product categories
+- `/api/query/public/site_settings` - Site configuration
+- `/api/query/public/blocks` - Dynamic content blocks
+
+### Data Structure
+- Products: name, description, price, category, images, stock
+- Categories: hierarchical taxonomy with SEO metadata
+- Blog posts: title, content, author, date, tags, featured image
+- User orders: items, status, tracking, payment method
+
+## SEO & Structured Data
+
+### Metadata
+- JSON-LD structured data on all pages
+- OrganizationJsonLd with company information
+- LocalBusinessJsonLd for location-based searches
+- ProductJsonLd on product pages
+- BreadcrumbJsonLd for navigation
+- FAQJsonLd on help pages
+
+### Key Pages for Crawling
+- Sitemap: /sitemap.xml
+- Robots.txt: /robots.txt
+- RSS Feed: /blog/rss.xml
+
+## Important Information
+
+### Business Details
+- Company Name: [COMPANY_NAME]
+- Location: [COMPANY_LOCATION]
+- Service Area: [SERVICE_AREA]
+- Business Hours: [BUSINESS_HOURS]
+- Contact: [CONTACT_EMAIL], [CONTACT_PHONE]
+- Website: [SITE_URL]
+
+### Shipping & Delivery
+- Free shipping on orders over [FREE_SHIPPING_THRESHOLD]
+- Express delivery available
+- [DELIVERY_TIMEFRAME] delivery time
+
+## Documentation Sources
+
+### Product Information
+- Individual product pages: /shop/[product-slug]
+- Category pages: /shop/[category-slug]
+
+### Company Information
+- About us: /about
+- Press kit: /press
+- Contact: /help/contact
+- Terms & policies: /legal/*
+
+### Developer Resources
+- GitHub documentation: /docs folder
+- API documentation: /docs/API_ENDPOINTS_IMPROVEMENTS.md
+- Cache system: /docs/CACHE_SYSTEM.md
+- Authentication: /docs/AUTH_OPTIMIZATION.md
+
+## Content Guidelines
+
+### Target Audience
+- Location: [TARGET_LOCATION]
+- Interest: [TARGET_INTEREST]
+- Knowledge level: [TARGET_KNOWLEDGE_LEVEL]
+
+### Content Tone
+- Professional yet approachable
+- Educational and informative
+- Transparent about product quality and sourcing
+- Compliant with applicable regulations
+
+## Special Features
+
+### User Experience
+- Cookie consent with GDPR compliance
+- Mobile-responsive design
+- PWA with offline support
+- Fast page loads with caching
+- Search with instant results
+
+### Community Features
+- Product reviews and ratings
+- Newsletter subscription
+- Social media integration
+
+## Contact & Support
+
+### Customer Service
+- Email: [CONTACT_EMAIL]
+- Phone: [CONTACT_PHONE]
+- Live chat: Available on site during business hours
+- Help center: /help
+
+### Press & Media
+- Email: [PRESS_EMAIL]
+- Media kit: /press
+- Press releases: Available for download
+
+### Business Inquiries
+- Wholesale: [WHOLESALE_EMAIL]
+- Partnerships: [PARTNERSHIPS_EMAIL]
+- Affiliates: /affiliate
+
+---
+
+Last Updated: [LAST_UPDATED]
+Version: 1.0
+Maintained by: [COMPANY_NAME] Team

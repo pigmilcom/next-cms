@@ -1,0 +1,19 @@
+{
+    "SMS": {
+        "greeting": "Olá",
+        "hi": "Olá",
+        "verification": {
+            "message": "O seu código de verificação é: {{code}}. Não partilhe este código com ninguém."
+        },
+        "orderStatus": {
+            "processing": "A sua encomenda está a ser processada e será enviada em breve.",
+            "delivered": "A sua encomenda foi entregue! Esperamos que goste da sua compra.",
+            "complete": "A sua encomenda está completa. Obrigado pela sua compra!",
+            "cancelled": "A sua encomenda foi cancelada. Se tiver questões, por favor contacte-nos.",
+            "pending": "A sua encomenda está pendente de confirmação.",
+            "default": "O estado da sua encomenda foi atualizado para: {{status}}.",
+            "tracking": "Rastreio",
+            "trackOrder": "Rastrear encomenda"
+        }
+    }
+}

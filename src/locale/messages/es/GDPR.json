@@ -1,0 +1,54 @@
+{
+    "GDPR": {
+        "consentModal": {
+            "title": "Usamos cookies",
+            "description": "Usamos cookies para mejorar tu experiencia. Gestiona tus preferencias a continuación.",
+            "acceptAllBtn": "Aceptar todo",
+            "acceptNecessaryBtn": "Rechazar todo",
+            "showPreferencesBtn": "Gestionar preferencias individuales",
+            "footer": "Política de privacidad"
+        },
+        "preferencesModal": {
+            "title": "Gestionar preferencias de cookies",
+            "acceptAllBtn": "Aceptar todo",
+            "acceptNecessaryBtn": "Rechazar todo",
+            "savePreferencesBtn": "Aceptar selección actual",
+            "closeIconLabel": "Cerrar modal",
+            "serviceCounterLabel": "Servicio|Servicios",
+            "sections": {
+                "privacyChoices": {
+                    "title": "Tus opciones de privacidad",
+                    "description": "En este panel puedes expresar algunas preferencias relacionadas con el procesamiento de tu información personal. Puedes revisar y cambiar las opciones expresadas en cualquier momento volviendo a este panel a través del enlace proporcionado. Para denegar tu consentimiento a las actividades de procesamiento específicas descritas a continuación, cambia los botones a desactivado o usa el botón \"Rechazar todo\" y confirma que quieres guardar tus opciones."
+                },
+                "necessary": {
+                    "title": "Estrictamente necesarias",
+                    "description": "Estas cookies son esenciales para el correcto funcionamiento del sitio web y no se pueden desactivar."
+                },
+                "analytics": {
+                    "title": "Rendimiento y analíticas",
+                    "description": "Estas cookies recopilan información sobre cómo usas nuestro sitio web. Todos los datos son anónimos y no se pueden usar para identificarte."
+                },
+                "advertising": {
+                    "title": "Orientación y publicidad",
+                    "description": "Estas cookies se utilizan para hacer que los mensajes publicitarios sean más relevantes para ti y tus intereses. La intención es mostrar anuncios que sean relevantes y atractivos para el usuario individual y, por lo tanto, más valiosos para editores y anunciantes de terceros."
+                },
+                "moreInfo": {
+                    "title": "Más información",
+                    "description": "Para cualquier consulta en relación con mi política sobre cookies y tus opciones, por favor contáctanos"
+                }
+            },
+            "cookieTable": {
+                "caption": "Tabla de cookies",
+                "headers": {
+                    "name": "Cookie",
+                    "domain": "Dominio",
+                    "desc": "Descripción"
+                },
+                "cookies": {
+                    "ga": "Cookie de seguimiento de Google Analytics",
+                    "gid": "Cookie de identificador de Google Analytics"
+                }
+            }
+        }
+    }
+}

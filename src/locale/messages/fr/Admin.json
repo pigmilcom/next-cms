@@ -1,0 +1,1495 @@
+{
+    "Admin": {
+        "Overview": {
+            "title": "Tableau de Bord",
+            "description": "Bon retour ! Voici ce qui se passe sur votre site web.",
+            "viewSite": "Voir le Site",
+            "stats": {
+                "customers": {
+                    "label": "Clients",
+                    "description": "Total des clients"
+                },
+                "orders": {
+                    "label": "Commandes",
+                    "description": "Total des commandes"
+                },
+                "catalog": {
+                    "label": "Catalogue",
+                    "description": "Articles dans le catalogue"
+                },
+                "revenue": {
+                    "label": "Revenus",
+                    "description": "Revenus totaux"
+                },
+                "categories": "Catégories",
+                "collections": "Collections",
+                "uptime": "Temps de Fonctionnement",
+                "loadTime": "Temps de Chargement"
+            },
+            "quickActions": {
+                "title": "Actions Rapides",
+                "description": "Accès rapide aux tâches administratives communes",
+                "manageCatalog": {
+                    "title": "Gérer le Catalogue",
+                    "description": "Voir et gérer les produits/services"
+                },
+                "manageUsers": {
+                    "title": "Gérer les Utilisateurs",
+                    "description": "Voir et gérer les comptes d'utilisateurs"
+                },
+                "viewOrders": {
+                    "title": "Voir les Commandes",
+                    "description": "Vérifier les commandes récentes et l'exécution"
+                },
+                "siteSettings": {
+                    "title": "Paramètres du Site",
+                    "description": "Configurer les paramètres du site web"
+                },
+                "systemMaintenance": {
+                    "title": "Maintenance du Système",
+                    "description": "Sauvegarde, cache et outils système"
+                }
+            },
+            "recentActivity": {
+                "title": "Activité Récente",
+                "description": "Dernières mises à jour et modifications sur votre site web",
+                "noActivity": "Aucune activité récente à afficher",
+                "noActivityHint": "L'activité apparaîtra ici lorsque vous utiliserez votre panneau admin"
+            },
+            "systemStatus": {
+                "title": "État du Système",
+                "description": "État actuel de la santé du système et notifications importantes",
+                "database": {
+                    "title": "État de la Base de Données",
+                    "operational": "Tous les systèmes opérationnels"
+                },
+                "api": {
+                    "title": "État de l'API",
+                    "responding": "Tous les endpoints répondent"
+                },
+                "cache": {
+                    "title": "État du Cache",
+                    "optimizationRecommended": "Optimisation recommandée"
+                }
+            }
+        },
+        "Navigation": {
+            "home": {
+                "dashboard": "Tableau de Bord",
+                "analyticsReports": "Analyses et Rapports"
+            },
+            "main": {
+                "access": "Accès",
+                "users": "Utilisateurs",
+                "rolesPermissions": "Rôles et Permissions",
+                "store": "Boutique",
+                "orders": "Commandes",
+                "catalog": "Catalogue",
+                "categories": "Catégories",
+                "collections": "Collections",
+                "attributes": "Attributs",
+                "customers": "Clients",
+                "coupons": "Coupons",
+                "reviews": "Avis",
+                "testimonials": "Témoignages",
+                "storeSettings": "Paramètres de la Boutique",
+                "media": "Médias",
+                "workspace": "Espace de Travail",
+                "agenda": "Agenda",
+                "taskBoard": "Tableau des Tâches",
+                "schedule": "Planning",
+                "marketing": "Marketing",
+                "campaigns": "Campagnes",
+                "templates": "Modèles",
+                "subscribers": "Abonnés",
+                "club": "Club",
+                "supportTickets": "Tickets de Support"
+            },
+            "developer": {
+                "database": "Base de Données",
+                "blocks": "Blocs",
+                "interface": "Interface",
+                "aiAgent": "Agent IA",
+                "api": "API",
+                "endpoints": "Endpoints",
+                "createApiKey": "Créer une Clé API",
+                "cronjobs": "Cronjobs"
+            },
+            "system": {
+                "settings": "Paramètres",
+                "maintenance": "Maintenance"
+            }
+        },
+        "Analytics": {
+            "header": {
+                "title": "Analytique",
+                "description": "Voir les analyses du site web et les statistiques des visiteurs"
+            },
+            "common": {
+                "selectedPeriod": "période sélectionnée",
+                "to": "à",
+                "now": "Maintenant"
+            },
+            "timePeriods": {
+                "last7days": "7 Derniers Jours",
+                "lastweek": "Semaine Dernière",
+                "last30days": "30 Derniers Jours",
+                "lastmonth": "Mois Dernier",
+                "last3months": "3 Derniers Mois",
+                "last6months": "6 Derniers Mois",
+                "lastyear": "Année Dernière"
+            },
+            "toasts": {
+                "fetchError": "Échec du chargement des données analytiques",
+                "filterApplied": "Filtre appliqué avec succès",
+                "filterCleared": "Filtre réinitialisé",
+                "showingPeriod": "Affichage de {period}",
+                "selectDateRange": "Veuillez sélectionner une date de début et de fin",
+                "clearSuccess": "Données analytiques supprimées avec succès",
+                "clearError": "Échec de la suppression des données analytiques"
+            },
+            "confirm": {
+                "clearAll": "Voulez-vous vraiment supprimer TOUTES les données analytiques ? Cette action est irréversible.",
+                "clearRange": "Voulez-vous vraiment supprimer les données analytiques de {start} à {end} ?"
+            },
+            "tabs": {
+                "overview": "Vue d'ensemble",
+                "website": "Site Web",
+                "marketing": "Marketing",
+                "ecommerce": "E-commerce",
+                "users": "Utilisateurs"
+            },
+            "filters": {
+                "dateRangeTitle": "Filtre par Période",
+                "dateRangeDescription": "Filtrer les données analytiques par période",
+                "startDate": "Date de Début",
+                "endDate": "Date de Fin",
+                "pickDate": "Choisir une date",
+                "apply": "Appliquer le Filtre",
+                "quickPeriods": "Périodes Rapides",
+                "selectTimePeriod": "Sélectionner une période",
+                "clear": "Effacer le Filtre",
+                "active": "Actif :",
+                "allTime": "Toute la période"
+            },
+            "charts": {
+                "visitors": "Visiteurs",
+                "revenue": "Revenus",
+                "email": "Email",
+                "sms": "SMS"
+            },
+            "aria": {
+                "areaChart": "Graphique en aires",
+                "lineChart": "Graphique en lignes",
+                "barChart": "Graphique en barres",
+                "pieChart": "Graphique circulaire",
+                "radialChart": "Graphique radial"
+            },
+            "empty": {
+                "visitorData": "Aucune donnée de visiteurs disponible",
+                "revenueData": "Aucune donnée de revenus disponible",
+                "countryData": "Aucune donnée par pays disponible",
+                "browserData": "Aucune donnée de navigateur disponible",
+                "deviceData": "Aucune donnée d'appareil disponible",
+                "hourlyData": "Aucune donnée horaire disponible",
+                "pageData": "Aucune donnée de pages disponible"
+            },
+            "stats": {
+                "uniqueVisitors": {
+                    "title": "Visiteurs Uniques",
+                    "description": "Adresses IP uniques"
+                },
+                "pageViews": {
+                    "title": "Vues de Page",
+                    "description": "Total des vues de page"
+                },
+                "campaignsSent": {
+                    "title": "Campagnes Envoyées",
+                    "description": "Total des campagnes envoyées"
+                },
+                "totalOrders": {
+                    "title": "Commandes Totales",
+                    "description": "Commandes de tous les temps"
+                },
+                "totalRevenue": {
+                    "title": "Revenus Totaux",
+                    "description": "Commandes finalisées"
+                },
+                "subscribers": {
+                    "title": "Abonnés",
+                    "description": "Abonnés actifs"
+                },
+                "avgPagesSession": {
+                    "title": "Moy. Pages/Session",
+                    "description": "Pages par visiteur"
+                },
+                "bounceRate": {
+                    "title": "Taux de Rebond",
+                    "description": "Visites d'une seule page"
+                }
+            },
+            "overviewCharts": {
+                "dailyVisitors": {
+                    "title": "Visiteurs Quotidiens",
+                    "description": "Trafic des visiteurs dans le temps"
+                },
+                "revenueOverTime": {
+                    "title": "Revenus dans le Temps",
+                    "description": "Performance quotidienne des revenus"
+                }
+            },
+            "website": {
+                "dailyVisitors": {
+                    "title": "Visiteurs Quotidiens",
+                    "description": "Trafic des visiteurs dans le temps"
+                },
+                "topCountries": {
+                    "title": "Principaux Pays",
+                    "description": "Visiteurs par pays"
+                },
+                "browserUsage": {
+                    "title": "Usage des Navigateurs",
+                    "description": "Navigateurs les plus utilisés"
+                },
+                "deviceTypes": {
+                    "title": "Types d'Appareils",
+                    "description": "Trafic desktop vs mobile"
+                },
+                "hourlyTraffic": {
+                    "title": "Trafic Horaire",
+                    "description": "Répartition du trafic par heure"
+                },
+                "topPages": {
+                    "title": "Pages Principales",
+                    "description": "Pages les plus visitées"
+                }
+            },
+            "clearSection": {
+                "websiteMetrics": {
+                    "title": "Métriques du Site",
+                    "description": "Contrôlez et gérez les données de métriques analytiques du site avec des options de filtrage par date ou suppression permanente de l'historique."
+                },
+                "close": "Fermer",
+                "clearData": "Effacer les Données",
+                "clearMetricsTitle": "Effacer les Données de Métriques",
+                "clearMetricsDescription": "Supprime définitivement les données de métriques analytiques. Cette action est irréversible.",
+                "clearOption": "Option de Suppression",
+                "selectClearOption": "Sélectionner une option",
+                "deleteAll": "Supprimer Toutes les Données de Métriques",
+                "deleteByRange": "Supprimer par Plage de Dates",
+                "clearing": "Suppression en cours...",
+                "confirmClear": "Confirmer la Suppression",
+                "cancel": "Annuler"
+            },
+            "marketing": {
+                "cards": {
+                    "emailsSent": {
+                        "title": "Emails Envoyés",
+                        "description": "Total des campagnes email"
+                    },
+                    "smsSent": {
+                        "title": "SMS Envoyés",
+                        "description": "Total des campagnes SMS"
+                    },
+                    "openRate": {
+                        "title": "Taux d'Ouverture",
+                        "description": "Taux d'ouverture des campagnes"
+                    },
+                    "clickRate": {
+                        "title": "Taux de Clic",
+                        "description": "Taux de clic des campagnes"
+                    }
+                },
+                "campaignPerformance": {
+                    "title": "Performance des Campagnes",
+                    "description": "Campagnes Email vs SMS",
+                    "sent": "Envoyé",
+                    "opened": "Ouvert",
+                    "clicked": "Cliqué"
+                },
+                "engagementRates": {
+                    "title": "Taux d'Engagement",
+                    "description": "Taux d'ouverture et de clic"
+                }
+            },
+            "ecommerce": {
+                "cards": {
+                    "pendingOrders": {
+                        "title": "Commandes en Attente",
+                        "description": "Commandes en attente"
+                    },
+                    "completedOrders": {
+                        "title": "Commandes Terminées",
+                        "description": "Commandes terminées"
+                    }
+                },
+                "orderStatus": {
+                    "title": "État des Commandes",
+                    "description": "Répartition par état"
+                },
+                "status": {
+                    "pending": "En attente",
+                    "completed": "Terminée",
+                    "other": "Autre"
+                },
+                "revenueMetrics": {
+                    "title": "Métriques de Revenus",
+                    "description": "Valeur moyenne des commandes et conversion",
+                    "averageOrderValue": "Valeur Moyenne de Commande",
+                    "conversionRate": "Taux de Conversion",
+                    "completionRate": "Taux de Finalisation"
+                }
+            },
+            "users": {
+                "cards": {
+                    "totalUsers": {
+                        "title": "Total Utilisateurs",
+                        "description": "Utilisateurs enregistrés"
+                    },
+                    "newUsers": {
+                        "title": "Nouveaux Utilisateurs",
+                        "description": "Sur la période sélectionnée"
+                    },
+                    "totalSubscribers": {
+                        "title": "Total Abonnés",
+                        "description": "Abonnés newsletter"
+                    },
+                    "activeSubscribers": {
+                        "title": "Abonnés Actifs",
+                        "description": "Abonnés actifs"
+                    }
+                },
+                "userGrowth": {
+                    "title": "Croissance des Utilisateurs",
+                    "description": "Nouveaux vs existants",
+                    "existingUsers": "Utilisateurs Existants"
+                },
+                "subscriberStatus": {
+                    "title": "Statut des Abonnés",
+                    "description": "Actifs vs inactifs",
+                    "active": "Actif",
+                    "inactive": "Inactif"
+                }
+            }
+        },
+        "Orders": {
+            "header": {
+                "title": "Commandes",
+                "description": "Gérez et suivez vos commandes"
+            },
+            "common": {
+                "yes": "Oui",
+                "no": "Non",
+                "na": "N/D",
+                "invalidDate": "Date invalide"
+            },
+            "status": {
+                "order": {
+                    "pending": "En attente",
+                    "processing": "En cours",
+                    "delivered": "Livrée",
+                    "complete": "Terminée",
+                    "cancelled": "Annulée"
+                },
+                "payment": {
+                    "pending": "En attente",
+                    "processing": "En cours",
+                    "paid": "Payé",
+                    "failed": "Échoué",
+                    "refunded": "Remboursé",
+                    "cancelled": "Annulé"
+                },
+                "method": {
+                    "none": "Aucun/En attente",
+                    "card": "Carte de crédit/débit",
+                    "bank_transfer": "Virement bancaire",
+                    "pay_on_delivery": "Paiement à la livraison",
+                    "cash": "Espèces",
+                    "crypto": "Cryptomonnaie",
+                    "eupago_mb": "Multibanco (EuPago)",
+                    "eupago_mbway": "MB WAY (EuPago)"
+                }
+            },
+            "actions": {
+                "viewDetails": "Voir les détails",
+                "editNotes": "Modifier les notes",
+                "editStatus": "Modifier le statut",
+                "editPayment": "Modifier le paiement",
+                "generateInvoice": "Générer la facture",
+                "deleteOrder": "Supprimer la commande",
+                "retrying": "Nouvelle tentative...",
+                "retryConnection": "Réessayer la connexion",
+                "retryNow": "Réessayer maintenant",
+                "resetFilters": "Réinitialiser tous les filtres",
+                "reset": "Réinitialiser",
+                "hideFilters": "Masquer les filtres",
+                "showFilters": "Afficher les filtres",
+                "refreshPaymentStatus": "Actualiser le statut des paiements",
+                "refreshing": "Actualisation...",
+                "refresh": "Actualiser",
+                "exportCsv": "Exporter CSV",
+                "newOrder": "Nouvelle commande",
+                "cancel": "Annuler",
+                "saving": "Enregistrement...",
+                "saveNotes": "Enregistrer les notes",
+                "updating": "Mise à jour...",
+                "updateStatus": "Mettre à jour le statut",
+                "updatePayment": "Mettre à jour le paiement",
+                "creating": "Création...",
+                "createOrder": "Créer la commande"
+            },
+            "errors": {
+                "connectionErrorTitle": "Erreur de connexion",
+                "connectionFailed": "La connexion a échoué. Vérifiez votre connexion internet et réessayez.",
+                "connectionIssuesDetected": "Des problèmes de connexion ont été détectés. Les données peuvent ne pas être à jour.",
+                "selectedCustomerInvalid": "Client sélectionné introuvable. Sélectionnez un client valide ou créez-en un nouveau."
+            },
+            "table": {
+                "columns": {
+                    "orderId": "ID commande",
+                    "customer": "Client",
+                    "total": "Total",
+                    "status": "Statut",
+                    "createdAt": "Créé le"
+                },
+                "emptyMessage": "Aucune commande trouvée"
+            },
+            "filters": {
+                "status": { "placeholder": "Statut", "all": "Tous les statuts" },
+                "paymentStatus": { "placeholder": "Paiement", "all": "Tous les paiements" },
+                "paymentMethod": { "placeholder": "Méthode", "all": "Toutes les méthodes" },
+                "dateRange": {
+                    "placeholder": "Période",
+                    "all": "Toutes les dates",
+                    "today": "Aujourd'hui",
+                    "yesterday": "Hier",
+                    "last7days": "7 derniers jours",
+                    "last30days": "30 derniers jours",
+                    "thismonth": "Ce mois-ci",
+                    "lastmonth": "Mois dernier"
+                },
+                "orderBy": {
+                    "placeholder": "Trier par",
+                    "newest": "Plus récentes d'abord",
+                    "oldest": "Plus anciennes d'abord",
+                    "highestTotal": "Total le plus élevé",
+                    "lowestTotal": "Total le plus bas",
+                    "customerName": "Nom du client"
+                },
+                "tags": {
+                    "status": "Statut",
+                    "payment": "Paiement",
+                    "method": "Méthode",
+                    "date": "Date",
+                    "sort": "Tri"
+                }
+            },
+            "dialogs": {
+                "orderDetails": {
+                    "title": "Détails de la commande",
+                    "tabs": {
+                        "details": "Détails",
+                        "customer": "Client",
+                        "payment": "Paiement",
+                        "status": "Statut"
+                    },
+                    "copyOrderId": "Copier l'ID complet de la commande",
+                    "copyTransactionId": "Copier l'ID complet de transaction",
+                    "internalNotesPlaceholder": "Ajouter des notes internes (visibles uniquement par les administrateurs)..."
+                },
+                "editStatus": {
+                    "title": "Modifier le statut de la commande",
+                    "description": "Mettre à jour le statut et le suivi de la commande #{orderId}",
+                    "selectStatus": "Sélectionner un statut",
+                    "tracking": "Saisir le numéro de suivi",
+                    "trackingOptional": "Saisir le numéro de suivi (optionnel)",
+                    "trackingOptionalLabel": "Numéro de suivi (optionnel)",
+                    "verifyingPhone": "Vérification du numéro de téléphone...",
+                    "selectSmsPhone": "Sélectionnez le numéro pour envoyer le SMS :",
+                    "phonePlaceholder": "+351 912 345 678"
+                },
+                "editPayment": {
+                    "title": "Modifier les informations de paiement",
+                    "description": "Mettre à jour le statut et la méthode de paiement pour la commande #{orderId}",
+                    "selectPaymentStatus": "Sélectionner le statut du paiement",
+                    "selectPaymentMethod": "Sélectionner la méthode de paiement"
+                },
+                "createOrder": {
+                    "title": "Créer une nouvelle commande",
+                    "description": "Créez une commande manuellement et envoyez éventuellement une notification email au client.",
+                    "selectCustomer": "Sélectionner un client existant ou en créer un nouveau",
+                    "createNewCustomer": "Créer un nouveau client",
+                    "unnamedCustomer": "Client sans nom",
+                    "addItemFromCatalog": "Ajouter un article depuis le catalogue",
+                    "addCustomItem": "Ajouter un article personnalisé",
+                    "selectPaymentMethod": "Sélectionner la méthode de paiement",
+                    "discountPercentagePlaceholder": "0-100",
+                    "discountFixedPlaceholder": "0.00",
+                    "taxRatePlaceholder": "20.00"
+                },
+                "confirmStatusChange": {
+                    "title": "Confirmer le changement de statut",
+                    "description": "Voulez-vous vraiment changer le statut de la commande {orderId} en \"{status}\" ?",
+                    "trackingPlaceholder": "Saisir le numéro de suivi..."
+                }
+            },
+            "confirm": {
+                "deleteOrder": {
+                    "title": "Supprimer la commande",
+                    "description": "Voulez-vous vraiment supprimer la commande #{orderId} ? Cette action est irréversible.",
+                    "confirmText": "Supprimer"
+                },
+                "editStatus": {
+                    "title": "Modifier le statut de la commande",
+                    "description": "Cette commande est déjà {status}. Voulez-vous vraiment modifier le statut d'une commande {status} ?",
+                    "confirmText": "Continuer"
+                }
+            },
+            "confirmStatus": {
+                "includeTrackingNumber": "Inclure le numéro de suivi",
+                "optional": "optionnel",
+                "recommendedTracking": "Recommandé pour les commandes livrées/terminées"
+            },
+            "create": {
+                "customerInfo": "Informations client",
+                "firstName": "Prénom",
+                "lastName": "Nom",
+                "email": "Email",
+                "phone": "Téléphone",
+                "shippingAddress": "Adresse de livraison",
+                "streetAddress": "Adresse",
+                "apartmentUnit": "Appartement/Unité",
+                "city": "Ville",
+                "state": "État/Région",
+                "zipCode": "Code postal",
+                "country": "Pays",
+                "orderDetails": "Détails de la commande",
+                "addCustomItem": "Ajouter un article personnalisé",
+                "product": "Produit",
+                "quantity": "Qté",
+                "price": "Prix",
+                "remove": "Supprimer",
+                "paymentMethod": "Méthode de paiement",
+                "orderStatus": "Statut de la commande",
+                "sendConfirmationEmail": "Envoyer un email de confirmation",
+                "applyTax": "Appliquer la taxe",
+                "taxRate": "Taux de taxe (%)",
+                "taxIncluded": "La taxe est incluse dans le prix des articles",
+                "taxExtracted": "Le montant de la taxe est extrait du sous-total",
+                "taxAdded": "Le montant de la taxe est ajouté au sous-total",
+                "shippingCost": "Frais de livraison",
+                "discount": "Remise",
+                "fixed": "Fixe",
+                "subtotal": "Sous-total",
+                "subtotalExclTax": "Sous-total (hors taxe)",
+                "tax": "Taxe",
+                "shipping": "Livraison",
+                "total": "Total"
+            },
+            "details": {
+                "customer": {
+                    "email": "Email",
+                    "phone": "Téléphone",
+                    "shippingAddress": "Adresse de livraison",
+                    "deliveryNotes": "Notes de livraison",
+                    "internalNotes": "Notes internes",
+                    "noInternalNotes": "Aucune note interne"
+                },
+                "payment": {
+                    "title": "Détails du paiement",
+                    "paymentStatus": "Statut du paiement",
+                    "paymentMethod": "Méthode de paiement",
+                    "method": "Méthode",
+                    "mobile": "Mobile",
+                    "reference": "Référence",
+                    "entity": "Entité",
+                    "transactionId": "ID de transaction",
+                    "transactionFee": "Frais de transaction",
+                    "incFees": "(frais inclus)",
+                    "subtotal": "Sous-total",
+                    "discount": "Remise",
+                    "shipping": "Livraison",
+                    "orderTotal": "Total de la commande",
+                    "revenue": "Revenu",
+                    "orderSummary": "Résumé de la commande",
+                    "eupagoInfo": "Informations de paiement EuPago",
+                    "mbway": "MB WAY",
+                    "multibanco": "Multibanco",
+                    "vatIncludedText": "La TVA est incluse dans le prix des articles",
+                    "vatAddedText": "La TVA est ajoutée au prix des articles"
+                },
+                "status": {
+                    "title": "Statut de la commande",
+                    "orderDate": "Date de commande",
+                    "currentStatus": "Statut actuel",
+                    "orderStatus": "Statut de la commande",
+                    "trackPackage": "Suivre le colis",
+                    "trackingNumber": "Numéro de suivi",
+                    "includeTrackingInfo": "Inclure les informations de suivi",
+                    "sendEmailToCustomer": "Envoyer une notification email au client",
+                    "sendSmsToCustomer": "Envoyer une notification SMS au client",
+                    "confirmSmsPhone": "Sélectionnez le numéro pour le SMS",
+                    "orderPhone": "Téléphone de la commande",
+                    "userAccountPhone": "Téléphone du compte utilisateur",
+                    "enterManually": "Saisir manuellement",
+                    "noPhoneInOrder": "Aucun téléphone dans la commande"
+                }
+            },
+            "invoice": {
+                "previewTitle": "Aperçu de facture #{orderId}",
+                "invoice": "Facture",
+                "order": "Commande #{orderId}",
+                "invoiceDate": "Date de facture",
+                "orderDate": "Date de commande",
+                "status": "Statut",
+                "customer": "Client",
+                "billTo": "Facturer à",
+                "details": "Détails",
+                "description": "Description",
+                "qty": "Qté",
+                "price": "Prix",
+                "paymentMethod": "Méthode de paiement",
+                "reference": "Référence",
+                "entity": "Entité",
+                "subtotal": "Sous-total",
+                "discount": "Remise",
+                "shipping": "Livraison",
+                "tax": "Taxe",
+                "total": "Total",
+                "totalAmount": "Montant total",
+                "thankYou": "Merci pour votre commande !",
+                "yourBusiness": "votre confiance",
+                "downloadPdf": "Télécharger le PDF",
+                "printInvoice": "Imprimer la facture",
+                "emailInvoice": "Envoyer la facture par email",
+                "emailSubject": "Facture pour la commande #{orderId}",
+                "emailBody": "Bonjour {customerName},\n\nVeuillez trouver ci-dessous les détails de votre facture :\n\nCommande : #{orderId}\nTotal : {total}\nDate : {date}\n\nMerci pour votre achat.",
+                "generating": "Génération..."
+            },
+            "csv": {
+                "dialog": {
+                    "title": "Exporter les commandes en CSV",
+                    "description": "Sélectionnez les champs à inclure dans l'export CSV"
+                },
+                "groups": {
+                    "orderId": "ID commande",
+                    "customerInfo": "Informations client",
+                    "orderDate": "Date de commande",
+                    "orderStatus": "Statut de commande",
+                    "paymentInfo": "Informations de paiement",
+                    "financialDetails": "Détails financiers",
+                    "eupagoDetails": "Détails EuPago",
+                    "shippingInfo": "Informations de livraison",
+                    "addressDetails": "Détails d'adresse",
+                    "itemsDetails": "Détails des articles",
+                    "timestamps": "Horodatages"
+                },
+                "headers": {
+                    "customerName": "Nom du client",
+                    "customerEmail": "Email du client",
+                    "customerPhone": "Téléphone du client",
+                    "paymentMethod": "Méthode de paiement",
+                    "paymentStatus": "Statut du paiement",
+                    "subtotal": "Sous-total",
+                    "discountType": "Type de remise",
+                    "discountValue": "Valeur de remise",
+                    "discountAmount": "Montant de remise",
+                    "couponCode": "Code promo",
+                    "shippingCost": "Frais de livraison",
+                    "vatEnabled": "TVA activée",
+                    "vatPercentage": "Pourcentage TVA",
+                    "vatAmount": "Montant TVA",
+                    "vatIncluded": "TVA incluse",
+                    "orderTotal": "Total de commande",
+                    "clubPoints": "Points club",
+                    "currency": "Devise",
+                    "eupagoMethod": "Méthode EuPago",
+                    "eupagoReference": "Référence EuPago",
+                    "eupagoEntity": "Entité EuPago",
+                    "eupagoTransactionId": "ID transaction EuPago",
+                    "eupagoTransactionFee": "Frais transaction EuPago",
+                    "revenue": "Revenu (après frais et taxes)",
+                    "trackingNumber": "Numéro de suivi",
+                    "deliveryNotes": "Notes de livraison",
+                    "shippingNotes": "Notes d'expédition",
+                    "streetAddress": "Adresse",
+                    "apartmentUnit": "Appartement/Unité",
+                    "city": "Ville",
+                    "state": "État/Région",
+                    "zipCode": "Code postal",
+                    "country": "Pays",
+                    "countryIso": "ISO pays",
+                    "itemsCount": "Nombre d'articles",
+                    "itemsDetails": "Détails des articles",
+                    "updatedAt": "Mis à jour le"
+                }
+            },
+            "toasts": {
+                "fetchOrdersFailed": "Échec de récupération des commandes",
+                "fetchCustomersFailed": "Échec de récupération des clients",
+                "fetchCatalogFailed": "Échec de récupération du catalogue",
+                "dataRefreshed": "Données actualisées avec succès",
+                "refreshFailed": "Échec de l'actualisation des données",
+                "paymentsConfirmed": "{count} paiement(s) confirmé(s)",
+                "expiredOrdersCancelled": "{count} commande(s) expirée(s) annulée(s)",
+                "noPendingPayments": "Aucun paiement en attente à mettre à jour",
+                "autoCompletedDeliveredOrders": "{count} commandes livrées de plus de 30 jours ont été clôturées automatiquement",
+                "newOrdersReceived": "{count} nouvelle(s) commande(s) reçue(s)",
+                "ordersUpdated": "{count} commande(s) mise(s) à jour",
+                "checkPaymentsFailed": "Échec de vérification des paiements",
+                "refreshPaymentStatusFailed": "Échec de l'actualisation du statut des paiements",
+                "completedOrdersUpdated": "{count} commande(s) terminée(s) mise(s) à jour",
+                "createOrderFailed": "Échec de création de la commande",
+                "createCustomerFailed": "Échec de création du client",
+                "customerFieldsRequired": "Veuillez remplir tous les champs client requis",
+                "selectCustomerRequired": "Veuillez sélectionner un client existant ou en créer un nouveau",
+                "addItemRequired": "Veuillez ajouter au moins un article à la commande",
+                "orderCreated": "Commande créée avec succès",
+                "noChangesDetected": "Aucun changement détecté. Veuillez sélectionner un statut différent.",
+                "statusUpdatedEmailSms": "Statut de commande mis à jour. Notifications email et SMS envoyées.",
+                "statusUpdatedEmail": "Statut de commande mis à jour et client notifié par email",
+                "statusUpdatedSms": "Statut de commande mis à jour et client notifié par SMS",
+                "orderUpdatedNotificationsFailed": "Commande mise à jour mais notifications échouées",
+                "statusUpdated": "Statut de commande mis à jour avec succès",
+                "statusUpdatedCustomerNotified": "Statut de commande mis à jour et client notifié",
+                "statusUpdatedEmailFailed": "Statut de commande mis à jour mais notification email échouée",
+                "statusUpdatedSmsSkippedNoPhone": "Statut mis à jour, SMS ignoré : aucun numéro de téléphone fourni",
+                "updateOrderStatusFailed": "Échec de la mise à jour du statut de commande",
+                "invoiceGenerated": "PDF de facture généré avec succès",
+                "invoiceGenerateFailed": "Échec de la génération de la facture",
+                "orderIdCopied": "ID de commande copié dans le presse-papiers",
+                "copyOrderIdFailed": "Échec de la copie de l'ID de commande",
+                "orderNotesUpdated": "Notes de commande mises à jour avec succès",
+                "updateOrderNotesFailed": "Échec de la mise à jour des notes de commande",
+                "transactionIdCopied": "ID de transaction copié dans le presse-papiers",
+                "paymentDetailsUpdated": "Détails de paiement mis à jour avec succès",
+                "updatePaymentDetailsFailed": "Échec de la mise à jour des détails de paiement",
+                "paymentInformationUpdated": "Informations de paiement mises à jour avec succès",
+                "updatePaymentInformationFailed": "Échec de la mise à jour des informations de paiement",
+                "selectedCustomerNotFound": "Client sélectionné introuvable. Veuillez réessayer.",
+                "emailClientOpened": "Client email ouvert avec les détails de la facture",
+                "prepareEmailFailed": "Échec de la préparation de l'email",
+                "orderDeleted": "Commande supprimée avec succès",
+                "deleteOrderFailed": "Échec de la suppression de la commande",
+                "orderAlreadyHasAppointment": "Cette commande a déjà un rendez-vous",
+                "orderAddedToAgenda": "Commande ajoutée à l'agenda avec succès",
+                "addToAgendaFailed": "Échec de l'ajout de la commande à l'agenda"
+            }
+        },
+        "Catalog": {
+            "header": {
+                "title": "Articles",
+                "description": "Gérez les articles de votre catalogue"
+            },
+            "common": {
+                "untitled": "Sans titre",
+                "yes": "Oui",
+                "no": "Non",
+                "na": "N/D",
+                "invalidDate": "Date invalide"
+            },
+            "status": {
+                "active": "Actif",
+                "inactive": "Inactif"
+            },
+            "stock": {
+                "na": "N/D",
+                "unlimited": "Illimité",
+                "available": "Disponible",
+                "notAvailable": "Non disponible",
+                "inStock": "{count} en stock",
+                "outOfStock": "Rupture de stock"
+            },
+            "table": {
+                "image": "Image",
+                "name": "Nom",
+                "price": "Prix",
+                "category": "Catégorie",
+                "collections": "Collections",
+                "stockStatus": "État du stock",
+                "emptyMessage": "Aucun article trouvé dans le catalogue",
+                "searchPlaceholder": "Rechercher des articles..."
+            },
+            "errors": {
+                "loadData": "Échec du chargement des données. Veuillez réessayer.",
+                "refreshData": "Échec de l’actualisation des données. Veuillez réessayer.",
+                "failedLoadTitle": "Échec du chargement des données"
+            },
+            "toasts": {
+                "fetchFailed": "Échec de récupération des données du catalogue",
+                "dataRefreshed": "Données actualisées avec succès",
+                "refreshFailed": "Échec de l’actualisation des données",
+                "waitUpload": "Veuillez attendre la fin du téléversement en cours",
+                "noFiles": "Aucun fichier fourni",
+                "fileTooLarge": "{name} est trop volumineux (max 10MB)",
+                "fileTypeNotAllowed": "{name} : le type de fichier {extension} n’est pas autorisé",
+                "notImageFile": "{name} n’est pas un fichier image",
+                "noValidImages": "Aucune image valide à téléverser",
+                "uploadSuccess": "{count} image(s) téléversée(s) avec succès",
+                "uploadFailed": "Échec du téléversement des images",
+                "slugRequired": "Le slug est requis. Veuillez fournir un slug valide.",
+                "slugExists": "Le slug existe déjà. Veuillez en choisir un autre.",
+                "itemUpdated": "Article mis à jour avec succès !",
+                "updateFailed": "Échec de la mise à jour de l’article",
+                "itemCreated": "Article créé avec succès !",
+                "createFailed": "Échec de la création de l’article",
+                "saveFailed": "Échec de l’enregistrement de l’article",
+                "itemDeleted": "Article supprimé avec succès",
+                "deleteFailed": "Échec de la suppression de l’article"
+            },
+            "actions": {
+                "editItem": "Modifier l’article",
+                "deleteItem": "Supprimer l’article",
+                "retrying": "Nouvelle tentative...",
+                "tryAgain": "Réessayer",
+                "resetFilters": "Réinitialiser tous les filtres",
+                "reset": "Réinitialiser",
+                "hideFilters": "Masquer les filtres",
+                "showFilters": "Afficher les filtres",
+                "refreshData": "Actualiser les données du catalogue",
+                "refreshing": "Actualisation...",
+                "refresh": "Actualiser",
+                "exportCsv": "Exporter en CSV",
+                "addItem": "Ajouter un article",
+                "cancel": "Annuler",
+                "uploading": "Téléversement...",
+                "updating": "Mise à jour...",
+                "creating": "Création...",
+                "updateItem": "Mettre à jour l’article",
+                "createItem": "Créer l’article"
+            },
+            "filters": {
+                "type": {
+                    "placeholder": "Type",
+                    "all": "Tous les types",
+                    "physical": "Physique",
+                    "digital": "Numérique",
+                    "service": "Service"
+                },
+                "category": {
+                    "placeholder": "Catégorie",
+                    "all": "Toutes les catégories"
+                },
+                "collection": {
+                    "placeholder": "Collection",
+                    "all": "Toutes les collections"
+                },
+                "status": {
+                    "placeholder": "Statut",
+                    "all": "Tous les statuts"
+                },
+                "featured": {
+                    "placeholder": "Mis en avant",
+                    "all": "Tous les articles",
+                    "only": "Uniquement mis en avant",
+                    "notFeatured": "Non mis en avant"
+                },
+                "stock": {
+                    "placeholder": "Stock",
+                    "all": "Tout le stock",
+                    "inStock": "En stock",
+                    "outOfStock": "Rupture de stock",
+                    "unlimited": "Illimité"
+                },
+                "discount": {
+                    "placeholder": "Remise",
+                    "all": "Tous les articles",
+                    "withDiscount": "Avec remise",
+                    "noDiscount": "Sans remise"
+                },
+                "priceRange": {
+                    "placeholder": "Fourchette de prix",
+                    "all": "Tous les prix",
+                    "under10": "Moins de 10€",
+                    "10to50": "10€ - 50€",
+                    "50to100": "50€ - 100€",
+                    "over100": "Plus de 100€"
+                },
+                "sort": {
+                    "placeholder": "Trier par",
+                    "newest": "Plus récents d’abord",
+                    "oldest": "Plus anciens d’abord",
+                    "nameAZ": "Nom A-Z",
+                    "priceLowHigh": "Prix croissant",
+                    "priceHighLow": "Prix décroissant"
+                },
+                "badges": {
+                    "type": "Type",
+                    "category": "Catégorie",
+                    "collection": "Collection",
+                    "status": "Statut",
+                    "featured": "Mis en avant",
+                    "stock": "Stock",
+                    "discount": "Remise",
+                    "price": "Prix",
+                    "sort": "Tri"
+                }
+            },
+            "dialog": {
+                "editItemTitle": "Modifier l’article",
+                "addNewItemTitle": "Ajouter un nouvel article",
+                "description": "Ajoutez ou mettez à jour des articles du catalogue et gérez leurs détails."
+            },
+            "deleteDialog": {
+                "title": "Supprimer l’article",
+                "description": "Voulez-vous vraiment supprimer \"{item}\" ? Cette action est irréversible et supprimera définitivement l’article de votre catalogue.",
+                "thisItem": "cet article",
+                "confirmText": "Supprimer"
+            },
+            "csv": {
+                "dialogTitle": "Exporter le catalogue en CSV",
+                "dialogDescription": "Sélectionnez les champs de données à inclure dans l’export CSV du catalogue",
+                "itemId": "ID de l’article",
+                "type": "Type",
+                "sku": "SKU",
+                "currency": "Devise",
+                "discountType": "Type de remise",
+                "discountAmount": "Montant de la remise",
+                "stock": "Stock",
+                "lowStockAlert": "Seuil de stock bas",
+                "quantity": "Quantité",
+                "quantityUnit": "Unité de quantité",
+                "statusTitle": "Statut",
+                "featured": "Mis en avant",
+                "active": "Actif",
+                "metaTitle": "Titre méta",
+                "metaDescription": "Description méta",
+                "metaKeywords": "Mots-clés méta",
+                "createdAt": "Créé le",
+                "updatedAt": "Mis à jour le",
+                "basicInfo": {
+                    "label": "Informations de base"
+                },
+                "pricing": {
+                    "label": "Tarification"
+                },
+                "inventory": {
+                    "label": "Inventaire"
+                },
+                "categoryInfo": {
+                    "label": "Catégorie et collections"
+                },
+                "status": {
+                    "label": "Statut et fonctionnalités"
+                },
+                "seoData": {
+                    "label": "Données SEO"
+                },
+                "timestamps": {
+                    "label": "Horodatages"
+                }
+            }
+        },
+        "CatalogForm": {
+            "common": {
+                "language": "Langue",
+                "translationHint": "Traduction pour {lang}. Laissez vide pour utiliser la langue par défaut.",
+                "note": "Note",
+                "yes": "Oui"
+            },
+            "tabs": {
+                "basic": "Infos de base",
+                "pricing": "Tarification",
+                "details": "Détails",
+                "images": "Images",
+                "attributes": "Attributs",
+                "seo": "SEO"
+            },
+            "itemTypes": {
+                "physical": "Produit physique",
+                "digital": "Produit numérique",
+                "service": "Service"
+            },
+            "actions": {
+                "updating": "Mise à jour...",
+                "creating": "Création...",
+                "updateItem": "Mettre à jour l’article",
+                "createItem": "Créer l’article"
+            },
+            "toasts": {
+                "uploadFailed": "Échec du téléversement des images",
+                "discountPercentageMax": "Le pourcentage de remise ne peut pas dépasser 100%",
+                "fixedDiscountInvalid": "Le montant de la remise fixe ne peut pas être égal ou supérieur au prix de l’article",
+                "metaTitleGenerated": "Titre méta généré et mis à jour pour toutes les langues",
+                "metaTitleFailed": "Échec de la mise à jour du titre méta",
+                "metaDescriptionGenerated": "Description méta générée et mise à jour pour toutes les langues",
+                "metaDescriptionFailed": "Échec de la mise à jour de la description méta",
+                "coverImageUpdated": "Image de couverture mise à jour",
+                "imageRemoved": "Image supprimée"
+            },
+            "basic": {
+                "itemTypeRequired": "Type d’article *",
+                "selectItemType": "Sélectionnez le type d’article",
+                "sectionTitle": "Informations de base",
+                "nameRequired": "Nom *",
+                "slug": "Slug",
+                "slugHelp": "Version du nom adaptée aux URL. Générée automatiquement à partir du nom mais modifiable.",
+                "description": "Description",
+                "activeItem": "Article actif",
+                "featuredItem": "Article mis en avant",
+                "placeholders": {
+                    "name": "Saisir le nom de l’article ({lang})",
+                    "slug": "item-slug",
+                    "description": "Saisir la description de l’article ({lang})"
+                }
+            },
+            "pricing": {
+                "sectionTitle": "Tarification et remises",
+                "currency": "Devise",
+                "selectCurrency": "Sélectionnez une devise",
+                "unitType": "Type d’unité",
+                "selectUnit": "Sélectionnez une unité",
+                "unitTypeHelp": "Ce type d’unité sera appliqué à tous les paliers de prix",
+                "quantityValue": "Quantité/Valeur",
+                "basePriceOriginalRequired": "Prix de base (original) *",
+                "basePriceRequired": "Prix de base *",
+                "quantityBasedTitle": "Tarification par quantité",
+                "quantityBasedDescription": "Définissez des prix différents selon les quantités (remise en gros)",
+                "quantity": "Quantité",
+                "priceOriginal": "Prix (original)",
+                "base": "Base",
+                "removeTier": "Supprimer le palier",
+                "addPriceTier": "Ajouter un palier de prix",
+                "tiersNote": "Le premier palier correspond au prix et à la quantité de base de votre produit. Les paliers supplémentaires sont destinés à la tarification en volume/gros. Le stock est partagé entre tous les paliers de prix : lorsque les clients achètent des quantités différentes, ils obtiennent de meilleurs tarifs tout en utilisant le même stock. Le type d’unité est défini globalement ci-dessus.",
+                "discountSettings": "Paramètres de remise",
+                "discountType": "Type de remise",
+                "selectType": "Sélectionner un type",
+                "discountAmount": "Montant de la remise",
+                "finalPrice": "Prix final :",
+                "save": "Enregistrer",
+                "discount": {
+                    "none": "Aucune remise",
+                    "percentage": "Pourcentage (%)",
+                    "fixed": "Montant fixe"
+                },
+                "placeholders": {
+                    "quantity": "1.00",
+                    "price": "0.00",
+                    "one": "1",
+                    "percentage": "0-100"
+                }
+            },
+            "details": {
+                "sectionTitle": "Détails spécifiques au type",
+                "category": "Catégorie",
+                "selectCategory": "Sélectionnez une catégorie",
+                "noCategory": "Aucune catégorie",
+                "collections": "Collections",
+                "addToCollections": "Ajouter aux collections",
+                "unknownCollection": "Collection inconnue",
+                "sku": "SKU",
+                "enterSku": "Saisir SKU",
+                "generateSku": "Générer SKU",
+                "skuHelp": "Stock Keeping Unit. Cliquez sur le bouton pour générer automatiquement.",
+                "stockManagement": "Gestion du stock",
+                "stockQuantity": "Quantité en stock",
+                "unlimitedStock": "Stock illimité",
+                "lowStockThreshold": "Seuil d’alerte de stock bas",
+                "downloadLink": "Lien de téléchargement",
+                "downloadNotes": "Notes de téléchargement",
+                "serviceType": "Type de service",
+                "selectServiceType": "Sélectionnez un type de service",
+                "serviceTypes": {
+                    "standard": "Service standard",
+                    "consultation": "Consultation",
+                    "workshop": "Atelier/Formation",
+                    "maintenance": "Maintenance",
+                    "custom": "Service personnalisé",
+                    "subscription": "Abonnement"
+                },
+                "duration": "Durée",
+                "serviceHasDuration": "Le service a une durée fixe",
+                "durationUnits": {
+                    "minutes": "Minutes",
+                    "hours": "Heures",
+                    "days": "Jours",
+                    "weeks": "Semaines"
+                },
+                "durationDetermined": "La durée sera déterminée selon les besoins",
+                "deliveryMethod": "Mode de prestation",
+                "selectDeliveryMethod": "Sélectionnez un mode de prestation",
+                "deliveryMethods": {
+                    "inPerson": "En présentiel",
+                    "remote": "À distance/En ligne",
+                    "hybrid": "Hybride",
+                    "onSite": "Sur site (chez le client)"
+                },
+                "platformTool": "Plateforme/Outil",
+                "maxParticipants": "Nombre maximal de participants",
+                "limitParticipants": "Limiter le nombre de participants",
+                "prerequisites": "Prérequis",
+                "whatsIncluded": "Ce qui est inclus",
+                "additionalNotes": "Notes supplémentaires",
+                "requiresAppointment": "Nécessite une prise de rendez-vous",
+                "appointmentSettings": "Paramètres de rendez-vous",
+                "allowOnlineBooking": "Autoriser la réservation en ligne",
+                "bufferTimeMinutes": "Temps tampon (minutes)",
+                "advanceBookingDays": "Réservation anticipée (jours)",
+                "workingHours": "Heures de travail",
+                "to": "à",
+                "placeholders": {
+                    "zero": "0",
+                    "five": "5",
+                    "downloadLink": "https://example.com/download",
+                    "downloadNotes": "Instructions pour les clients",
+                    "sixty": "60",
+                    "platform": "ex. : Zoom, Google Meet, Microsoft Teams",
+                    "fifteen": "15",
+                    "thirty": "30",
+                    "prerequisites": "Exigences ou préparations nécessaires avant le service",
+                    "whatsIncluded": "Indiquez ce qui est inclus dans ce service (matériel, outils, suivi, etc.)",
+                    "additionalNotes": "Informations supplémentaires sur le service, conditions ou instructions spéciales"
+                }
+            },
+            "images": {
+                "sectionTitle": "Images",
+                "uploading": "Téléversement des images...",
+                "clickToUpload": "Cliquez pour téléverser des images",
+                "uploadHelp": "PNG, JPG, WEBP jusqu’à 10MB chacune",
+                "uploadedImages": "Images téléversées",
+                "cover": "Couverture",
+                "setAsCover": "Définir comme image de couverture",
+                "removeImage": "Supprimer l’image",
+                "noImagesYet": "Aucune image téléversée pour le moment"
+            },
+            "attributes": {
+                "sectionTitle": "Attributs du produit",
+                "description": "Sélectionnez des attributs prédéfinis dans les paramètres de votre boutique ou ajoutez des attributs personnalisés pour mieux décrire votre produit.",
+                "selectAttribute": "Sélectionner {name}",
+                "enterAttribute": "Saisir {name}",
+                "customTitle": "Attributs personnalisés",
+                "attributeName": "Nom de l’attribut ({lang})",
+                "attributeValue": "Valeur de l’attribut ({lang})",
+                "enterAttributeName": "Saisir le nom de l’attribut ({lang})",
+                "enterAttributeValue": "Saisir la valeur de l’attribut ({lang})",
+                "addCustomAttribute": "Ajouter un attribut personnalisé"
+            },
+            "seo": {
+                "sectionTitle": "SEO et informations meta",
+                "metaTitle": "Titre méta ({language})",
+                "metaDescription": "Description méta ({language})",
+                "generateMetaTitlePlaceholder": "Générez un titre méta optimisé SEO pour ce produit...",
+                "generateMetaDescriptionPlaceholder": "Générez une description méta optimisée SEO pour ce produit...",
+                "metaTitlePlaceholder": "Titre optimisé SEO (50-60 caractères) - {lang}",
+                "metaDescriptionPlaceholder": "Brève description pour les résultats de recherche (150-160 caractères) - {lang}",
+                "characters": "caractères",
+                "translationFor": "Traduction pour {lang}",
+                "ogImageUrl": "URL de l’image OG",
+                "ogImagePlaceholder": "https://example.com/image.jpg",
+                "searchPreview": "Aperçu du résultat de recherche ({language})",
+                "yourProductTitle": "Titre de votre produit",
+                "productSlug": "product-slug",
+                "productDescriptionPreview": "La description de votre produit apparaîtra ici dans les résultats de recherche...",
+                "previewForLanguage": "Aperçu pour la version en {lang}"
+            }
+        },
+        "Settings": {
+            "header": {
+                "title": "Paramètres Système",
+                "description": "Configurez les paramètres de votre application"
+            },
+            "tabs": {
+                "site": "Site",
+                "seo": "SEO",
+                "location": "Emplacement",
+                "language": "Langue",
+                "social": "Social",
+                "email": "Email",
+                "sms": "SMS",
+                "oauth": "OAuth",
+                "web3": "Web3",
+                "security": "Sécurité",
+                "services": "Services",
+                "storage": "Stockage"
+            },
+            "actions": {
+                "saveChanges": "Enregistrer les Modifications",
+                "saving": "Enregistrement...",
+                "savingSettings": "Enregistrement des paramètres..."
+            },
+            "toasts": {
+                "siteNameEmailRequired": "Le nom du site et l'e-mail sont obligatoires",
+                "countryRequired": "La sélection du pays est obligatoire",
+                "settingsUpdated": "Paramètres mis à jour avec succès",
+                "failedRefetchSettings": "Échec du rechargement des paramètres",
+                "failedSaveSettings": "Échec de l'enregistrement des paramètres",
+                "failedClearWeb3Cache": "Échec de la suppression du cache Web3",
+                "locationDetected": "Emplacement détecté avec succès",
+                "failedGetLocation": "Échec de l'obtention de l'emplacement. Veuillez activer les services de localisation.",
+                "geolocationNotSupported": "La géolocalisation n'est pas prise en charge par ce navigateur.",
+                "phoneNumberRequired": "Veuillez saisir un numéro de téléphone",
+                "testSmsSent": "SMS de test envoyé avec succès !",
+                "failedSendTestSms": "Échec de l'envoi du SMS de test",
+                "emailRequired": "Veuillez saisir une adresse e-mail",
+                "testEmailSent": "E-mail de test envoyé avec succès !",
+                "failedSendTestEmail": "Échec de l'envoi de l'e-mail de test",
+                "invalidImageFile": "Veuillez sélectionner un fichier image valide (JPEG, PNG, GIF ou WebP)",
+                "imageTooLarge": "L'image doit faire moins de 10 Mo",
+                "ogImageUploaded": "Image OG téléchargée avec succès !",
+                "failedUploadImage": "Échec du téléchargement de l'image",
+                "ogImageRemoved": "Image OG supprimée",
+                "invalidLogoFile": "Veuillez sélectionner un fichier image valide (JPEG, PNG, GIF, WebP ou SVG)",
+                "logoTooLarge": "L'image doit faire moins de 10 Mo",
+                "logoUploaded": "Logo téléchargé avec succès !",
+                "failedUploadLogo": "Échec du téléchargement du logo",
+                "logoRemoved": "Logo supprimé",
+                "atLeastOneLanguage": "Au moins une langue doit être sélectionnée",
+                "cannotRemoveDefault": "Impossible de supprimer la langue par défaut. Veuillez d'abord définir une autre langue par défaut.",
+                "setAsDefaultLanguage": "{language} défini comme langue par défaut"
+            },
+            "site": {
+                "title": "Informations du Site",
+                "description": "Informations de base sur votre entreprise",
+                "siteName": "Nom du Site *",
+                "siteNamePlaceholder": "Nom de Votre Entreprise",
+                "contactEmail": "E-mail de Contact *",
+                "contactEmailPlaceholder": "contact@exemple.com",
+                "contactPhone": "Téléphone de Contact",
+                "contactPhonePlaceholder": "+351912345678",
+                "siteLogo": "Logo du Site",
+                "uploadLogo": "Télécharger le Logo",
+                "uploading": "Téléchargement...",
+                "removeLogo": "Supprimer",
+                "removingLogo": "Suppression...",
+                "logoUrl": "URL du Logo",
+                "logoUrlPlaceholder": "https://exemple.com/logo.png",
+                "logoDescription": "Téléchargez le logo de votre entreprise ou fournissez une URL. Taille recommandée : 200x200px, max 10Mo.",
+                "uploadMethod": "Méthode de Téléchargement",
+                "uploadImageFile": "Télécharger un Fichier Image",
+                "enterImageUrl": "Saisir l'URL de l'Image",
+                "currentLogo": "Logo Actuel",
+                "siteLogoAlt": "Logo du Site"
+            },
+            "seo": {
+                "title": "SEO et Informations Meta",
+                "description": "Optimisez votre site pour les moteurs de recherche et le partage social",
+                "siteTitle": "Titre du Site",
+                "siteTitlePlaceholder": "Titre de Votre Site",
+                "siteTitleDescription": "Le titre principal de votre site web, affiché dans les onglets du navigateur et les résultats de recherche",
+                "siteDescription": "Description du Site",
+                "siteDescriptionPlaceholder": "Une brève description de votre site web...",
+                "siteDescriptionDescription": "Brève description (150-160 caractères) affichée dans les résultats de recherche et le partage social",
+                "siteKeywords": "Mots-clés du Site",
+                "siteKeywordsPlaceholder": "mot-clé1, mot-clé2, mot-clé3",
+                "siteKeywordsDescription": "Liste de mots-clés séparés par des virgules, jusqu'à 10 mots-clés.",
+                "ogImage": "Image Open Graph",
+                "uploadOgImage": "Télécharger l'Image",
+                "removeOgImage": "Supprimer",
+                "ogImageUrl": "URL de l'Image OG",
+                "ogImageUrlPlaceholder": "https://exemple.com/og-image.jpg",
+                "ogImageDescription": "Image utilisée lors du partage sur les réseaux sociaux (recommandé : 1200x630px, max 10Mo)",
+                "uploadMethod": "Méthode de Téléchargement",
+                "uploadImageFile": "Télécharger un Fichier Image",
+                "enterImageUrl": "Saisir l'URL de l'Image"
+            },
+            "location": {
+                "title": "Emplacement et Zone de Service",
+                "description": "Informations géographiques et couverture de service",
+                "businessAddress": "Adresse de l'Entreprise",
+                "businessAddressPlaceholder": "123 Rue Principale",
+                "city": "Ville",
+                "cityPlaceholder": "Votre Ville",
+                "postalCode": "Code Postal",
+                "postalCodePlaceholder": "XXXX-XXX",
+                "latitude": "Latitude",
+                "latitudePlaceholder": "40.7128",
+                "getCurrentLocation": "Obtenir l'emplacement actuel",
+                "longitude": "Longitude",
+                "longitudePlaceholder": "-74.0060",
+                "country": "Pays *",
+                "countryPlaceholder": "Sélectionnez un pays",
+                "serviceArea": "Zone de Service",
+                "serviceAreaPlaceholder": "Zone Métropolitaine",
+                "serviceAreaDescription": "Décrivez votre zone de couverture de service",
+                "serviceRadius": "Rayon de Service (km)",
+                "serviceRadiusPlaceholder": "50",
+                "serviceRadiusDescription": "Distance maximale pour les services (en kilomètres)",
+                "defaultCurrency": "Devise par Défaut",
+                "selectCurrency": "Sélectionner une devise",
+                "currencyDescription": "Devise par défaut pour les prix et les transactions",
+                "defaultLanguage": "Langue par Défaut",
+                "selectLanguage": "Sélectionner une langue",
+                "defaultLanguageDescription": "Langue par défaut pour le site web frontend"
+            },
+            "language": {
+                "title": "Paramètres de Langue",
+                "description": "Configurez les préférences de langue pour le frontend et le backend",
+                "languageType": "Type de Langue",
+                "frontend": "Frontend",
+                "backend": "Backend",
+                "frontendLanguages": "Langues du Frontend *",
+                "frontendLanguagesDescription": "Sélectionnez les langues du frontend disponibles. Vous pouvez ajouter/supprimer des langues et définir une langue par défaut.",
+                "backendLanguages": "Langues du Backend (Admin) *",
+                "backendLanguagesDescription": "Sélectionnez les langues backend disponibles. Vous pouvez ajouter/supprimer des langues et définir une langue par défaut.",
+                "availableLanguagesFilesystem": "Langues Disponibles (depuis le système de fichiers)",
+                "selectedLanguages": "Langues Sélectionnées",
+                "availableLanguages": "Langues Disponibles",
+                "setDefault": "Définir par Défaut",
+                "default": "PAR DÉFAUT",
+                "remove": "Supprimer"
+            },
+            "social": {
+                "title": "Réseaux Sociaux",
+                "description": "Ajoutez vos profils de réseaux sociaux",
+                "platformPlaceholder": "Plateforme (ex., Facebook)",
+                "urlPlaceholder": "URL",
+                "addSocialNetwork": "Ajouter un Réseau Social",
+                "workingHours": "Heures de Travail",
+                "workingHoursDescription": "Définissez les heures d'ouverture de votre entreprise",
+                "day": "Jour",
+                "selectDay": "Sélectionner le jour",
+                "opens": "Ouvre",
+                "closes": "Ferme",
+                "addWorkingHours": "Ajouter des Horaires",
+                "allDaysAdded": "Tous les jours ont été ajoutés",
+                "allDaysUsed": "Tous les jours sont déjà utilisés",
+                "monday": "Lundi",
+                "tuesday": "Mardi",
+                "wednesday": "Mercredi",
+                "thursday": "Jeudi",
+                "friday": "Vendredi",
+                "saturday": "Samedi",
+                "sunday": "Dimanche"
+            },
+            "email": {
+                "title": "Configuration Email",
+                "description": "Configurez le fournisseur d'e-mail pour l'envoi d'e-mails transactionnels",
+                "emailProvider": "Fournisseur d'E-mail",
+                "selectEmailProvider": "Sélectionnez le fournisseur d'e-mail",
+                "emailProviderDescription": "Choisissez votre fournisseur de service e-mail pour l'envoi d'e-mails",
+                "testEmailConfig": "Tester la Configuration E-mail",
+                "testEmailDescription": "Envoyez un e-mail de test pour vérifier que votre configuration e-mail fonctionne correctement",
+                "testEmailPlaceholder": "test@exemple.com",
+                "sendTest": "Envoyer un Test",
+                "sendingTest": "Envoi...",
+                "smtpHost": "Hôte SMTP",
+                "smtpHostPlaceholder": "smtp.gmail.com",
+                "smtpHostDescription": "Nom d'hôte de votre serveur SMTP",
+                "smtpPort": "Port SMTP",
+                "smtpPortDescription": "Port du serveur SMTP (généralement 587 pour TLS ou 465 pour SSL)",
+                "smtpSecure": "Utiliser SSL/TLS",
+                "smtpSecureDescription": "Activer la connexion sécurisée (recommandé)",
+                "emailUser": "Nom d'Utilisateur E-mail",
+                "emailUserPlaceholder": "votre-email@gmail.com",
+                "emailUserDescription": "Votre nom d'utilisateur du compte e-mail",
+                "emailPass": "Mot de Passe E-mail",
+                "emailPassPlaceholder": "votre-mot-de-passe-app",
+                "emailPassDescription": "Votre mot de passe du compte e-mail ou mot de passe spécifique à l'application"
+            },
+            "sms": {
+                "title": "Configuration SMS",
+                "description": "Configurez le fournisseur SMS (Twilio) et activez les fonctionnalités SMS",
+                "enableSms": "Activer l'Intégration SMS",
+                "enableSmsDescription": "Activer l'envoi de SMS via Twilio",
+                "twilioAccountSid": "SID du Compte Twilio",
+                "twilioAccountSidPlaceholder": "ACxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                "twilioAccountSidDescription": "Votre SID de compte Twilio depuis la console Twilio",
+                "twilioAuthToken": "Jeton d'Authentification Twilio",
+                "twilioAuthTokenPlaceholder": "********************************",
+                "twilioAuthTokenDescription": "Votre jeton d'authentification Twilio depuis la console Twilio",
+                "twilioPhoneNumber": "Numéro de Téléphone Twilio",
+                "twilioPhoneNumberPlaceholder": "+15551234567",
+                "twilioPhoneNumberDescription": "Votre numéro de téléphone Twilio avec code pays (ex., +15551234567)",
+                "testSmsConfig": "Tester la Configuration SMS",
+                "testSmsDescription": "Envoyez un SMS de test pour vérifier que votre configuration Twilio fonctionne correctement. Incluez le code pays (ex., +351912345678).",
+                "testSmsPlaceholder": "+351912345678",
+                "sendTest": "Envoyer un Test",
+                "sendingTest": "Envoi..."
+            },
+            "oauth": {
+                "title": "Fournisseurs OAuth",
+                "description": "Configurez les fournisseurs de connexion sociale pour l'authentification des utilisateurs",
+                "enableProvider": "Activer {provider}",
+                "clientId": "ID Client",
+                "clientIdPlaceholder": "votre-id-client",
+                "clientSecret": "Secret Client",
+                "clientSecretPlaceholder": "votre-secret-client",
+                "setupInstructions": "Instructions de configuration pour {provider}"
+            },
+            "web3": {
+                "title": "Intégration Web3",
+                "description": "Configurez l'intégration blockchain pour les fonctionnalités Web3 (NFT, jetons, contrats intelligents)",
+                "enableWeb3": "Activer Web3",
+                "enableWeb3Description": "Activez les fonctionnalités Web3 pour votre application",
+                "blockchainNetwork": "Réseau Blockchain",
+                "selectBlockchain": "Sélectionnez le réseau blockchain",
+                "blockchainDescription": "Sélectionnez le réseau blockchain pour les fonctionnalités Web3",
+                "contractAddress": "Adresse du Contrat",
+                "contractAddressPlaceholder": "0x...",
+                "contractAddressDescription": "Adresse du contrat intelligent pour votre collection de jetons/NFT",
+                "tokenSymbol": "Symbole du Jeton",
+                "tokenSymbolPlaceholder": "TOKEN",
+                "tokenSymbolDescription": "Symbole pour votre jeton (ex., ETH, BTC)",
+                "chainSymbol": "Symbole de la Chaîne",
+                "chainSymbolPlaceholder": "ETH",
+                "chainSymbolDescription": "Symbole de la devise native de la chaîne",
+                "rpcUrl": "URL RPC (Optionnel)",
+                "rpcUrlPlaceholder": "https://mainnet.infura.io/v3/VOTRE-ID-PROJET",
+                "rpcUrlDescription": "Point de terminaison RPC personnalisé (Infura, Alchemy, etc.) - laisser vide pour utiliser la valeur par défaut"
+            },
+            "security": {
+                "title": "Sécurité et Accès",
+                "description": "Sécurisez et protégez votre site web",
+                "enableTurnstile": "Activer Turnstile",
+                "enableTurnstileDescription": "Activer la vérification de sécurité Cloudflare Turnstile",
+                "turnstileSiteKey": "Clé de Site Turnstile",
+                "turnstileSiteKeyPlaceholder": "1x00000000000000000000",
+                "allowRegistration": "Autoriser l'Inscription des Utilisateurs",
+                "allowRegistrationDescription": "Autoriser les nouveaux utilisateurs à créer des comptes",
+                "enableFrontend": "Activer le Frontend",
+                "enableFrontendDescription": "Autoriser l'accès au site web public",
+                "baseUrl": "URL de Base",
+                "baseUrlPlaceholder": "https://votresite.com",
+                "baseUrlDescription": "Pour remplacer l'URL, veuillez mettre à jour votre variable d'environnement NEXTAUTH_URL"
+            },
+            "services": {
+                "title": "Services Tiers",
+                "description": "Configurez les intégrations avec des services externes (Google Analytics, Google Maps, etc.)",
+                "googleAnalytics": {
+                    "title": "Google Analytics",
+                    "enableAnalytics": "Activer Google Analytics",
+                    "enableAnalyticsDescription": "Suivez les analyses des visiteurs du site web avec Google Analytics",
+                    "measurementId": "ID de Mesure",
+                    "measurementIdDescription": "Votre ID de mesure Google Analytics (commence par G-)",
+                    "measurementIdPlaceholder": "G-XXXXXXXXXX",
+                    "howToGetId": "Comment obtenir votre ID de Mesure :",
+                    "step1": "Accédez aux paramètres d'administration de Google Analytics",
+                    "step2": "Sélectionnez votre propriété",
+                    "step3": "Sous Propriété, cliquez sur Flux de données",
+                    "step4": "Cliquez sur votre flux web",
+                    "step5": "Copiez l'ID de Mesure (commence par G-)"
+                },
+                "googleMaps": {
+                    "title": "Intégration Google Maps",
+                    "description": "Activez Google Maps et fournissez la clé API pour les services Places/Maps",
+                    "enableMaps": "Activer Google Maps",
+                    "enableMapsDescription": "Activer l'intégration Google Maps pour les services de localisation",
+                    "mapsApiKey": "Clé API Google Maps",
+                    "mapsApiKeyPlaceholder": "AIza..."
+                }
+            },
+            "storage": {
+                "title": "Stockage de Fichiers",
+                "description": "Configurez un stockage compatible S3 pour les téléchargements de fichiers (Cloudflare R2, AWS S3, DigitalOcean Spaces, etc.)",
+                "enableS3": "Activer le Stockage S3/R2",
+                "enableS3Description": "Utilisez un stockage compatible S3 pour les téléchargements de fichiers au lieu des variables d'environnement",
+                "configNote": "Les identifiants de stockage configurés ici remplaceront les variables d'environnement. Laissez les champs vides pour utiliser les variables d'environnement.",
+                "endpoint": "URL de l'Endpoint",
+                "endpointDescription": "URL de l'endpoint compatible S3 (ex: Cloudflare R2, AWS S3, DigitalOcean Spaces)",
+                "region": "Région",
+                "regionDescription": "Région de stockage (utilisez 'auto' pour Cloudflare R2)",
+                "accessKey": "Access Key ID",
+                "accessKeyPlaceholder": "Saisissez votre access key",
+                "accessKeyDescription": "Votre ID de access key compatible S3",
+                "secretKey": "Secret Access Key",
+                "secretKeyPlaceholder": "Saisissez votre secret key",
+                "secretKeyDescription": "Votre secret access key compatible S3 (gardez cela sécurisé)",
+                "bucket": "Nom du Bucket",
+                "bucketPlaceholder": "mon-bucket-nom",
+                "bucketDescription": "Le nom de votre bucket de stockage",
+                "publicUrl": "URL Publique (Optionnel)",
+                "publicUrlDescription": "Domaine personnalisé pour l'accès aux fichiers publics (ex: cdn.votredomaine.com)"
+            }
+        }
+    }
+}

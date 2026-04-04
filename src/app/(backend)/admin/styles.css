@@ -1,0 +1,99 @@
+/* @/app/(backend)/admin/styles.css */
+:root {
+    --sb-track-color: #7b7878;
+    --sb-thumb-color: #2e2f2e;
+    --sb-size: 5px;
+    --font-inter: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Apply Inter font to admin section */
+body:has([data-admin-layout]) {
+    font-family: var(--font-inter) !important;
+}
+
+[data-admin-layout] .font-theme {
+    font-weight: normal;
+    font-family: var(--font-inter) !important;
+}
+
+[data-admin-layout] h1,
+[data-admin-layout] h2,
+[data-admin-layout] h3,
+[data-admin-layout] h4,
+[data-admin-layout] h5,
+[data-admin-layout] h6 {
+    font-family: var(--font-inter) !important;
+}
+.admin--dashboard,
+.admin--dashboard *,
+[data-admin-layout],
+[data-admin-layout] *,
+[data-admin-layout] input,
+[data-admin-layout] button,
+[data-admin-layout] select,
+[data-admin-layout] textarea {
+    font-family: var(--font-inter) !important;
+    font-display: swap;
+}
+
+*::-webkit-scrollbar {
+    width: var(--sb-size);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--sb-track-color);
+    border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb-color);
+    border-radius: 3px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-color: var(--sb-thumb-color) var(--sb-track-color);
+    }
+}
+
+/* Main content area - responsive to sidebar state */
+html:has([data-admin-layout]),
+body:has([data-admin-layout]),
+[data-admin-layout] main {
+    overflow: hidden !important; /* Prevent body scroll */
+}
+[data-admin-layout] main {
+    width: 100%;
+    max-width: calc(100% - var(--sidebar-width));
+    position: relative;
+}
+
+/* When sidebar is collapsed to icon mode (3rem width) */
+[data-slot="sidebar-wrapper"]:has([data-state="collapsed"]) header,
+[data-slot="sidebar-wrapper"]:has([data-state="collapsed"]) main {
+    max-width: calc(100% - 3rem);
+}
+
+/* Header responsive to sidebar state */
+[data-admin-layout] header {
+    max-width: calc(100% - var(--sidebar-width));
+}
+
+/* Mobile: full width regardless of sidebar state */
+@media screen and (max-width: 768px) {
+    [data-admin-layout] header {
+        max-width: 100%;
+    }
+
+    [data-admin-layout] main {
+        max-width: 100%;
+    }
+}
+
+.admin-layout-wrapper {
+    overflow: hidden !important; /* Prevent body scroll */
+}
+
+label {
+    margin-bottom: .3rem;
+}
