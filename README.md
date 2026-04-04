@@ -2,7 +2,7 @@
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue) ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-blue) ![Biome](https://img.shields.io/badge/code%20style-biome-60a5fa)
 
-<img alt="NextCMS" src="public/shared/nextcms_alt.webp" width="80%" style="margin: 0 auto;">
+<img alt="NextCMS" src="public/shared/nextcms_alt.webp" width="80%">
 
 A **production-ready** full-stack CMS and e-commerce platform built with **Next.js 16** and **React 19**. Features include a complete admin backend, shopping cart, payment processing, multilingual support, and flexible content management system.
 
