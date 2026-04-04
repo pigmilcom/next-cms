@@ -2,7 +2,7 @@
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue) ![Next.js](https://img.shields.io/badge/Next.js-16-black) ![React](https://img.shields.io/badge/React-19-blue) ![Biome](https://img.shields.io/badge/code%20style-biome-60a5fa)
 
-![Next.js CMS & E-commerce](public/shared/nextcms_alt.webp)
+<img alt="NextCMS" src="public/shared/nextcms_alt.webp" width="80%" style="margin: 0 auto;">
 
 A **production-ready** full-stack CMS and e-commerce platform built with **Next.js 16** and **React 19**. Features include a complete admin backend, shopping cart, payment processing, multilingual support, and flexible content management system.
 
@@ -138,7 +138,7 @@ This platform serves as:
 1. **Clone the Repository**:
     ```bash
     git clone <repository-url>
-    cd cbd-shop
+    cd next-cms
     ```
 
 2. **Install Dependencies**:
@@ -164,11 +164,7 @@ This platform serves as:
    # Database (choose one)
    POSTGRES_URL=postgresql://...
    # or
-   FIREBASE_CONFIG={"apiKey":"..."}
-
-   # Storage
-   S3_***=
-   ```
+   FIREBASE_CONFIG={"apiKey":"..."} 
 
 4. **Run Development Server**:
     ```bash
@@ -204,6 +200,7 @@ npm run email-dev    # Preview email templates
 │   ├── app/                    # Next.js App Router
 │   │   ├── (backend)/          # Backend admin panel
 │   │   ├── (frontend)/         # Public pages / Storefront / Authentication pages
+│   │   ├── (actions)/          # Public system pages
 │   │   ├── auth/               # Authentication routes
 │   │   ├── api/                # API routes 
 │   ├── components/             # React components
