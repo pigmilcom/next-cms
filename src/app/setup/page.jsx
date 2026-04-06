@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import SetupPageClient from './page.client';
 import { getAllUsers, getAllRoles } from '@/lib/server/users.js';
 import { getSettings } from '@/lib/server/settings';
-import { initializeDatabase } from './init/route';
+import { initializeDatabase } from './init/db-init';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
