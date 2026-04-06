@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import SetupPageClient from './page.client';
 import { getAllUsers, getAllRoles } from '@/lib/server/users.js';
 import { getSettings } from '@/lib/server/settings';
-import { initializeDatabase } from './init/db-init';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -38,25 +37,32 @@ async function checkSetupStatus() {
         const setupDirPath = join(process.cwd(), 'src', 'app', 'setup');
         const setupDirExists = existsSync(setupDirPath);
 
+        // Check required env vars server-side
+        const requiredEnvVars = ['NEXTAUTH_URL', 'NEXTAUTH_SECRET', 'POSTGRES_URL'];
+        const envStatus = requiredEnvVars.map((key) => ({
+            key,
+            present: !!(process.env[key] && process.env[key].trim() !== '')
+        }));
+        const envReady = envStatus.every((v) => v.present);
+
         // Check if all required data exists using backend-data.js functions
         let hasSettings = false;
         let hasRoles = false;
         let needsFirstUser = false;
         let existingCollections = [];
-        let databaseInitialization = null;
-        
+
         try {
             // Check site_settings and store_settings - follow same pattern as settings.js
             const settingsResult = await getSettings();
             hasSettings = settingsResult?.siteSettings !== null && settingsResult?.storeSettings !== null;
             if (settingsResult?.siteSettings) existingCollections.push('site_settings');
             if (settingsResult?.storeSettings) existingCollections.push('store_settings');
-            
+
             // Check roles - follow same pattern as users.js
             const rolesResult = await getAllRoles({ page: 1, limit: 1 });
             hasRoles = rolesResult?.success && rolesResult?.data?.length > 0;
             if (hasRoles) existingCollections.push('roles');
-            
+
             // Check users - follow same pattern as users.js
             const usersResult = await getAllUsers({ page: 1, limit: 1 });
             const hasUsers = usersResult?.success && usersResult?.data?.length > 0;
@@ -70,13 +76,6 @@ async function checkSetupStatus() {
             hasRoles = false;
         }
 
-        // Trigger database initialization directly (creates default tables/data if missing)
-        try {
-            databaseInitialization = await initializeDatabase();
-        } catch (error) {
-            console.error('Error initializing database:', error.message);
-        }
-
         // Determine setup states:
         // 1. If tables exist (settings + roles) but no users → show user creation form
         // 2. If all tables exist AND at least one user exists → setup is complete
@@ -84,18 +83,19 @@ async function checkSetupStatus() {
         const allDataExists = tablesReady && !needsFirstUser;
 
         return {
-            setupData: { existingCollections, databaseInitialization },
+            envStatus,
+            envReady,
             needsFirstUser,
             tablesReady,
             allDataExists,
             showSetupDirWarning: setupDirExists && allDataExists,
-            existingCollections,
-            defaultCredentials: databaseInitialization?.defaultCredentials || null
+            existingCollections
         };
     } catch (error) {
         console.error('Error checking setup status:', error.message);
         return {
-            setupData: null,
+            envStatus: [],
+            envReady: false,
             needsFirstUser: true,
             tablesReady: false,
             allDataExists: false,
@@ -124,13 +124,13 @@ export default async function SetupPage() {
 
     return (
         <SetupPageClient 
-            setupData={status.setupData}
+            envStatus={status.envStatus}
+            envReady={status.envReady}
             needsFirstUser={status.needsFirstUser}
             tablesReady={status.tablesReady}
             allDataExists={status.allDataExists}
             showSetupDirWarning={status.showSetupDirWarning}
             existingCollections={status.existingCollections}
-            defaultCredentials={status.defaultCredentials}
         />
     );
 }

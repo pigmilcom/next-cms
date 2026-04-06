@@ -1,11 +1,17 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
-import initializeBundleAnalyzer from '@next/bundle-analyzer';
 
-// Analyzer
-const withBundleAnalyzer = initializeBundleAnalyzer({
-    enabled: process.env.BUNDLE_ANALYZER_ENABLED === 'true',
-});
+// Analyzer (optional dev dependency — gracefully skip if not installed)
+let withBundleAnalyzer: (config: NextConfig) => NextConfig;
+try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const initializeBundleAnalyzer = require('@next/bundle-analyzer');
+    withBundleAnalyzer = initializeBundleAnalyzer({
+        enabled: process.env.BUNDLE_ANALYZER_ENABLED === 'true',
+    });
+} catch {
+    withBundleAnalyzer = (config: NextConfig) => config;
+}
 
 // Intl
 const withNextIntl = createNextIntlPlugin(
