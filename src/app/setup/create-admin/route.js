@@ -5,6 +5,7 @@ import { encryptPassword, generateSalt } from '@/lib/crypt';
 import { sendWelcomeEmail } from '@/lib/server/email';
 import { cacheFunctions } from '@/lib/shared/cache';
 import { v6 as uuidv6 } from 'uuid';
+import { initializeDatabase } from '../init/db-init.js';
 
 const timeNow = () => new Date().toISOString();
 
@@ -66,6 +67,19 @@ export async function POST(request) {
         } catch (error) {
             // Table might not exist yet, which is fine - it will be created
             console.log('Users table check:', error.message);
+        }
+
+        // Initialise all default tables: site_settings, store_settings, roles
+        // (safe to call even if some tables already exist — checks before creating)
+        const dbInit = await initializeDatabase();
+        if (dbInit?.errors?.length > 0) {
+            console.warn('DB init warnings:', dbInit.errors);
+        }
+        if (!dbInit?.success) {
+            return NextResponse.json(
+                { success: false, error: 'Failed to initialise database tables: ' + (dbInit?.message || 'Unknown error') },
+                { status: 500 }
+            );
         }
 
         // Generate salt via crypto API

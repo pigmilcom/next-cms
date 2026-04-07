@@ -132,33 +132,9 @@ const getDefaultRoles = () => [
     },
 ];
 
-// Cache for initialization status to prevent duplicate runs
-let initializationInProgress = false;
-let initializationComplete = false;
-
 // Initialize default database tables and data
+// Safe to call multiple times — each collection is guarded by an existence check
 export const initializeDatabase = async () => {
-    // Prevent duplicate initialization
-    if (initializationInProgress) {
-        return {
-            success: true,
-            tablesCreated: [],
-            errors: [],
-            message: 'Initialization already in progress'
-        };
-    }
-
-    if (initializationComplete) {
-        return {
-            success: true,
-            tablesCreated: [],
-            errors: [],
-            message: 'Database already initialized'
-        };
-    }
-
-    initializationInProgress = true;
-
     const results = {
         success: false,
         tablesCreated: [],
@@ -312,14 +288,11 @@ export const initializeDatabase = async () => {
             ? `Database initialized successfully. Created: ${results.tablesCreated.join(', ')}`
             : 'Database already initialized with default data';
 
-        initializationComplete = true;
         return results;
     } catch (error) {
         console.error('Database initialization error:', error);
         results.errors.push(error.message);
         results.message = 'Failed to initialize database';
         return results;
-    } finally {
-        initializationInProgress = false;
     }
 };

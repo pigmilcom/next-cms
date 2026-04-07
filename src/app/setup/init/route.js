@@ -106,9 +106,9 @@ export async function GET() {
                 }
             }
 
-            // Initialize database with default tables and data if setup is complete
-            if (isSetupComplete && dbConfigured) {
-                console.log('Setup complete, initializing database...');
+            // Initialize database with default tables and data whenever DB is reachable
+            if (dbConfigured) {
+                console.log('DB configured, initializing default tables...');
                 try {
                 databaseInitialization = await initializeDatabase();
                 } catch (dbInitError) {
