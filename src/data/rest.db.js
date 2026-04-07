@@ -228,7 +228,7 @@ class DBService {
         }
     }
 
-    async insertRecord(record) {
+    async insertRecord(record, options = {}) {
         if (this.isBuildPhase()) {
         return { success: true, data: null };
         }
@@ -241,7 +241,7 @@ class DBService {
         }
         try {
             if (typeof this.service.insertRecord === 'function') {
-                const result = await this.service.insertRecord(record);
+                const result = await this.service.insertRecord(record, options);
                 return { success: true, data: result };
             } else {
                 console.warn(`insertRecord not implemented for ${this.provider} provider`);
@@ -249,6 +249,31 @@ class DBService {
             }
         } catch (error) {
             console.error(`Error in insertRecord (${this.provider}):`, error);
+            return { success: false, message: error.message };
+        }
+    }
+
+    async deleteAllRecordsExcept(excludeTablePatterns = []) {
+        if (this.isBuildPhase()) {
+            return { success: true, data: null };
+        }
+        if (!this.service) {
+            console.error('Database service not initialized');
+            return { success: false, message: 'Database not configured' };
+        }
+        if (!this.connected) {
+            await this.initConnection();
+        }
+        try {
+            if (typeof this.service.deleteAllRecordsExcept === 'function') {
+                const result = await this.service.deleteAllRecordsExcept(excludeTablePatterns);
+                return { success: true, data: result };
+            } else {
+                console.warn(`deleteAllRecordsExcept not implemented for ${this.provider} provider`);
+                return { success: false, message: 'deleteAllRecordsExcept not implemented for this provider' };
+            }
+        } catch (error) {
+            console.error(`Error in deleteAllRecordsExcept (${this.provider}):`, error);
             return { success: false, message: error.message };
         }
     }

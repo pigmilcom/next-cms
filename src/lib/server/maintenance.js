@@ -1052,14 +1052,23 @@ export async function importBackup(backupFile, options = {}) {
             total: records.length,
             success: 0,
             failed: 0,
+            skipped: 0,
             errors: []
         };
 
-        // Clear existing data if requested
+        // Tables whose values should ALWAYS be overridden from the backup (both merge and full restore)
+        const SETTINGS_TABLES = ['site_settings', 'store_settings'];
+        // Tables where existing records must NEVER be overridden to avoid duplicates
+        const PROTECTED_TABLES = ['users'];
+
+        // Helper: extract table name from record key (format: "table:id")
+        const getTableName = (key) => key.split(':')[0];
+
+        // Clear existing data if requested — preserve user records to avoid losing accounts
         if (clearExisting) {
             try {
-                console.log('Clearing existing database data...');
-                const deleteResult = await DBService.deleteAllRecords();
+                console.log('Clearing existing database data (preserving users)...');
+                const deleteResult = await DBService.deleteAllRecordsExcept(PROTECTED_TABLES);
                 if (!deleteResult?.success) {
                     console.warn('Failed to clear existing data:', deleteResult?.error || deleteResult?.message);
                 }
@@ -1069,7 +1078,10 @@ export async function importBackup(backupFile, options = {}) {
             }
         }
 
-        // Restore records
+        // Restore records with table-aware conflict resolution:
+        // - site_settings / store_settings → always upsert (override current values)
+        // - users → INSERT ON CONFLICT DO NOTHING (never override existing users)
+        // - everything else → upsert (override in both merge and full-restore modes)
         console.log(`Restoring ${records.length} records from backup...`);
         for (const record of records) {
             try {
@@ -1080,11 +1092,21 @@ export async function importBackup(backupFile, options = {}) {
                     continue;
                 }
 
-                // Insert record directly with original key (preserves backup structure)
-                const insertResult = await DBService.insertRecord(record);
-                
+                const tableName = getTableName(record.key);
+                const isProtected = PROTECTED_TABLES.includes(tableName);
+
+                // Settings always override; protected tables (users) never override
+                const onConflict = isProtected ? 'ignore' : 'update';
+
+                const insertResult = await DBService.insertRecord(record, { onConflict });
+
                 if (insertResult?.success) {
-                    restoreResults.success++;
+                    // data === null means the record was skipped (DO NOTHING — user already exists)
+                    if (isProtected && insertResult.data === null) {
+                        restoreResults.skipped++;
+                    } else {
+                        restoreResults.success++;
+                    }
                 } else {
                     restoreResults.failed++;
                     restoreResults.errors.push(`Failed to restore ${record.key}: ${insertResult?.error || insertResult?.message || 'Unknown error'}`);
@@ -1102,9 +1124,11 @@ export async function importBackup(backupFile, options = {}) {
             console.warn('Failed to clear caches after restore:', cacheError);
         }
 
-        const wasSuccessful = restoreResults.success > 0;
+        const wasSuccessful = restoreResults.success > 0 || restoreResults.skipped > 0;
+        const skippedMsg = restoreResults.skipped > 0 ? `, ${restoreResults.skipped} users skipped (already exist)` : '';
+        const failedMsg = restoreResults.failed > 0 ? `, ${restoreResults.failed} failed` : '';
         const message = wasSuccessful
-            ? `Backup restored: ${restoreResults.success} records imported${restoreResults.failed > 0 ? `, ${restoreResults.failed} failed` : ''}`
+            ? `Backup restored: ${restoreResults.success} records imported${skippedMsg}${failedMsg}`
             : 'Backup restore failed: No records were imported';
 
         return {
