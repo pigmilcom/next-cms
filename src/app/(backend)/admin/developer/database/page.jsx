@@ -4,6 +4,7 @@
 
 import {
     Activity,
+    AlertTriangle,
     Database,
     Download,
     Edit,
@@ -441,9 +442,9 @@ export default function DatabasePage() {
 
             const backupData = await response.json();
 
-            // Import backup using server function
+            // Import backup using server function (content string, not browser-incompatible Buffer)
             const importResponse = await importBackup(
-                { name: backup.filename, buffer: Buffer.from(JSON.stringify(backupData)) },
+                { name: backup.filename, content: JSON.stringify(backupData) },
                 { clearExisting: true, userId: 'Admin' }
             );
 
@@ -643,14 +644,20 @@ export default function DatabasePage() {
         setDeleteBackupDialog({ open: false, backupId: '', backupName: '' });
 
         try {
-            await dbDelete(backupId, 'backups');
-            toast.success('Backup deleted successfully');
-
-            // Remove the backup from state instead of reloading the page
-            setBackups((prevBackups) => prevBackups.filter((backup) => backup.id !== backupId));
+            setLoading((prev) => ({ ...prev, deleteBackup: true }));
+            const result = await deleteBackup(backupId);
+            if (result?.success) {
+                toast.success(result.message || 'Backup deleted successfully');
+                // Remove the backup from state
+                setBackups((prevBackups) => prevBackups.filter((backup) => backup.id !== backupId));
+            } else {
+                toast.error(result?.error || 'Failed to delete backup');
+            }
         } catch (error) {
             console.error('Error deleting backup:', error);
             toast.error('Failed to delete backup');
+        } finally {
+            setLoading((prev) => ({ ...prev, deleteBackup: false }));
         }
     };
 
@@ -907,7 +914,7 @@ export default function DatabasePage() {
         }
     };
 
-    const confirmFileRestore = async () => {
+    const confirmFileRestore = async (clearExisting = true) => {
         if (restoreConfirmation.toLowerCase() !== 'restore') {
             toast.error('Please type "restore" to confirm');
             return;
@@ -917,19 +924,22 @@ export default function DatabasePage() {
             setLoading((prev) => ({ ...prev, restoreBackup: true }));
             setFileUploadOpen(false);
             setRestoreConfirmation('');
-            setBackupProgress({ current: 0, total: 1, operation: 'Preparing restore from uploaded file...' });
+            const operation = clearExisting
+                ? 'Clearing existing data and restoring from uploaded file...'
+                : 'Merging backup data from uploaded file...';
+            setBackupProgress({ current: 0, total: 1, operation });
 
-            // Import backup using server function
+            // Import backup using server function (content string, not browser-incompatible Buffer)
             const importResponse = await importBackup(
-                { name: uploadedFileName, buffer: Buffer.from(JSON.stringify(uploadedBackupData)) },
-                { clearExisting: true, userId: 'Admin' }
+                { name: uploadedFileName, content: JSON.stringify(uploadedBackupData) },
+                { clearExisting, userId: 'Admin' }
             );
 
             if (importResponse?.success) {
                 setBackupProgress({ current: 1, total: 1, operation: 'Restore completed successfully!' });
 
                 setTimeout(() => {
-                    toast.success('Database restored successfully from uploaded file');
+                    toast.success(importResponse.message || 'Database restored successfully from uploaded file');
                     fetchDatabaseInfo();
                     fetchActivities();
                     fetchBackups();
@@ -1629,25 +1639,25 @@ export default function DatabasePage() {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+                            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950/50">
                                 <div className="mb-2 flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-yellow-400"></div>
-                                    <span className="font-medium text-yellow-800">Warning</span>
+                                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                                    <span className="font-medium text-yellow-800 dark:text-yellow-100">Warning</span>
                                 </div>
-                                <p className="mb-3 text-sm text-yellow-700">
-                                    This will overwrite all existing data. This action cannot be undone.
+                                <p className="mb-3 text-sm text-yellow-700 dark:text-yellow-300">
+                                    Restoring will affect your current database. Choose how to proceed.
                                 </p>
                                 <div className="space-y-1">
-                                    <p className="text-gray-600 text-sm">
+                                    <p className="text-gray-600 text-sm dark:text-gray-400">
                                         File: <strong>{uploadedFileName}</strong>
                                     </p>
                                     {uploadedBackupData?.recordCount && (
-                                        <p className="text-gray-600 text-sm">
+                                        <p className="text-gray-600 text-sm dark:text-gray-400">
                                             Records: <strong>{uploadedBackupData.recordCount}</strong>
                                         </p>
                                     )}
                                     {uploadedBackupData?.provider && (
-                                        <p className="text-gray-600 text-sm">
+                                        <p className="text-gray-600 text-sm dark:text-gray-400">
                                             Provider: <strong>{uploadedBackupData.provider}</strong>
                                         </p>
                                     )}
@@ -1655,7 +1665,7 @@ export default function DatabasePage() {
                             </div>
 
                             <div>
-                                <label className="mb-2 block font-medium text-gray-700 text-sm">
+                                <label className="mb-2 block font-medium text-gray-700 dark:text-gray-300 text-sm">
                                     Type "restore" to confirm:
                                 </label>
                                 <Input
@@ -1665,6 +1675,44 @@ export default function DatabasePage() {
                                     placeholder="Type restore here"
                                     className="w-full"
                                 />
+                            </div>
+
+                            {/* Two restore options */}
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Button
+                                    onClick={() => confirmFileRestore(false)}
+                                    disabled={restoreConfirmation.toLowerCase() !== 'restore' || loading.restoreBackup}
+                                    variant="default"
+                                    className="h-auto flex-col items-center gap-1 py-3">
+                                    {loading.restoreBackup ? (
+                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Download className="h-4 w-4" />
+                                            <span className="font-semibold text-sm">Import & Merge</span>
+                                            <span className="text-xs opacity-90 font-normal text-center">
+                                                Add to existing data
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={() => confirmFileRestore(true)}
+                                    disabled={restoreConfirmation.toLowerCase() !== 'restore' || loading.restoreBackup}
+                                    variant="destructive"
+                                    className="h-auto flex-col items-center gap-1 py-3">
+                                    {loading.restoreBackup ? (
+                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <AlertTriangle className="h-4 w-4" />
+                                            <span className="font-semibold text-sm">Clear & Restore</span>
+                                            <span className="text-xs opacity-90 font-normal text-center">
+                                                Delete all data first
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -1680,21 +1728,6 @@ export default function DatabasePage() {
                             }}>
                             Cancel
                         </Button>
-                        {uploadedBackupData && (
-                            <Button
-                                onClick={confirmFileRestore}
-                                disabled={restoreConfirmation.toLowerCase() !== 'restore' || loading.restoreBackup}
-                                className="bg-red-600 text-white hover:bg-red-700">
-                                {loading.restoreBackup ? (
-                                    <>
-                                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                                        Restoring...
-                                    </>
-                                ) : (
-                                    'Restore Database'
-                                )}
-                            </Button>
-                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
