@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --include=dev || (echo "npm ci failed, fallback to install" && npm install --legacy-peer-deps --include=dev)
+RUN npm ci --legacy-peer-deps --include=dev || (echo "npm ci failed, fallback to install" && npm install --legacy-peer-deps --include=dev)
 COPY . .
 RUN NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
