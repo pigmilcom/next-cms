@@ -959,6 +959,44 @@ export async function getDatabaseTables(params = {}) {
 }
 
 /**
+ * Restore database from a backup file URL (fetches server-side to avoid CORS)
+ * @param {string} fileUrl - Public URL of the backup file (e.g. S3/CDN)
+ * @param {Object} options - Restore options
+ * @param {boolean} options.clearExisting - Whether to clear existing data before restore (default: true)
+ * @param {string} options.userId - User ID performing the restore
+ * @returns {Promise<Object>} Restore result
+ */
+export async function restoreBackupFromUrl(fileUrl, options = {}) {
+    try {
+        if (!fileUrl || typeof fileUrl !== 'string') {
+            return { success: false, error: 'Invalid backup file URL' };
+        }
+
+        // Fetch the backup file server-side (bypasses browser CORS restrictions)
+        let response;
+        try {
+            response = await fetch(fileUrl);
+        } catch (fetchError) {
+            return { success: false, error: `Failed to fetch backup file: ${fetchError.message}` };
+        }
+
+        if (!response.ok) {
+            return {
+                success: false,
+                error: `Failed to fetch backup file: HTTP ${response.status} ${response.statusText}`
+            };
+        }
+
+        const content = await response.text();
+
+        return await importBackup({ content, name: fileUrl.split('/').pop() || 'backup.json' }, options);
+    } catch (error) {
+        console.error('Error restoring backup from URL:', error);
+        return { success: false, error: error.message || 'Failed to restore backup from URL' };
+    }
+}
+
+/**
  * Import and restore database from backup file
  * @param {Object} backupFile - Backup file object with buffer/content
  * @param {Object} options - Restore options

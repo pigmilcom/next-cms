@@ -58,7 +58,7 @@ import {
     getCollectionData,
     logDatabaseActivity
 } from '@/lib/server/database.js';
-import { createDatabaseBackup, getBackupHistory, deleteBackup, importBackup } from '@/lib/server/maintenance.js';
+import { createDatabaseBackup, getBackupHistory, deleteBackup, importBackup, restoreBackupFromUrl } from '@/lib/server/maintenance.js';
 
 export default function DatabasePage() {
     const [selectedTab, setSelectedTab] = useState('collections');
@@ -429,24 +429,16 @@ export default function DatabasePage() {
             setLoading((prev) => ({ ...prev, restoreBackup: true }));
             setBackupProgress({ current: 0, total: 1, operation: 'Preparing restore...' });
 
-            // Fetch backup file from S3
             if (!backup.fileUrl) {
                 toast.error('Backup file URL not found');
                 return;
             }
 
-            const response = await fetch(backup.fileUrl);
-            if (!response.ok) {
-                throw new Error('Failed to fetch backup file');
-            }
-
-            const backupData = await response.json();
-
-            // Import backup using server function (content string, not browser-incompatible Buffer)
-            const importResponse = await importBackup(
-                { name: backup.filename, content: JSON.stringify(backupData) },
-                { clearExisting: true, userId: 'Admin' }
-            );
+            // Fetch and restore server-side to avoid CORS issues with S3/CDN
+            const importResponse = await restoreBackupFromUrl(backup.fileUrl, {
+                clearExisting: true,
+                userId: 'Admin'
+            });
 
             if (importResponse?.success) {
                 setBackupProgress({ current: 1, total: 1, operation: 'Restore completed successfully!' });
