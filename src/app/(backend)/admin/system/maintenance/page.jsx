@@ -21,9 +21,27 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -42,6 +60,7 @@ import {
     getServerInfo,
     getSystemCacheStats,
     importBackup,
+    restoreBackupFromUrl,
     triggerDeployment,
     updateDeployHook
 } from '@/lib/server/maintenance.js';
@@ -63,6 +82,8 @@ export default function MaintenancePage() {
     });
     const [deployHookInput, setDeployHookInput] = useState('');
     const [deployProviderInput, setDeployProviderInput] = useState('vercel');
+    const [deleteBackupDialog, setDeleteBackupDialog] = useState({ open: false, backupId: '' });
+    const [restoreBackupDialog, setRestoreBackupDialog] = useState({ open: false, backup: null });
     const [loading, setLoading] = useState({
         serverInfo: true,
         database: true,
@@ -173,10 +194,12 @@ export default function MaintenancePage() {
 
     // Delete backup
     const handleDeleteBackup = async (backupId) => {
-        if (!confirm('Are you sure you want to delete this backup?')) {
-            return;
-        }
+        setDeleteBackupDialog({ open: true, backupId });
+    };
 
+    const confirmDeleteBackup = async () => {
+        const { backupId } = deleteBackupDialog;
+        setDeleteBackupDialog({ open: false, backupId: '' });
         setLoading((prev) => ({ ...prev, deleteBackup: true }));
         try {
             const result = await deleteBackup(backupId);
@@ -191,6 +214,31 @@ export default function MaintenancePage() {
             toast.error('Failed to delete backup');
         } finally {
             setLoading((prev) => ({ ...prev, deleteBackup: false }));
+        }
+    };
+
+    // Restore backup from saved URL
+    const handleRestoreBackup = (backup) => {
+        setRestoreBackupDialog({ open: true, backup });
+    };
+
+    const confirmRestoreBackup = async (clearExisting) => {
+        const { backup } = restoreBackupDialog;
+        setRestoreBackupDialog({ open: false, backup: null });
+        setLoading((prev) => ({ ...prev, importBackup: true }));
+        try {
+            const result = await restoreBackupFromUrl(backup.fileUrl, { clearExisting, userId: 'admin' });
+            if (result?.success) {
+                toast.success(result.message || 'Database restored successfully');
+                await Promise.all([fetchDatabaseData(), fetchDatabaseTables(), fetchDatabaseStats()]);
+            } else {
+                toast.error(result?.error || 'Failed to restore backup');
+            }
+        } catch (error) {
+            console.error('Error restoring backup:', error);
+            toast.error('Failed to restore backup');
+        } finally {
+            setLoading((prev) => ({ ...prev, importBackup: false }));
         }
     };
 
@@ -219,18 +267,8 @@ export default function MaintenancePage() {
             return;
         }
 
-        // Confirm before importing
-        const confirmMessage = 
-            'Are you sure you want to import this backup? This will add all records from the backup to your database. ' +
-            'To replace all existing data, use the "Clear & Import" option instead.';
-        
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
         setLoading((prev) => ({ ...prev, importBackup: true }));
         try {
-            // Read file content as text
             const arrayBuffer = await file.arrayBuffer();
             const decoder = new TextDecoder('utf-8');
             const content = decoder.decode(arrayBuffer);
@@ -249,7 +287,6 @@ export default function MaintenancePage() {
 
             if (result?.success) {
                 toast.success(result.message || 'Backup imported successfully');
-                // Refresh all data after import
                 await Promise.all([
                     fetchDatabaseData(),
                     fetchDatabaseTables(),
@@ -273,24 +310,8 @@ export default function MaintenancePage() {
             return;
         }
 
-        // Strong confirmation before clearing and importing
-        const confirmMessage = 
-            '⚠️ WARNING: This will DELETE ALL existing data and replace it with the backup data. ' +
-            'This action CANNOT be undone. Are you absolutely sure?';
-        
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
-        // Second confirmation
-        const secondConfirm = confirm('This is your last chance. Click OK to proceed with clearing all data and importing the backup.');
-        if (!secondConfirm) {
-            return;
-        }
-
         setLoading((prev) => ({ ...prev, importBackup: true }));
         try {
-            // Read file content as text
             const arrayBuffer = await file.arrayBuffer();
             const decoder = new TextDecoder('utf-8');
             const content = decoder.decode(arrayBuffer);
@@ -309,7 +330,6 @@ export default function MaintenancePage() {
 
             if (result?.success) {
                 toast.success(result.message || 'Backup imported successfully');
-                // Refresh all data after import
                 await Promise.all([
                     fetchDatabaseData(),
                     fetchDatabaseTables(),
@@ -509,6 +529,7 @@ export default function MaintenancePage() {
                         }}
                         onCreateBackup={handleCreateBackup}
                         onDeleteBackup={handleDeleteBackup}
+                        onRestoreBackup={handleRestoreBackup}
                         onImportBackup={handleImportBackup}
                         onClearAndImportBackup={handleClearAndImportBackup}
                         formatBytes={formatBytes}
@@ -533,6 +554,111 @@ export default function MaintenancePage() {
                     />
                 </TabsContent>
             </Tabs>
+
+            {/* Delete Backup Confirmation */}
+            <AlertDialog
+                open={deleteBackupDialog.open}
+                onOpenChange={(open) => setDeleteBackupDialog({ open, backupId: '' })}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Backup</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this backup? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteBackup} className="bg-red-600 text-white hover:bg-red-700">
+                            Delete Backup
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Restore Backup Confirmation Dialog */}
+            <Dialog
+                open={restoreBackupDialog.open}
+                onOpenChange={(open) => { if (!open) setRestoreBackupDialog({ open: false, backup: null }); }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Restore Backup</DialogTitle>
+                        <DialogDescription>
+                            Choose how to restore this backup to your database.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {restoreBackupDialog.backup && (
+                        <div className="space-y-4">
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/50">
+                                <p className="font-medium text-sm text-blue-900 dark:text-blue-100">Backup Details</p>
+                                <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                                    <strong>{restoreBackupDialog.backup.filename || restoreBackupDialog.backup.name}</strong>
+                                </p>
+                                <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                    {new Date(restoreBackupDialog.backup.createdAt).toLocaleString()} •{' '}
+                                    {restoreBackupDialog.backup.recordCount || 0} records
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950/50">
+                                <div className="flex items-start gap-3">
+                                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-600 dark:text-orange-400" />
+                                    <div>
+                                        <p className="font-medium text-sm text-orange-900 dark:text-orange-100">Choose how to restore</p>
+                                        <p className="mt-1 text-xs text-orange-700 dark:text-orange-300">
+                                            <strong>Import &amp; Merge:</strong> adds backup records to existing data.<br />
+                                            <strong>Clear &amp; Restore:</strong> deletes all data first, then imports.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Button
+                                    onClick={() => confirmRestoreBackup(false)}
+                                    disabled={loading.importBackup}
+                                    variant="default"
+                                    className="h-auto flex-col items-center gap-2 py-4">
+                                    {loading.importBackup ? (
+                                        <RefreshCw className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Download className="h-5 w-5" />
+                                            <span className="font-semibold text-center">Import &amp; Merge</span>
+                                            <span className="text-center text-xs font-normal opacity-90">
+                                                Add to existing data
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={() => confirmRestoreBackup(true)}
+                                    disabled={loading.importBackup}
+                                    variant="destructive"
+                                    className="h-auto flex-col items-center gap-2 py-4">
+                                    {loading.importBackup ? (
+                                        <RefreshCw className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <AlertTriangle className="h-5 w-5" />
+                                            <span className="font-semibold text-center">Clear &amp; Restore</span>
+                                            <span className="text-center text-xs font-normal opacity-90">
+                                                Delete all data first
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRestoreBackupDialog({ open: false, backup: null })}>
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
@@ -703,6 +829,7 @@ function BackupsTab({
     onRefresh,
     onCreateBackup,
     onDeleteBackup,
+    onRestoreBackup,
     onImportBackup,
     onClearAndImportBackup,
     formatBytes
@@ -958,6 +1085,17 @@ function BackupsTab({
                                                 className="gap-2">
                                                 <Download className="h-4 w-4" />
                                                 <span className="hidden sm:inline">Download</span>
+                                            </Button>
+                                        )}
+                                        {backup.fileUrl && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onRestoreBackup(backup)}
+                                                disabled={loading.importBackup}
+                                                className="gap-2">
+                                                <Upload className="h-4 w-4" />
+                                                <span className="hidden sm:inline">Restore</span>
                                             </Button>
                                         )}
                                         <Button

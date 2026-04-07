@@ -97,7 +97,6 @@ export default function DatabasePage() {
     const [fileUploadOpen, setFileUploadOpen] = useState(false);
     const [uploadedBackupData, setUploadedBackupData] = useState(null);
     const [uploadedFileName, setUploadedFileName] = useState('');
-    const [restoreConfirmation, setRestoreConfirmation] = useState('');
 
     // Consolidated loading states
     const [loading, setLoading] = useState({
@@ -419,24 +418,22 @@ export default function DatabasePage() {
         setRestoreBackupDialog({ open: true, backup });
     };
 
-    const confirmRestoreBackup = async (backupParam = null) => {
-        const backup = backupParam?.backup || restoreBackupDialog.backup;
-        if (!backupParam) {
-            setRestoreBackupDialog({ open: false, backup: null });
-        }
+    const confirmRestoreBackup = async (clearExisting = true) => {
+        const backup = restoreBackupDialog.backup;
+        setRestoreBackupDialog({ open: false, backup: null });
 
         try {
             setLoading((prev) => ({ ...prev, restoreBackup: true }));
             setBackupProgress({ current: 0, total: 1, operation: 'Preparing restore...' });
 
-            if (!backup.fileUrl) {
+            if (!backup?.fileUrl) {
                 toast.error('Backup file URL not found');
                 return;
             }
 
             // Fetch and restore server-side to avoid CORS issues with S3/CDN
             const importResponse = await restoreBackupFromUrl(backup.fileUrl, {
-                clearExisting: true,
+                clearExisting,
                 userId: 'Admin'
             });
 
@@ -462,169 +459,31 @@ export default function DatabasePage() {
         }
     };
 
-    const handleDownloadBackup = async (backup, format = 'json') => {
+    const handleDownloadBackup = async (backup) => {
         try {
             if (!backup.fileUrl) {
                 toast.error('Backup file URL not found');
                 return;
             }
 
-            toast.info(`Downloading backup as ${format.toUpperCase()}...`);
+            toast.info('Downloading backup...');
 
-            // For JSON format, download directly from S3
-            if (format === 'json') {
-                const link = document.createElement('a');
-                link.href = backup.fileUrl;
-                link.download = backup.filename || 'backup.json';
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                document.body.appendChild(link);
-                link.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    toast.success('Backup download started');
-                }, 100);
-                return;
-            }
+            const link = document.createElement('a');
+            link.href = backup.fileUrl;
+            link.download = backup.filename || 'backup.json';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
 
-            // For other formats, fetch the backup data from S3 and convert
-            const response = await fetch(backup.fileUrl);
-            if (!response.ok) {
-                throw new Error('Failed to fetch backup file');
-            }
-
-            const backupData = await response.json();
-            let content, mimeType, extension;
-
-            switch (format) {
-                case 'sql':
-                    content = convertToSQL(backupData);
-                    mimeType = 'application/sql';
-                    extension = 'sql';
-                    break;
-                case 'csv':
-                    content = convertToCSV(backupData);
-                    mimeType = 'text/csv';
-                    extension = 'csv';
-                    break;
-                case 'txt':
-                    content = JSON.stringify(backupData, null, 2);
-                    mimeType = 'text/plain';
-                    extension = 'txt';
-                    break;
-                default:
-                    content = JSON.stringify(backupData, null, 2);
-                    mimeType = 'application/json';
-                    extension = 'json';
-            }
-
-            const blob = new Blob([content], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${(backup.filename || 'backup').replace('.json', '')}.${extension}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            toast.success(`Backup downloaded as ${format.toUpperCase()}`);
+            setTimeout(() => {
+                document.body.removeChild(link);
+                toast.success('Backup download started');
+            }, 100);
         } catch (error) {
             console.error('Error downloading backup:', error);
             toast.error('Failed to download backup');
         }
-    };
-
-    const convertToSQL = (backupData) => {
-        let sql = '-- Database Backup SQL Export\n';
-        sql += `-- Generated: ${new Date().toISOString()}\n`;
-        sql += `-- Provider: ${backupData.provider || 'Unknown'}\n`;
-        sql += `-- Records: ${backupData.recordCount || 0}\n\n`;
-
-        // Group records by table (first part of key before ':')
-        const tableGroups = {};
-        const records = backupData.data || [];
-
-        records.forEach(record => {
-            if (record.key) {
-                const tableName = record.key.split(':')[0];
-                if (!tableGroups[tableName]) {
-                    tableGroups[tableName] = [];
-                }
-                tableGroups[tableName].push(record.data);
-            }
-        });
-
-        Object.entries(tableGroups).forEach(([tableName, records]) => {
-            sql += `-- Table: ${tableName}\n`;
-            sql += `DROP TABLE IF EXISTS \`${tableName}\`;\n`;
-
-            if (Array.isArray(records) && records.length > 0) {
-                const firstRecord = records[0];
-                const columns = Object.keys(firstRecord);
-
-                sql += `CREATE TABLE \`${tableName}\` (\n`;
-                columns.forEach((col, i) => {
-                    sql += `  \`${col}\` TEXT${i < columns.length - 1 ? ',' : ''}\n`;
-                });
-                sql += `);\n\n`;
-
-                records.forEach((record) => {
-                    const values = columns.map((col) => {
-                        const val = record[col];
-                        return val === null || val === undefined ? 'NULL' : `'${String(val).replace(/'/g, "''")}'`;
-                    });
-                    sql += `INSERT INTO \`${tableName}\` (${columns.map((c) => `\`${c}\``).join(', ')}) VALUES (${values.join(', ')});\n`;
-                });
-            } else {
-                sql += `CREATE TABLE \`${tableName}\` (id TEXT);\n`;
-            }
-            sql += '\n';
-        });
-
-        return sql;
-    };
-
-    const convertToCSV = (backupData) => {
-        let csv = `# Database Backup Export\n`;
-        csv += `# Generated: ${new Date().toISOString()}\n`;
-        csv += `# Provider: ${backupData.provider || 'Unknown'}\n`;
-        csv += `# Records: ${backupData.recordCount || 0}\n\n`;
-
-        // Group records by table
-        const tableGroups = {};
-        const records = backupData.data || [];
-
-        records.forEach(record => {
-            if (record.key) {
-                const tableName = record.key.split(':')[0];
-                if (!tableGroups[tableName]) {
-                    tableGroups[tableName] = [];
-                }
-                tableGroups[tableName].push(record.data);
-            }
-        });
-
-        Object.entries(tableGroups).forEach(([tableName, records]) => {
-            csv += `# Table: ${tableName}\n`;
-
-            if (Array.isArray(records) && records.length > 0) {
-                const columns = Object.keys(records[0]);
-                csv += `${columns.join(',')}\n`;
-
-                records.forEach((record) => {
-                    const values = columns.map((col) => {
-                        const val = record[col];
-                        return val === null || val === undefined ? '' : `"${String(val).replace(/"/g, '""')}"`;
-                    });
-                    csv += `${values.join(',')}\n`;
-                });
-            }
-            csv += '\n';
-        });
-
-        return csv;
     };
 
     const handleDeleteBackup = async (backupId, backupName) => {
@@ -672,8 +531,8 @@ export default function DatabasePage() {
         const fileName = file.name;
         const fileExtension = fileName.split('.').pop().toLowerCase();
 
-        if (!['json', 'sql', 'csv'].includes(fileExtension)) {
-            toast.error('Please select a valid JSON, SQL, or CSV backup file');
+        if (fileExtension !== 'json') {
+            toast.error('Please select a valid JSON backup file');
             return;
         }
 
@@ -681,53 +540,31 @@ export default function DatabasePage() {
             const fileContent = await readFileContent(file);
             let backupData = null;
 
-            if (fileExtension === 'json') {
-                try {
-                    const parsed = JSON.parse(fileContent);
-                    // Validate if it's a proper backup format
-                    if (typeof parsed === 'object' && parsed !== null) {
-                        // Normalize to maintenance backup format if needed
-                        if (!parsed.version && !parsed.data) {
-                            // Old format - wrap it
-                            backupData = {
-                                version: '1.0',
-                                timestamp: new Date().toISOString(),
-                                provider: 'unknown',
-                                recordCount: 0,
-                                data: Object.entries(parsed).map(([key, data]) => ({ key, data }))
-                            };
-                        } else {
-                            backupData = parsed;
-                        }
+            try {
+                const parsed = JSON.parse(fileContent);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    if (!parsed.version && !parsed.data) {
+                        backupData = {
+                            version: '1.0',
+                            timestamp: new Date().toISOString(),
+                            provider: 'unknown',
+                            recordCount: 0,
+                            data: Object.entries(parsed).map(([key, data]) => ({ key, data }))
+                        };
                     } else {
-                        throw new Error('Invalid JSON backup format');
+                        backupData = parsed;
                     }
-                } catch (_error) {
-                    toast.error('Invalid JSON backup file format');
-                    return;
+                } else {
+                    throw new Error('Invalid JSON backup format');
                 }
-            } else if (fileExtension === 'sql') {
-                // For SQL files, convert to JSON format
-                try {
-                    backupData = parseSQLBackup(fileContent);
-                } catch (_error) {
-                    toast.error('Invalid SQL backup file format');
-                    return;
-                }
-            } else if (fileExtension === 'csv') {
-                // For CSV files, convert to JSON format
-                try {
-                    backupData = parseCSVBackup(fileContent);
-                } catch (_error) {
-                    toast.error('Invalid CSV backup file format');
-                    return;
-                }
+            } catch (_error) {
+                toast.error('Invalid JSON backup file format');
+                return;
             }
 
             setUploadedBackupData(backupData);
             setUploadedFileName(fileName);
-            setRestoreConfirmation('');
-            toast.success(`Backup file loaded successfully (${fileExtension.toUpperCase()})`);
+            toast.success('Backup file loaded successfully');
         } catch (error) {
             console.error('Error reading file:', error);
             toast.error('Failed to read backup file');
@@ -743,162 +580,6 @@ export default function DatabasePage() {
         });
     };
 
-    const parseSQLBackup = (sqlContent) => {
-        // Basic SQL parser for backup files
-        const tableData = {};
-        const lines = sqlContent.split('\n');
-        let currentTable = null;
-        const currentColumns = [];
-
-        // Extract provider and timestamp from header comments
-        let provider = 'unknown';
-        const providerMatch = sqlContent.match(/-- Provider: (.+)/);
-        if (providerMatch) {
-            provider = providerMatch[1].trim();
-        }
-
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-
-            // Detect table creation
-            const createTableMatch = trimmedLine.match(/CREATE TABLE `?([^`\s]+)`?/i);
-            if (createTableMatch) {
-                currentTable = createTableMatch[1];
-                tableData[currentTable] = [];
-                continue;
-            }
-
-            // Detect column definitions (simplified)
-            if (trimmedLine.includes('TEXT') || trimmedLine.includes('VARCHAR')) {
-                const columnMatch = trimmedLine.match(/`?([^`\s]+)`?\s+/);
-                if (columnMatch) {
-                    currentColumns.push(columnMatch[1]);
-                }
-                continue;
-            }
-
-            // Detect insert statements
-            const insertMatch = trimmedLine.match(/INSERT INTO `?([^`\s]+)`?.*VALUES\s*\((.+)\)/i);
-            if (insertMatch && currentTable) {
-                try {
-                    const tableName = insertMatch[1];
-                    const valuesStr = insertMatch[2];
-                    const values = valuesStr.split(',').map((v) => {
-                        const trimmed = v.trim();
-                        if (trimmed === 'NULL') return null;
-                        if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
-                            return trimmed.slice(1, -1).replace(/''/g, "'");
-                        }
-                        return trimmed;
-                    });
-
-                    const record = {};
-                    currentColumns.forEach((col, idx) => {
-                        record[col] = values[idx] || null;
-                    });
-
-                    if (!tableData[tableName]) {
-                        tableData[tableName] = [];
-                    }
-                    tableData[tableName].push(record);
-                } catch (_error) {
-                    // Skip invalid insert statements
-                }
-            }
-        }
-
-        // Convert to maintenance backup format
-        const recordsArray = [];
-        let recordCount = 0;
-
-        Object.entries(tableData).forEach(([tableName, records]) => {
-            records.forEach((record, index) => {
-                recordsArray.push({
-                    key: `${tableName}:${record.id || index}`,
-                    data: record
-                });
-                recordCount++;
-            });
-        });
-
-        return {
-            version: '1.0',
-            timestamp: new Date().toISOString(),
-            provider: provider,
-            recordCount: recordCount,
-            data: recordsArray
-        };
-    };
-
-    const parseCSVBackup = (csvContent) => {
-        // Parse CSV backup format
-        const lines = csvContent.split('\n');
-        const recordsArray = [];
-        let currentTable = null;
-        let headers = [];
-        let recordCount = 0;
-
-        // Extract provider from header comments
-        let provider = 'unknown';
-        const providerMatch = csvContent.match(/# Provider: (.+)/);
-        if (providerMatch) {
-            provider = providerMatch[1].trim();
-        }
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-
-            // Skip empty lines and comments except table markers
-            if (!line || (line.startsWith('#') && !line.startsWith('# Table:'))) {
-                continue;
-            }
-
-            // Detect table sections
-            if (line.startsWith('# Table:')) {
-                currentTable = line.split(':')[1].trim();
-                // Next non-empty line should be headers
-                i++;
-                while (i < lines.length && (!lines[i].trim() || lines[i].startsWith('#'))) {
-                    i++;
-                }
-                if (i < lines.length) {
-                    headers = lines[i].split(',').map((h) => h.replace(/"/g, '').trim());
-                }
-                continue;
-            }
-
-            // Parse data rows
-            if (currentTable && headers.length > 0) {
-                try {
-                    const values = line.match(/("([^"]*)"|[^,]+)/g) || [];
-                    if (values.length === headers.length) {
-                        const record = {};
-                        headers.forEach((header, idx) => {
-                            const value = values[idx].replace(/^"|"$/g, '').replace(/""/g, '"');
-                            record[header] = value === '' ? null : value;
-                        });
-
-                        recordsArray.push({
-                            key: `${currentTable}:${record.id || recordCount}`,
-                            data: record
-                        });
-                        recordCount++;
-                    }
-                } catch (_error) {
-                    // Skip invalid rows
-                }
-            }
-        }
-
-        return {
-            version: '1.0',
-            timestamp: new Date().toISOString(),
-            provider: provider,
-            recordCount: recordCount,
-            data: recordsArray
-        };
-    };
-
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -907,15 +588,9 @@ export default function DatabasePage() {
     };
 
     const confirmFileRestore = async (clearExisting = true) => {
-        if (restoreConfirmation.toLowerCase() !== 'restore') {
-            toast.error('Please type "restore" to confirm');
-            return;
-        }
-
         try {
             setLoading((prev) => ({ ...prev, restoreBackup: true }));
             setFileUploadOpen(false);
-            setRestoreConfirmation('');
             const operation = clearExisting
                 ? 'Clearing existing data and restoring from uploaded file...'
                 : 'Merging backup data from uploaded file...';
@@ -1351,25 +1026,15 @@ export default function DatabasePage() {
                                                                 {formatBytes(backup.fileSize || backup.size || 0)}
                                                             </div>
                                                         </div>
-                                                        <div className="flex gap-1">
-                                                            <select
-                                                                className="rounded border px-2 py-1 text-xs"
-                                                                onChange={(e) => {
-                                                                    if (e.target.value) {
-                                                                        handleDownloadBackup(backup, e.target.value);
-                                                                        e.target.value = ''; // Reset selection
-                                                                    }
-                                                                }}
-                                                                defaultValue=""
-                                                                disabled={loading.createBackup || loading.restoreBackup}>
-                                                                <option value="" disabled>
-                                                                    Download
-                                                                </option>
-                                                                <option value="json">JSON</option>
-                                                                <option value="sql">SQL</option>
-                                                                <option value="csv">CSV</option>
-                                                                <option value="txt">TXT</option>
-                                                            </select>
+                                        <div className="flex gap-1">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleDownloadBackup(backup)}
+                                                                disabled={loading.createBackup || loading.restoreBackup}
+                                                                title="Download JSON">
+                                                                <Download className="h-3 w-3" />
+                                                            </Button>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
@@ -1598,12 +1263,12 @@ export default function DatabasePage() {
             </Dialog>
 
             {/* File Upload Dialog */}
-            <Dialog open={fileUploadOpen} onOpenChange={setFileUploadOpen}>
+            <Dialog open={fileUploadOpen} onOpenChange={(open) => { if (!open) { setUploadedBackupData(null); setUploadedFileName(''); } setFileUploadOpen(open); }}>
                 <DialogContent className="max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Restore Backup</DialogTitle>
+                        <DialogTitle>Restore from File</DialogTitle>
                         <DialogDescription>
-                            Select a backup file to restore your database (JSON, SQL, or CSV format)
+                            Select a JSON backup file to restore your database
                         </DialogDescription>
                     </DialogHeader>
 
@@ -1613,11 +1278,11 @@ export default function DatabasePage() {
                                 <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
                                 <p className="mb-2 text-sm">Select a backup file to restore</p>
                                 <p className="mb-4 text-muted-foreground text-xs">
-                                    Supports JSON, SQL, and CSV formats
+                                    Supports JSON format only
                                 </p>
                                 <input
                                     type="file"
-                                    accept=".json,.sql,.csv"
+                                    accept=".json,application/json"
                                     onChange={handleFileUpload}
                                     className="hidden"
                                     id="backup-file-input"
@@ -1631,49 +1296,43 @@ export default function DatabasePage() {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950/50">
-                                <div className="mb-2 flex items-center gap-2">
-                                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                                    <span className="font-medium text-yellow-800 dark:text-yellow-100">Warning</span>
-                                </div>
-                                <p className="mb-3 text-sm text-yellow-700 dark:text-yellow-300">
-                                    Restoring will affect your current database. Choose how to proceed.
-                                </p>
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/50">
                                 <div className="space-y-1">
-                                    <p className="text-gray-600 text-sm dark:text-gray-400">
+                                    <p className="font-medium text-sm text-blue-900 dark:text-blue-100">Selected File</p>
+                                    <p className="text-blue-700 text-sm dark:text-blue-300">
                                         File: <strong>{uploadedFileName}</strong>
                                     </p>
                                     {uploadedBackupData?.recordCount && (
-                                        <p className="text-gray-600 text-sm dark:text-gray-400">
+                                        <p className="text-blue-700 text-sm dark:text-blue-300">
                                             Records: <strong>{uploadedBackupData.recordCount}</strong>
                                         </p>
                                     )}
                                     {uploadedBackupData?.provider && (
-                                        <p className="text-gray-600 text-sm dark:text-gray-400">
+                                        <p className="text-blue-700 text-sm dark:text-blue-300">
                                             Provider: <strong>{uploadedBackupData.provider}</strong>
                                         </p>
                                     )}
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="mb-2 block font-medium text-gray-700 dark:text-gray-300 text-sm">
-                                    Type "restore" to confirm:
-                                </label>
-                                <Input
-                                    type="text"
-                                    value={restoreConfirmation}
-                                    onChange={(e) => setRestoreConfirmation(e.target.value)}
-                                    placeholder="Type restore here"
-                                    className="w-full"
-                                />
+                            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950/50">
+                                <div className="flex items-start gap-3">
+                                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-600 dark:text-orange-400" />
+                                    <div>
+                                        <p className="font-medium text-sm text-orange-900 dark:text-orange-100">Choose how to restore</p>
+                                        <p className="mt-1 text-xs text-orange-700 dark:text-orange-300">
+                                            <strong>Import &amp; Merge:</strong> adds backup records to existing data.<br />
+                                            <strong>Clear &amp; Restore:</strong> deletes all data first, then imports.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Two restore options */}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <Button
                                     onClick={() => confirmFileRestore(false)}
-                                    disabled={restoreConfirmation.toLowerCase() !== 'restore' || loading.restoreBackup}
+                                    disabled={loading.restoreBackup}
                                     variant="default"
                                     className="h-auto flex-col items-center gap-1 py-3">
                                     {loading.restoreBackup ? (
@@ -1681,8 +1340,8 @@ export default function DatabasePage() {
                                     ) : (
                                         <>
                                             <Download className="h-4 w-4" />
-                                            <span className="font-semibold text-sm">Import & Merge</span>
-                                            <span className="text-xs opacity-90 font-normal text-center">
+                                            <span className="font-semibold text-sm">Import &amp; Merge</span>
+                                            <span className="text-center text-xs font-normal opacity-90">
                                                 Add to existing data
                                             </span>
                                         </>
@@ -1690,7 +1349,7 @@ export default function DatabasePage() {
                                 </Button>
                                 <Button
                                     onClick={() => confirmFileRestore(true)}
-                                    disabled={restoreConfirmation.toLowerCase() !== 'restore' || loading.restoreBackup}
+                                    disabled={loading.restoreBackup}
                                     variant="destructive"
                                     className="h-auto flex-col items-center gap-1 py-3">
                                     {loading.restoreBackup ? (
@@ -1698,8 +1357,8 @@ export default function DatabasePage() {
                                     ) : (
                                         <>
                                             <AlertTriangle className="h-4 w-4" />
-                                            <span className="font-semibold text-sm">Clear & Restore</span>
-                                            <span className="text-xs opacity-90 font-normal text-center">
+                                            <span className="font-semibold text-sm">Clear &amp; Restore</span>
+                                            <span className="text-center text-xs font-normal opacity-90">
                                                 Delete all data first
                                             </span>
                                         </>
@@ -1716,7 +1375,6 @@ export default function DatabasePage() {
                                 setFileUploadOpen(false);
                                 setUploadedBackupData(null);
                                 setUploadedFileName('');
-                                setRestoreConfirmation('');
                             }}>
                             Cancel
                         </Button>
@@ -1745,28 +1403,90 @@ export default function DatabasePage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Restore Backup Confirmation */}
-            <AlertDialog
+            {/* Restore Backup Confirmation Dialog */}
+            <Dialog
                 open={restoreBackupDialog.open}
-                onOpenChange={(open) => setRestoreBackupDialog({ open, backup: null })}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Restore Backup</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Are you sure you want to restore this backup? This will overwrite existing data and cannot
-                            be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={() => confirmRestoreBackup()}
-                            className="bg-blue-600 hover:bg-blue-700">
-                            Restore Backup
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                onOpenChange={(open) => { if (!open) setRestoreBackupDialog({ open: false, backup: null }); }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Restore Backup</DialogTitle>
+                        <DialogDescription>
+                            Choose how to restore this backup to your database.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {restoreBackupDialog.backup && (
+                        <div className="space-y-4">
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/50">
+                                <p className="font-medium text-sm text-blue-900 dark:text-blue-100">Backup Details</p>
+                                <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                                    <strong>{restoreBackupDialog.backup.filename || restoreBackupDialog.backup.name}</strong>
+                                </p>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                    {new Date(restoreBackupDialog.backup.createdAt).toLocaleString()} •{' '}
+                                    {restoreBackupDialog.backup.recordCount || 0} records
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950/50">
+                                <div className="flex items-start gap-3">
+                                    <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-orange-600 dark:text-orange-400" />
+                                    <div>
+                                        <p className="font-medium text-sm text-orange-900 dark:text-orange-100">Choose how to restore</p>
+                                        <p className="mt-1 text-xs text-orange-700 dark:text-orange-300">
+                                            <strong>Import &amp; Merge:</strong> adds backup records to existing data.<br />
+                                            <strong>Clear &amp; Restore:</strong> deletes all data first, then imports.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Button
+                                    onClick={() => confirmRestoreBackup(false)}
+                                    disabled={loading.restoreBackup}
+                                    variant="default"
+                                    className="h-auto flex-col items-center gap-1 py-3">
+                                    {loading.restoreBackup ? (
+                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Download className="h-4 w-4" />
+                                            <span className="font-semibold text-sm">Import &amp; Merge</span>
+                                            <span className="text-center text-xs font-normal opacity-90">
+                                                Add to existing data
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={() => confirmRestoreBackup(true)}
+                                    disabled={loading.restoreBackup}
+                                    variant="destructive"
+                                    className="h-auto flex-col items-center gap-1 py-3">
+                                    {loading.restoreBackup ? (
+                                        <RefreshCw className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <AlertTriangle className="h-4 w-4" />
+                                            <span className="font-semibold text-sm">Clear &amp; Restore</span>
+                                            <span className="text-center text-xs font-normal opacity-90">
+                                                Delete all data first
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setRestoreBackupDialog({ open: false, backup: null })}>
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Delete Backup Confirmation */}
             <AlertDialog
