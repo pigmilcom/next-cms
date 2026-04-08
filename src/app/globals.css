@@ -129,7 +129,7 @@
     --primary-hover: lab(89.88% 0 -0.01); /* #2e412a */
     --secondary: lab(5.06% 0 0); /* #147500 */
     --secondary-hover: lab(20.33% 0 0); /* #147500 */
-    --accent: oklch(38.666% 0.00004 271.152); 
+    --accent: oklch(18.674% 0.00002 271.152); 
     --brand-inverse: var(--brand);
     --background-rgba: var(--dark-rgba);
     --background: oklch(8.467% 0.00001 271.152);
@@ -662,6 +662,24 @@ table:not([data-slot="calendar"] table, [data-slot="calendar"] *) th {
     background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
 } 
 
+/* ── Homepage keyframes ── */
+@keyframes pg-scan {
+    0% { top: 0; opacity: 0.6; }
+    100% { top: 100vh; opacity: 0; }
+}
+@keyframes pg-slide-up {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pg-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes pg-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+}
+
 .scrollbar-thumb-primary\/20::-webkit-scrollbar-thumb {
     background: color-mix(in srgb, var(--primary) 20%, transparent);
 }
@@ -752,11 +770,12 @@ table:not([data-slot="calendar"] table, [data-slot="calendar"] *) th {
     z-index: 999;
 }
 #cc-main .cm__btns { 
+    gap: 0.45rem;
     border-color: var(--border) !important;
 }
 #cc-main .cm__btn,
 #cc-main .pm__btn {
-    background: var(--surface);
+    background: var(--accent);
     color: var(--foreground);  
     font-weight: bolder; 
     border-color: var(--border);
