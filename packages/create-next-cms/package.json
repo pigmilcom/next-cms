@@ -1,0 +1,37 @@
+{
+    "name": "@pigmilcom/create-next-cms",
+    "version": "1.0.0",
+    "description": "Create a new NextCMS project – production-ready Next.js 16 CMS & E-commerce platform",
+    "keywords": [
+        "nextjs",
+        "cms",
+        "ecommerce",
+        "create",
+        "scaffold",
+        "template",
+        "next-cms"
+    ],
+    "homepage": "https://github.com/pigmilcom/next-cms#readme",
+    "bugs": {
+        "url": "https://github.com/pigmilcom/next-cms/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/pigmilcom/next-cms.git",
+        "directory": "packages/create-next-cms"
+    },
+    "license": "MIT",
+    "type": "module",
+    "bin": {
+        "create-next-cms": "bin/index.js"
+    },
+    "files": [
+        "bin"
+    ],
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

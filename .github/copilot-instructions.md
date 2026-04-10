@@ -8,13 +8,14 @@ A production-ready Next.js 16 CMS & E-commerce platform with multi-database supp
 - **Tailwind CSS 4** + **shadcn/ui** + **Radix UI**
 - **Biome** for linting/formatting (no ESLint/Prettier)
 - **NextAuth 5**, **next-intl**, **react-hook-form** + **zod**
-- **Payments**: Stripe, EuPago (MB Way, Multibanco)
+- **Payments**: Stripe, EuPago (MB Way, Multibanco) & SumUp
+- **Databases**: PostgreSQL (primary), Firebase (optional)  
 
 ## Architecture Patterns
 
 ### Database Abstraction (`@/data/rest.db.js`)
 - **Single interface** for PostgreSQL, or Firebase (auto-detects via env vars)
-- Always use `DBService` methods: `.read()`, `.readAll()`, `.readBy()`, `.readByAll()`, `.create()`, `.update()`, `.delete()`
+- Always use `DBService` methods: `.read()`, `.readAll()`, `.readBy()`, `.readByAll()`, `.create()`, `.update()`, `.delete()`, `.upload()`
 - Never import provider-specific services (`postgres.db.js`, `firebase.db.js`, ..) directly
 
 ### Centralized Cache System (`@/lib/shared/cache.js`)
@@ -34,6 +35,7 @@ A production-ready Next.js 16 CMS & E-commerce platform with multi-database supp
 - `settings` - Site and store settings
 - `users` - User profiles and lists
 - `notifications` - Notification data
+-  etc. (create new instances as needed, e.g., `auth`, `analytics`, etc.)
 
 **Initialize Cache:**
 ```javascript
@@ -113,13 +115,13 @@ await clearCache('store', 'orders', 'settings'); // Clear multiple instances
 
 ### Server Function Organization
 **NEVER mix client and server functions**. Import from:
-- **Store operations**: `@/lib/server/store.js` (getCatalog, getCategories, addToWatchlist, etc.)
-- **Order operations**: `@/lib/server/orders.js` (getAllOrders, createOrder, updateOrder, etc.)
-- **Settings**: `@/lib/server/settings.js` (getSettings, updateSiteSettings)
+- **Store operations**: `@/lib/server/store.js` (getCatalog, getCategories, etc.)
+- **Order operations**: `@/lib/server/orders.js` (getAllOrders, createOrder, etc.)
+- **Settings**: `@/lib/server/settings.js` (getSettings)
 - **Auth helpers**: `@/lib/server/auth.js` (withAuth, withAdminAuth)
 - **Emails**: `@/lib/server/email.js` (sendOrderConfirmation, etc.)
-- **Payments**: `@/lib/server/gateway.js` (createStripePaymentIntent, createEuPagoReference)
-- **Client operations**: `@/lib/client/*.js` (ai.js, orders.js, visitor-tracking.js)
+- **Payments**: `@/lib/server/gateway.js` (createStripePaymentIntent, createEuPagoReference, etc.)
+- **Client operations**: `@/lib/client/*.js` (visitor-tracking.js etc.)
 
 All server functions return `{ success: boolean, data?: any, error?: string }`.
 
@@ -138,21 +140,22 @@ All server functions return `{ success: boolean, data?: any, error?: string }`.
 ```
 src/
 ├── app/
-│   ├── (backend)/admin/**     # Admin dashboard (role: admin)
+│   ├── (actions)/**           # Frontend system page routes
+│   ├── (backend)/**           # Admin dashboard (role: admin)
 │   ├── (frontend)/**          # Public frontend routes
 │   ├── auth/**                # Login, register, logout
 │   └── api/
-│       ├── query/[slug]             # Private API (authenticated)
-│       └── query/public/[slug]      # Public API (CSRF + rate limiting)
+│       ├── ...               # API routes (public and private)
 ├── data/
 │   ├── rest.db.js             # Database abstraction layer
 │   ├── postgres.db.js         # PostgreSQL implementation
 ├── lib/
 │   ├── server/                # Server-only functions ('use server')
 │   └── client/                # Client-safe utilities
+│   └── shared/                # Shared utilities (e.g., cache.js)
 ├── components/                # Shared UI components
 ├── emails/                    # React Email templates
-└── locale/                    # next-intl translations (en, es, fr, pt)
+└── locale/                    # next-intl translations (en, es, fr, pt, ..)
 ```
 
 ### Page Component Pattern (Server/Client Split)
