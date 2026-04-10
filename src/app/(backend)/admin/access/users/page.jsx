@@ -569,10 +569,10 @@ export default function UsersPage() {
         setIsViewOpen(true);
 
         // Load user referrals
-        if (user?.key) {
+        if (user?.referralCode) {
             setLoadingReferrals(true);
             try {
-                const referralsData = await getUserReferrals(user.key);
+                const referralsData = await getUserReferrals(user.referralCode);
                 if (referralsData?.success) {
                     setUserReferrals(referralsData.data || []);
                 } else {

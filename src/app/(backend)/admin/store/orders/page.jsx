@@ -45,12 +45,12 @@ import { PhoneInput } from '@/components/ui/phone-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { createCustomer, updateCustomer } from '@/lib/server/admin';
+import { createUser, getAllUsers, updateUser } from '@/lib/server/users';
 import { calculateOrderPoints } from '@/lib/server/club';
 import { sendOrderAdminConfirmationEmail, sendOrderUpdateEmail } from '@/lib/server/email';
 import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
 import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
-import { getCatalog, getCustomers } from '@/lib/server/store';
+import { getCatalog } from '@/lib/server/store';
 import { createAppointment } from '@/lib/server/workspace';
 import { generateUID } from '@/lib/shared/helpers';
 import { generatePDF } from '@/utils/generatePDF';
@@ -248,11 +248,11 @@ export default function OrdersPage() {
 
     const fetchCustomers = async (isRetry = false) => {
         try {
-            let params = { limit: 0 };
+            let params = { role: 'user', limit: 0 };
             if (isRetry) {
-                params = { limit: 0, options: { duration: '0' } };
+                params = { role: 'user', limit: 0, options: { duration: '0' } };
             }
-            const response = await getCustomers(params);
+            const response = await getAllUsers(params);
             if (response.success) {
                 setCustomers(response.data);
             } else {
@@ -694,71 +694,30 @@ export default function OrdersPage() {
                 const existingCustomer = customers.find((c) => c.email === orderData.customer.email);
 
                 if (existingCustomer) {
-                    // Update existing customer with new information
-                    const updatedCustomerData = {
-                        firstName: orderData.customer.firstName,
-                        lastName: orderData.customer.lastName,
-                        email: orderData.customer.email,
-                        phone: orderData.customer.phone,
-                        streetAddress: orderData.customer.streetAddress,
-                        apartmentUnit: orderData.customer.apartmentUnit,
-                        city: orderData.customer.city,
-                        state: orderData.customer.state,
-                        zipCode: orderData.customer.zipCode,
-                        country: orderData.customer.country,
-                        countryIso: orderData.customer.countryIso,
-                        // Preserve existing customer data
-                        isBusinessCustomer: existingCustomer.isBusinessCustomer || false,
-                        businessName: existingCustomer.businessName || '',
-                        legalBusinessName: existingCustomer.legalBusinessName || '',
-                        tvaNumber: existingCustomer.tvaNumber || '',
-                        businessType: existingCustomer.businessType || '',
-                        businessAddress: existingCustomer.businessAddress || '',
-                        businessPhone: existingCustomer.businessPhone || '',
-                        businessEmail: existingCustomer.businessEmail || '',
-                        notes: existingCustomer.notes || '',
-                        orders: existingCustomer.orders || 0,
-                        totalSpent: existingCustomer.totalSpent || 0,
-                        lastOrder: existingCustomer.lastOrder,
-                        createdAt: existingCustomer.createdAt
+                    // Update existing user with new information
+                    const updatedUserData = {
+                        displayName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim() || existingCustomer.displayName,
+                        phone: orderData.customer.phone || existingCustomer.phone || '',
+                        country: orderData.customer.country || existingCustomer.country || ''
                     };
                     const customerKey = existingCustomer.key || existingCustomer.id;
-                    const _customerResponse = await updateCustomer(customerKey, updatedCustomerData);
+                    await updateUser(customerKey, updatedUserData);
                     orderData.email = existingCustomer.email;
                 } else {
-                    // Create new customer
-                    const customerData = {
-                        firstName: orderData.customer.firstName,
-                        lastName: orderData.customer.lastName,
+                    // Create new user
+                    const userResult = await createUser({
+                        displayName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim() || orderData.customer.email,
                         email: orderData.customer.email,
-                        phone: orderData.customer.phone,
-                        streetAddress: orderData.customer.streetAddress,
-                        apartmentUnit: orderData.customer.apartmentUnit,
-                        city: orderData.customer.city,
-                        state: orderData.customer.state,
-                        zipCode: orderData.customer.zipCode,
-                        country: orderData.customer.country,
-                        countryIso: orderData.customer.countryIso,
-                        // Add default values for new customers
-                        isBusinessCustomer: false,
-                        businessName: '',
-                        legalBusinessName: '',
-                        tvaNumber: '',
-                        businessType: '',
-                        businessAddress: '',
-                        businessPhone: '',
-                        businessEmail: '',
-                        notes: '',
-                        orders: 0,
-                        totalSpent: 0,
-                        lastOrder: null,
-                        createdAt: new Date().toISOString()
-                    };
+                        phone: orderData.customer.phone || '',
+                        country: orderData.customer.country || '',
+                        role: 'user'
+                    });
 
-                    const customerResponse = await createCustomer(customerData);
-
-                    if (!customerResponse.success || !customerResponse.data) {
-                        throw new Error(t('toasts.createCustomerFailed'));
+                    if (!userResult.success) {
+                        // If user already exists, that's fine — proceed with the order
+                        if (!userResult.error?.includes('already exists')) {
+                            throw new Error(t('toasts.createCustomerFailed'));
+                        }
                     }
 
                     orderData.email = orderData.customer.email;
@@ -3635,20 +3594,23 @@ export default function OrdersPage() {
                                         setSelectedCustomerId(value);
                                         const customer = customers.find((c) => c.id === value);
                                         if (customer) {
+                                            const nameParts = (customer.displayName || '').split(' ');
+                                            const firstName = nameParts[0] || '';
+                                            const lastName = nameParts.slice(1).join(' ') || '';
                                             setFormData({
                                                 ...formData,
                                                 customer: {
-                                                    firstName: customer.firstName || '',
-                                                    lastName: customer.lastName || '',
+                                                    firstName,
+                                                    lastName,
                                                     email: customer.email || '',
                                                     phone: customer.phone || '',
-                                                    streetAddress: customer.streetAddress || '',
-                                                    apartmentUnit: customer.apartmentUnit || '',
-                                                    city: customer.city || '',
-                                                    state: customer.state || '',
-                                                    zipCode: customer.zipCode || '',
-                                                    country: customer.country || 'FR',
-                                                    countryIso: customer.countryIso || 'FR'
+                                                    streetAddress: '',
+                                                    apartmentUnit: '',
+                                                    city: '',
+                                                    state: '',
+                                                    zipCode: '',
+                                                    country: customer.country || 'Portugal',
+                                                    countryIso: customer.countryIso || 'PT'
                                                 }
                                             });
                                         } else {
@@ -3663,10 +3625,10 @@ export default function OrdersPage() {
                                 <SelectContent>
                                     <SelectItem value="new">{t('dialogs.createOrder.createNewCustomer')}</SelectItem>
                                     {customers.map((customer) => {
-                                        if (customer.role !== 'user') return null;
                                         const name =
+                                            customer.displayName ||
                                             `${customer.firstName || ''} ${customer.lastName || ''}`.trim() ||
-                                            customer.name ||
+                                            customer.email ||
                                             t('dialogs.createOrder.unnamedCustomer');
                                         return (
                                             <SelectItem key={customer.id} value={customer.id}>

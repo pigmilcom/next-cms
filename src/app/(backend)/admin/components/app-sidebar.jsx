@@ -36,7 +36,7 @@ export function AppSidebar(props) {
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader className="flex-row flex-nowrap items-center justify-start">
                 <img
-                    src="/shared/nextcms_icon.webp"
+                    src={`${siteSettings?.siteLogo || '/shared/nextcms_icon.webp'}`}
                     alt="Logo" 
                     className="filter invert-100 dark:invert-0 bg-transparent dark:bg-background rounded-md p-1 border border-border shadow-xs"
                     style={{ height: '28px', maxHeight: '28px', maxWidth: '80px', width: 'auto' }}
