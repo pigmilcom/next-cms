@@ -747,6 +747,8 @@ export async function createUser(userData) {
             displayName: userData.displayName || userData.email,
             phone: userData.phone || '',
             country: userData.country || '',
+            isProfessional: userData.isProfessional || false,
+            customerTvaNumber: userData.customerTvaNumber || '',
             role: userData.role || 'user',
             emailVerified: false,
             password: encryptedPassword, // Encrypted password or empty if not provided
@@ -877,7 +879,12 @@ export async function createUserFromCustomer(orderData) {
             // Compare and update country if different and provided
             if (customerData.country && currentUser.country !== customerData.country) {
                 updateData.country = customerData.country;
-            } 
+            }
+
+            // Compare and update customerTvaNumber if different and provided
+            if (customerData.customerTvaNumber && currentUser.customerTvaNumber !== customerData.customerTvaNumber) {
+                updateData.customerTvaNumber = customerData.customerTvaNumber;
+            }
 
             // Only update if there are changes
             if (Object.keys(updateData).length > 0) {
@@ -912,6 +919,8 @@ export async function createUserFromCustomer(orderData) {
             displayName,
             phone: customerData.phone || '',
             country: customerData.country || '',
+            isProfessional: customerData.isProfessional || false,
+            customerTvaNumber: customerData.customerTvaNumber || '',
             role: 'user'
         };
 

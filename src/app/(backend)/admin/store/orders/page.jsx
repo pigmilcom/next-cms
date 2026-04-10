@@ -63,6 +63,7 @@ const initialFormData = {
         lastName: '',
         email: '',
         phone: '',
+        customerTvaNumber: '',
         streetAddress: '',
         apartmentUnit: '',
         city: '',
@@ -696,7 +697,8 @@ export default function OrdersPage() {
                     const updatedUserData = {
                         displayName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim() || existingCustomer.displayName,
                         phone: orderData.customer.phone || existingCustomer.phone || '',
-                        country: orderData.customer.country || existingCustomer.country || ''
+                        country: orderData.customer.country || existingCustomer.country || '',
+                        customerTvaNumber: orderData.customer.customerTvaNumber || existingCustomer.customerTvaNumber || ''
                     };
                     const customerKey = existingCustomer.key || existingCustomer.id;
                     await updateUser(customerKey, updatedUserData);
@@ -708,6 +710,7 @@ export default function OrdersPage() {
                         email: orderData.customer.email,
                         phone: orderData.customer.phone || '',
                         country: orderData.customer.country || '',
+                        customerTvaNumber: orderData.customer.customerTvaNumber || '',
                         role: 'user'
                     });
 
@@ -2051,6 +2054,12 @@ export default function OrdersPage() {
                                             <div>
                                                 <label className="font-medium text-gray-500 text-sm">{t('details.customer.phone')}</label>
                                                 <p className="text-sm">{selectedOrder.customer.phone}</p>
+                                            </div>
+                                        )}
+                                        {selectedOrder.customer.customerTvaNumber && (
+                                            <div>
+                                                <label className="font-medium text-gray-500 text-sm">{t('details.customer.tvaNumber')}</label>
+                                                <p className="text-sm">{selectedOrder.customer.customerTvaNumber}</p>
                                             </div>
                                         )}
                                     </CardContent>
@@ -3602,6 +3611,7 @@ export default function OrdersPage() {
                                                     lastName,
                                                     email: customer.email || '',
                                                     phone: customer.phone || '',
+                                                    customerTvaNumber: customer.customerTvaNumber || '',
                                                     streetAddress: '',
                                                     apartmentUnit: '',
                                                     city: '',
@@ -3707,6 +3717,26 @@ export default function OrdersPage() {
                                                     }
                                                 })
                                             }
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label htmlFor="customerTvaNumber">
+                                            {t('create.customerTvaNumber')}{' '}
+                                            <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
+                                        </label>
+                                        <Input
+                                            id="customerTvaNumber"
+                                            value={formData.customer.customerTvaNumber}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    customer: {
+                                                        ...formData.customer,
+                                                        customerTvaNumber: e.target.value
+                                                    }
+                                                })
+                                            }
+                                            placeholder={t('create.customerTvaNumberPlaceholder')}
                                         />
                                     </div>
                                 </div>

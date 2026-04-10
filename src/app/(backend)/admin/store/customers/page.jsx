@@ -61,6 +61,8 @@ const initialFormData = {
     email: '',
     phone: '',
     country: '',
+    isProfessional: false,
+    customerTvaNumber: '',
     role: 'user',
     password: '',
     points: 0,
@@ -212,8 +214,8 @@ export default function CustomersPage() {
         {
             key: 'basicInfo',
             label: 'Basic Information',
-            headers: ['Name', 'Email', 'Phone'],
-            fields: ['displayName', 'email', 'phone'],
+            headers: ['Name', 'Email', 'Phone', 'VAT / Tax Number'],
+            fields: ['displayName', 'email', 'phone', 'customerTvaNumber'],
             defaultChecked: true
         },
         {
@@ -270,6 +272,7 @@ export default function CustomersPage() {
                 'No Name',
             email: customer.email || '',
             phone: customer.phone || '',
+            customerTvaNumber: customer.customerTvaNumber || '',
             streetAddress: customer.streetAddress || '',
             city: customer.city || '',
             state: customer.state || '',
@@ -344,6 +347,9 @@ export default function CustomersPage() {
                             firstName: user.displayName?.split(' ')[0] || '',
                             lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
                             phone: user.phone || '',
+                            country: user.country || '',
+                            isProfessional: user.isProfessional || false,
+                            customerTvaNumber: user.customerTvaNumber || '',
                             role: user.role || 'user',
                             // User preferences
                             preferences: {
@@ -388,6 +394,9 @@ export default function CustomersPage() {
                             firstName: user.displayName?.split(' ')[0] || '',
                             lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
                             phone: user.phone || '',
+                            country: user.country || '',
+                            isProfessional: user.isProfessional || false,
+                            customerTvaNumber: user.customerTvaNumber || '',
                             role: user.role || 'user',
                             preferences: {
                                 emailNotifications: user.emailNotifications ?? true,
@@ -505,6 +514,8 @@ export default function CustomersPage() {
                 email: formData.email,
                 phone: formData.phone || '',
                 country: formData.country || '',
+                isProfessional: formData.isProfessional || false,
+                customerTvaNumber: formData.customerTvaNumber || '',
                 // Include user preferences
                 emailNotifications: formData.emailNotifications,
                 orderUpdates: formData.orderUpdates,
@@ -591,6 +602,8 @@ export default function CustomersPage() {
             email: customer.email || '',
             phone: customer.phone || '',
             country: customer.country || '',
+            isProfessional: customer.isProfessional || false,
+            customerTvaNumber: customer.customerTvaNumber || '',
             role: customer.role || 'user',
             password: '',
             points: customer.points || 0,
@@ -1243,6 +1256,36 @@ export default function CustomersPage() {
                             />
                         </div>
 
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                checked={!!formData.isProfessional}
+                                onCheckedChange={(v) =>
+                                    setFormData({
+                                        ...formData,
+                                        isProfessional: !!v,
+                                        customerTvaNumber: !v ? '' : formData.customerTvaNumber
+                                    })
+                                }
+                            />
+                            <div className="flex-1">
+                                <div className="font-medium text-sm">Professional / Brand</div>
+                                <div className="text-muted-foreground text-sm">Enable to add a VAT/tax number</div>
+                            </div>
+                        </div>
+
+                        {formData.isProfessional && (
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    VAT / Tax Number <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.customerTvaNumber}
+                                    onChange={(e) => setFormData({ ...formData, customerTvaNumber: e.target.value })}
+                                    placeholder="e.g. PT123456789"
+                                />
+                            </div>
+                        )}
+
                         {/* Role selector - hidden for create (defaults to 'user'), checkbox-controlled for edit */}
                         {editCustomer && (
                             <div className="flex items-center gap-2">
@@ -1674,6 +1717,12 @@ export default function CustomersPage() {
                                             <div>
                                                 <p className="text-muted-foreground">Country</p>
                                                 <p className="font-medium uppercase">{viewCustomer.country}</p>
+                                            </div>
+                                        )}
+                                        {viewCustomer.customerTvaNumber && (
+                                            <div>
+                                                <p className="text-muted-foreground">VAT / Tax Number</p>
+                                                <p className="font-medium">{viewCustomer.customerTvaNumber}</p>
                                             </div>
                                         )}
                                         <div>

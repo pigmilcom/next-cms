@@ -562,11 +562,15 @@
                 "recommendedTracking": "Recommended for delivered/completed orders"
             },
             "create": {
+                "optional": "optional",
                 "customerInfo": "Customer Information",
                 "firstName": "First Name",
                 "lastName": "Last Name",
                 "email": "Email",
                 "phone": "Phone",
+                "isProfessional": "Professional / Brand",
+                "customerTvaNumber": "Customer VAT / Tax Number",
+                "customerTvaNumberPlaceholder": "e.g. PT123456789",
                 "shippingAddress": "Shipping Address",
                 "streetAddress": "Street Address",
                 "apartmentUnit": "Apartment/Unit",
@@ -601,6 +605,7 @@
                 "customer": {
                     "email": "Email",
                     "phone": "Phone",
+                    "tvaNumber": "VAT / Tax Number",
                     "shippingAddress": "Shipping Address",
                     "deliveryNotes": "Delivery Notes",
                     "internalNotes": "Internal Notes",

@@ -551,11 +551,15 @@
                 "recommendedTracking": "Recommandé pour les commandes livrées/terminées"
             },
             "create": {
+                "optional": "optionnel",
                 "customerInfo": "Informations client",
                 "firstName": "Prénom",
                 "lastName": "Nom",
                 "email": "Email",
                 "phone": "Téléphone",
+                "isProfessional": "Professionnel / Marque",
+                "customerTvaNumber": "Numéro de TVA / fiscal",
+                "customerTvaNumberPlaceholder": "ex. FR12345678901",
                 "shippingAddress": "Adresse de livraison",
                 "streetAddress": "Adresse",
                 "apartmentUnit": "Appartement/Unité",
@@ -590,6 +594,7 @@
                 "customer": {
                     "email": "Email",
                     "phone": "Téléphone",
+                    "tvaNumber": "Numéro de TVA",
                     "shippingAddress": "Adresse de livraison",
                     "deliveryNotes": "Notes de livraison",
                     "internalNotes": "Notes internes",
