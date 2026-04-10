@@ -164,6 +164,38 @@ export async function deleteAppointment(appointmentId) {
     }
 }
 
+/**
+ * Delete all appointments linked to a specific order ID
+ * Called automatically when a service order is deleted to keep agenda in sync
+ * @param {string} orderId - The order ID to match against appointments
+ * @returns {Promise<Object>} Result with count of deleted appointments
+ */
+export async function deleteAppointmentsByOrderId(orderId) {
+    try {
+        if (!orderId) return { success: true, deleted: 0 };
+
+        const appointmentsResponse = await DBService.readAll('appointments');
+        if (!appointmentsResponse?.success) {
+            return { success: true, deleted: 0 };
+        }
+
+        const allAppts = Array.isArray(appointmentsResponse.data)
+            ? appointmentsResponse.data
+            : Object.values(appointmentsResponse.data || {});
+
+        const linked = allAppts.filter((apt) => apt.orderId === orderId);
+
+        for (const apt of linked) {
+            await deleteWithCacheClear(apt.key || apt.id, 'appointments', ['workspace', 'store']);
+        }
+
+        return { success: true, deleted: linked.length };
+    } catch (error) {
+        console.error('Error deleting appointments by orderId:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // ============================================================================
 // TASKS CRUD FUNCTIONS
 // ============================================================================

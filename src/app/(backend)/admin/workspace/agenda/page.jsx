@@ -2,9 +2,19 @@
 
 'use client';
 
-import { Calendar, CheckCircle, Clock, Edit, Eye, Mail, Phone, Users, Pencil, Package } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Edit, Eye, Mail, Phone, Trash2, Users, Pencil, Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +28,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
     createOrderTask,
     createTask,
+    deleteAppointment,
     getAllAgenda,
     getAllAppointments,
     getAllScheduleItems,
@@ -58,6 +69,9 @@ export default function AgendaPage() {
         paymentStatus: '',
         deliveryNotes: ''
     });
+    // Remove from agenda state
+    const [isDeleteFromAgendaOpen, setIsDeleteFromAgendaOpen] = useState(false);
+    const [isRemovingFromAgenda, setIsRemovingFromAgenda] = useState(false);
 
     // Fetch all data for synchronization
     const fetchAllData = async () => {
@@ -102,7 +116,7 @@ export default function AgendaPage() {
 
             // Fetch catalog items (services)
             try {
-                const catalogResponse = await getAllCatalog();
+                const catalogResponse = await getCatalog();
                 if (catalogResponse?.success && Array.isArray(catalogResponse.data)) {
                     setCatalog(catalogResponse.data);
                 } else {
@@ -209,8 +223,9 @@ export default function AgendaPage() {
         // Service orders that require appointments from orders collection
         ...orders
             .filter((order) => {
-                // Filter orders that have services requiring appointments
+                // Filter orders that have services requiring appointments AND are not hidden from agenda
                 return (
+                    !order.hiddenFromAgenda &&
                     order.items &&
                     order.items.some((item) => {
                         const service = catalog.find((cat) => cat.id === item.productId);
@@ -416,6 +431,46 @@ export default function AgendaPage() {
         } catch (error) {
             console.error('Error saving appointment changes:', error);
             toast.error('Failed to save changes');
+        }
+    };
+
+    // Remove appointment or service order from the agenda
+    const handleRemoveFromAgenda = async () => {
+        if (!selectedAppointment) return;
+
+        setIsRemovingFromAgenda(true);
+        try {
+            const isOrderSource = selectedAppointment.source === 'order';
+
+            if (isOrderSource) {
+                // For service orders: mark order as hidden from agenda (does not delete the order)
+                const [, orderId] = selectedAppointment.id.split('-');
+                const response = await updateOrder(orderId, { hiddenFromAgenda: true });
+                if (response?.success) {
+                    toast.success('Service order removed from agenda');
+                    setIsDeleteFromAgendaOpen(false);
+                    setIsAppointmentDialogOpen(false);
+                    fetchAllData();
+                } else {
+                    toast.error('Failed to remove from agenda');
+                }
+            } else {
+                // For regular appointments: delete the appointment record
+                const response = await deleteAppointment(selectedAppointment.id);
+                if (response?.success) {
+                    toast.success('Appointment removed from agenda');
+                    setIsDeleteFromAgendaOpen(false);
+                    setIsAppointmentDialogOpen(false);
+                    fetchAllData();
+                } else {
+                    toast.error('Failed to remove appointment from agenda');
+                }
+            }
+        } catch (error) {
+            console.error('Error removing from agenda:', error);
+            toast.error('Failed to remove from agenda');
+        } finally {
+            setIsRemovingFromAgenda(false);
         }
     };
 
@@ -1069,13 +1124,13 @@ export default function AgendaPage() {
 
             {/* Appointment Editing Dialog */}
             <Dialog open={isAppointmentDialogOpen} onOpenChange={setIsAppointmentDialogOpen}>
-                <DialogContent className="sm:max-w-150">
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Manage Appointment</DialogTitle>
                     </DialogHeader>
                     {selectedAppointment && (
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <Label className="font-medium text-muted-foreground text-sm">Service</Label>
                                     <p className="text-sm">{selectedAppointment.serviceName ||  'Service Appointment'}</p>
@@ -1098,7 +1153,7 @@ export default function AgendaPage() {
 
                             {isEditingAppointment ? (
                                 <>
-                                    <div className="grid grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                         <div>
                                             <Label htmlFor="edit-date">Date</Label>
                                             <Input
@@ -1172,7 +1227,7 @@ export default function AgendaPage() {
                                 </>
                             ) : (
                                 <>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                         <div>
                                             <Label className="font-medium text-muted-foreground text-sm">
                                                 Date & Time
@@ -1223,8 +1278,15 @@ export default function AgendaPage() {
                                 </>
                             )}
 
-                            <div className="flex justify-between gap-2">
+                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
                                 <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        className="text-destructive hover:text-destructive"
+                                        onClick={() => setIsDeleteFromAgendaOpen(true)}>
+                                        <Trash2 className="mr-1 h-4 w-4" />
+                                        Remove from Agenda
+                                    </Button>
                                     {selectedAppointment.orderId && (
                                         <Button
                                             variant="outline"
@@ -1284,13 +1346,13 @@ export default function AgendaPage() {
 
             {/* Order Details Dialog */}
             <Dialog open={isOrderDetailsOpen} onOpenChange={setIsOrderDetailsOpen}>
-                <DialogContent className="sm:max-w-175">
+                <DialogContent className="max-w-[95vw] sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Service Booking Order Details</DialogTitle>
                     </DialogHeader>
                     {selectedOrder && (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <Label className="font-medium text-muted-foreground text-sm">Order ID</Label>
                                     <p className="font-mono text-sm">#{selectedOrder.id}</p>
@@ -1453,7 +1515,7 @@ export default function AgendaPage() {
                                 </div>
                             )}
 
-                            <div className="flex justify-end space-x-2">
+                            <div className="flex flex-wrap justify-end gap-2">
                                 {isEditingOrder ? (
                                     <>
                                         <Button variant="outline" onClick={() => setIsEditingOrder(false)}>
@@ -1502,6 +1564,29 @@ export default function AgendaPage() {
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Remove from Agenda Confirmation */}
+            <AlertDialog open={isDeleteFromAgendaOpen} onOpenChange={setIsDeleteFromAgendaOpen}>
+                <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remove from Agenda</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {selectedAppointment?.source === 'order'
+                                ? 'This will hide the service order from the agenda. The order itself will not be deleted and can be managed from the Orders page.'
+                                : 'This will permanently remove this appointment from the agenda. This action cannot be undone.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isRemovingFromAgenda}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={handleRemoveFromAgenda}
+                            disabled={isRemovingFromAgenda}>
+                            {isRemovingFromAgenda ? 'Removing...' : 'Remove'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

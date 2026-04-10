@@ -51,7 +51,7 @@ import { sendOrderAdminConfirmationEmail, sendOrderUpdateEmail } from '@/lib/ser
 import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
 import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
 import { getCatalog } from '@/lib/server/store';
-import { createAppointment } from '@/lib/server/workspace';
+import { createAppointment, deleteAppointmentsByOrderId } from '@/lib/server/workspace';
 import { generateUID } from '@/lib/shared/helpers';
 import { generatePDF } from '@/utils/generatePDF';
 
@@ -649,18 +649,16 @@ export default function OrdersPage() {
                 }
             }
 
-            // Calculate tax amount
-            let taxAmount = 0;
-            let _taxableAmount = subtotal;
+            // Calculate VAT amount
+            let vatAmount = 0;
 
-            if (formData.taxEnabled && formData.taxRate > 0) {
-                if (formData.taxIncluded) {
-                    // Tax is included in prices - extract tax amount
-                    taxAmount = (subtotal * formData.taxRate) / (100 + formData.taxRate);
-                    _taxableAmount = subtotal - taxAmount;
+            if (formData.vatEnabled && formData.vatPercentage > 0) {
+                if (formData.vatIncluded) {
+                    // VAT is included in prices - extract VAT amount
+                    vatAmount = (subtotal * formData.vatPercentage) / (100 + formData.vatPercentage);
                 } else {
-                    // Tax is added on top
-                    taxAmount = (subtotal * formData.taxRate) / 100;
+                    // VAT is added on top
+                    vatAmount = (subtotal * formData.vatPercentage) / 100;
                 }
             }
 
@@ -749,7 +747,7 @@ export default function OrdersPage() {
                     subtotal: orderData.subtotal,
                     shippingCost: orderData.shippingCost,
                     discountAmount: orderData.discountAmount,
-                    taxAmount: orderData.taxAmount,
+                    vatAmount: orderData.vatAmount,
                     total: orderData.total,
                     shippingAddress: {
                         streetAddress: orderData.customer.streetAddress,
@@ -1986,21 +1984,21 @@ export default function OrdersPage() {
                                                         {formatPrice(selectedOrder.shippingCost || 0)}
                                                     </span>
                                                 </div>
-                                                {selectedOrder.taxEnabled &&
-                                                selectedOrder.taxAmount &&
-                                                selectedOrder.taxAmount > 0 ? (
+                                                {selectedOrder.vatEnabled &&
+                                                selectedOrder.vatAmount &&
+                                                selectedOrder.vatAmount > 0 ? (
                                                     <div className="flex justify-between text-sm">
                                                         <span className="text-gray-600">
-                                                            VAT ({selectedOrder.taxRate}%)
-                                                            {selectedOrder.taxIncluded ? ' (Included)' : ''}:
+                                                            VAT ({selectedOrder.vatPercentage}%)
+                                                            {selectedOrder.vatIncluded ? ' (Included)' : ''}:
                                                         </span>
                                                         <span className="font-medium ">
-                                                            {selectedOrder.taxIncluded ? (
+                                                            {selectedOrder.vatIncluded ? (
                                                                 <Badge variant="outline" className="text-green-600">
                                                                     Included
                                                                 </Badge>
                                                             ) : (
-                                                                formatPrice(selectedOrder.taxAmount)
+                                                                formatPrice(selectedOrder.vatAmount)
                                                             )}
                                                         </span>
                                                     </div>
@@ -4042,18 +4040,18 @@ export default function OrdersPage() {
                                 <div>
                                     <div className="mb-3 flex items-center space-x-2">
                                         <Checkbox
-                                            id="taxEnabled"
-                                            checked={formData.taxEnabled}
+                                            id="vatEnabled"
+                                            checked={formData.vatEnabled}
                                             onCheckedChange={(checked) =>
-                                                setFormData({ ...formData, taxEnabled: checked })
+                                                setFormData({ ...formData, vatEnabled: checked })
                                             }
                                         />
-                                        <label htmlFor="taxEnabled" className="font-medium text-sm">
+                                        <label htmlFor="vatEnabled" className="font-medium text-sm">
                                             {t('create.applyTax')}
                                         </label>
                                     </div>
 
-                                    {formData.taxEnabled && (
+                                    {formData.vatEnabled && (
                                         <div className="space-y-3">
                                             <div>
                                                 <label className="font-medium text-sm">{t('create.taxRate')}</label>
@@ -4062,11 +4060,11 @@ export default function OrdersPage() {
                                                     min="0"
                                                     max="100"
                                                     step="0.01"
-                                                    value={formData.taxRate}
+                                                    value={formData.vatPercentage}
                                                     onChange={(e) =>
                                                         setFormData({
                                                             ...formData,
-                                                            taxRate: parseFloat(e.target.value) || 0
+                                                            vatPercentage: parseFloat(e.target.value) || 0
                                                         })
                                                     }
                                                     placeholder={t('dialogs.createOrder.taxRatePlaceholder')}
@@ -4075,19 +4073,19 @@ export default function OrdersPage() {
 
                                             <div className="flex items-center space-x-2">
                                                 <Checkbox
-                                                    id="taxIncluded"
-                                                    checked={formData.taxIncluded}
+                                                    id="vatIncluded"
+                                                    checked={formData.vatIncluded}
                                                     onCheckedChange={(checked) =>
-                                                        setFormData({ ...formData, taxIncluded: checked })
+                                                        setFormData({ ...formData, vatIncluded: checked })
                                                     }
                                                 />
-                                                <label htmlFor="taxIncluded" className="text-sm">
+                                                <label htmlFor="vatIncluded" className="text-sm">
                                                     {t('create.taxIncluded')}
                                                 </label>
                                             </div>
 
                                             <div className="text-muted-foreground text-xs">
-                                                {formData.taxIncluded
+                                                {formData.vatIncluded
                                                     ? t('create.taxExtracted')
                                                     : t('create.taxAdded')}
                                             </div>
@@ -4112,46 +4110,46 @@ export default function OrdersPage() {
                                             }
                                         }
 
-                                        // Calculate tax
-                                        let taxAmount = 0;
+                                        // Calculate VAT
+                                        let previewVatAmount = 0;
                                         let displaySubtotal = subtotal;
 
-                                        if (formData.taxEnabled && formData.taxRate > 0) {
-                                            if (formData.taxIncluded) {
-                                                // Tax is included - extract tax amount
-                                                taxAmount = (subtotal * formData.taxRate) / (100 + formData.taxRate);
-                                                displaySubtotal = subtotal - taxAmount;
+                                        if (formData.vatEnabled && formData.vatPercentage > 0) {
+                                            if (formData.vatIncluded) {
+                                                // VAT is included - extract VAT amount
+                                                previewVatAmount = (subtotal * formData.vatPercentage) / (100 + formData.vatPercentage);
+                                                displaySubtotal = subtotal - previewVatAmount;
                                             } else {
-                                                // Tax is added on top
-                                                taxAmount = (subtotal * formData.taxRate) / 100;
+                                                // VAT is added on top
+                                                previewVatAmount = (subtotal * formData.vatPercentage) / 100;
                                             }
                                         }
 
-                                        const total = formData.taxIncluded
+                                        const total = formData.vatIncluded
                                             ? subtotal + (formData.shippingCost || 0) - discountAmount
-                                            : subtotal + (formData.shippingCost || 0) + taxAmount - discountAmount;
+                                            : subtotal + (formData.shippingCost || 0) + previewVatAmount - discountAmount;
 
                                         return (
                                             <>
                                                 <div className="flex justify-between text-sm">
                                                     <span>
-                                                        {formData.taxEnabled && formData.taxIncluded
+                                                        {formData.vatEnabled && formData.vatIncluded
                                                             ? t('create.subtotalExclTax')
                                                             : t('create.subtotal')}
                                                     </span>
                                                     <span>
                                                         {formatPrice(
-                                                            formData.taxEnabled && formData.taxIncluded
+                                                            formData.vatEnabled && formData.vatIncluded
                                                                 ? displaySubtotal
                                                                 : subtotal
                                                         )}
                                                     </span>
                                                 </div>
 
-                                                {formData.taxEnabled && taxAmount > 0 && (
+                                                {formData.vatEnabled && previewVatAmount > 0 && (
                                                     <div className="flex justify-between text-sm">
-                                                        <span>{t('create.tax')} ({formData.taxRate}%):</span>
-                                                        <span>{formatPrice(taxAmount)}</span>
+                                                        <span>{t('create.tax')} ({formData.vatPercentage}%):</span>
+                                                        <span>{formatPrice(previewVatAmount)}</span>
                                                     </div>
                                                 )}
 
@@ -4520,15 +4518,15 @@ export default function OrdersPage() {
                                             </div>
                                         </div>
 
-                                        {selectedOrderForInvoice.taxEnabled &&
-                                        selectedOrderForInvoice.taxAmount &&
-                                        selectedOrderForInvoice.taxAmount > 0 ? (
+                                        {selectedOrderForInvoice.vatEnabled &&
+                                        selectedOrderForInvoice.vatAmount &&
+                                        selectedOrderForInvoice.vatAmount > 0 ? (
                                             <div className="flex justify-between md:grid md:grid-cols-4 md:gap-2">
                                                 <div className="md:col-span-3 md:text-right font-semibold">
-                                                    {t('invoice.tax')} ({selectedOrderForInvoice.taxRate}%):
+                                                    {t('invoice.tax')} ({selectedOrderForInvoice.vatPercentage}%):
                                                 </div>
                                                 <div className="md:text-right font-semibold">
-                                                    {formatPrice(selectedOrderForInvoice.taxAmount)}
+                                                    {formatPrice(selectedOrderForInvoice.vatAmount)}
                                                 </div>
                                             </div>
                                         ) : null}
@@ -4678,6 +4676,10 @@ export default function OrdersPage() {
                         const response = await deleteOrder(orderToDelete.key || orderToDelete.id);
 
                         if (response?.success) {
+                            // If this is a service order, also remove linked appointments from the agenda
+                            if (orderToDelete.isServiceAppointment || orderToDelete.appointmentId) {
+                                await deleteAppointmentsByOrderId(orderToDelete.id);
+                            }
                             toast.success(t('toasts.orderDeleted'));
                             setAllOrders((prev) => prev.filter((order) => order.id !== orderToDelete.id));
                             setDeleteConfirmOpen(false);
