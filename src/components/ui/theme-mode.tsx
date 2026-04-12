@@ -91,19 +91,19 @@ export const ThemeSwitchGroup = ({ compact = false }) => {
 };
 
 export const ThemeSwitchButton = ({ className }: { className?: string }) => {
-    const { theme, setTheme } = useTheme();
+    const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => setMounted(true), []);
     if (!mounted) return null;
 
     const toggleTheme = () => {
-        setTheme(theme === 'dark' ? 'light' : 'dark');
+        setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
     };
 
     return (
         <Button className={className} variant="ghost" onClick={toggleTheme}>
-            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
     );
 };
