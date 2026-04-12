@@ -22,10 +22,4 @@ h6 {
 h1, h2, h3 {
     color: var(--primary);
 }
-
-html, body { 
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale; 
-  overscroll-behavior: none;
-  scroll-behavior: smooth;
-}
+ 
