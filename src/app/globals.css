@@ -732,7 +732,7 @@ table:not([data-slot="calendar"] table, [data-slot="calendar"] *) th {
     color: var(--muted);
 }
 #cc-main .cm__footer {
-    --cc-footer-bg: var(--surface);
+    --cc-footer-bg: var(--accent);
     border-color: var(--border);
     border-bottom-left-radius: var(--cc-modal-border-radius);
     border-bottom-right-radius: var(--cc-modal-border-radius);
@@ -1581,6 +1581,74 @@ input[type="checkbox"]:focus {
 .sparkle-8 { top: 18%; left: 22%; animation-delay: 1s; }
 .sparkle-9 { bottom: 35%; right: 20%; animation-delay: 0.7s; }
 .sparkle-10 { top: 40%; left: 10%; animation-delay: 1.3s; }
+
+/* ── Accessibility Widget (WCAG 2.1) ──────────────────────────────────────── */
+
+/* Text size */
+html.a11y-text-lg  { font-size: 118% !important; }
+html.a11y-text-xl  { font-size: 145% !important; }
+
+/* High contrast — boosts text/bg separation (filter set inline by JS) */
+html.a11y-high-contrast body {
+    --foreground: #ffffff;
+    --background: #000000;
+}
+
+/* Invert — re-invert media so images/video stay natural */
+html.a11y-invert img,
+html.a11y-invert video,
+html.a11y-invert canvas,
+html.a11y-invert svg:not([data-a11y-skip]) {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+/* Reduce motion */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1     !important;
+    transition-duration:      0.01ms !important;
+    scroll-behavior:          auto   !important;
+}
+
+/* Highlight links */
+html.a11y-highlight-links a,
+html.a11y-highlight-links [role="link"] {
+    text-decoration:        underline    !important;
+    text-underline-offset:  3px          !important;
+    outline:                2px solid    !important;
+    outline-offset:         2px          !important;
+}
+
+/* Text spacing (WCAG 1.4.12) */
+html.a11y-text-spacing *:not(input):not(textarea) {
+    letter-spacing: 0.12em  !important;
+    word-spacing:   0.18em  !important;
+    line-height:    1.85    !important;
+}
+
+/* ADHD friendly — kill all animation, add strong focus ring */
+html.a11y-adhd *,
+html.a11y-adhd *::before,
+html.a11y-adhd *::after {
+    animation:  none !important;
+    transition: none !important;
+}
+html.a11y-adhd :focus-visible {
+    outline:        3px solid #facc15 !important;
+    outline-offset: 3px               !important;
+    border-radius:  2px               !important;
+}
+
+/* Dyslexia-friendly — readable system font, generous spacing */
+html.a11y-dyslexia,
+html.a11y-dyslexia * {
+    font-family: 'Arial', 'Verdana', 'Helvetica', sans-serif !important;
+    word-spacing:   0.22em !important;
+    line-height:    1.95   !important;
+    letter-spacing: 0.04em !important;
+}
 
 @media (max-width: 600px) {
     .badge-container {
