@@ -924,6 +924,47 @@ export function CatalogItemForm({
                                 )}
                             </div>
 
+                            <div>
+                                <div className="mb-2">
+                                    <Label htmlFor="shortDescription">
+                                        {t('basic.shortDescription')}{' '}
+                                        {availableLanguages.length > 1 &&
+                                            `(${languageLabels[currentLanguage] || currentLanguage.toUpperCase()})`}
+                                    </Label>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="relative">
+                                        <Textarea
+                                            id="shortDescription"
+                                            value={getMultiLanguageValue('shortDescription', currentLanguage)}
+                                            onChange={(e) => {
+                                                const value = e.target.value.slice(0, 250); // Enforce 250 char limit
+                                                updateMultiLanguageField('shortDescription', currentLanguage, value);
+                                            }}
+                                            placeholder={t('basic.placeholders.shortDescription', {
+                                                lang: currentLanguage.toUpperCase()
+                                            })}
+                                            maxLength={250}
+                                            rows={3}
+                                            className="resize-none"
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <p className="text-muted-foreground text-xs">
+                                            {t('basic.shortDescriptionHelper')}
+                                        </p>
+                                        <span className="text-muted-foreground text-xs">
+                                            {(getMultiLanguageValue('shortDescription', currentLanguage) || '').length}/250
+                                        </span>
+                                    </div>
+                                </div>
+                                {currentLanguage !== defaultLanguage && (
+                                    <p className="mt-1 text-muted-foreground text-xs">
+                                        {t('common.translationHint', { lang: currentLanguage.toUpperCase() })}
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <div className="flex items-center space-x-2">
                                     <Switch

@@ -153,35 +153,38 @@ const GenerateAI = ({
             try {
                 // Use server action instead of fetch
                 const settingsResult = await loadAISettingsAction();
-                
-                if (!settingsResult.success) {
-                    throw new Error(settingsResult.error || 'Failed to fetch AI settings');
-                }
-                
-                const settings = settingsResult.data;
-                setAiEnabled(settings?.enabled || false);
 
-                if (settings?.enabled) {
-                    // Use server action for models
-                    const modelsResult = await loadAIModelsAction({ enabledOnly: true });
-                    
-                    if (modelsResult.success && modelsResult.data) {
-                        const models = modelsResult.data;
-                        setAiModels(models || []);
-                        if (models?.length > 0) {
-                            setSelectedAIModel(models[0].id);
-                        }
+                const siteAIEnabled = siteSettings?.aiEnabled === true;
+                const settingsAIEnabled = settingsResult.success && settingsResult.data?.enabled === true;
+                const shouldEnableAI = siteAIEnabled || settingsAIEnabled;
+
+                setAiEnabled(shouldEnableAI);
+
+                if (!shouldEnableAI) {
+                    setAiModels([]);
+                    setSelectedAIModel('');
+                    return;
+                }
+
+                // Use server action for models
+                const modelsResult = await loadAIModelsAction({ enabledOnly: true });
+
+                if (modelsResult.success && modelsResult.data) {
+                    const models = modelsResult.data;
+                    setAiModels(models || []);
+                    if (models?.length > 0) {
+                        setSelectedAIModel(models[0].id);
                     }
                 }
             } catch (error) {
                 console.error('Error loading AI settings:', error);
-                setAiEnabled(false);
+                setAiEnabled(siteSettings?.aiEnabled === true);
                 setAiModels([]);
             }
         };
 
         loadAISettings();
-    }, []);
+    }, [siteSettings?.aiEnabled]);
 
     // Build final instructions for AI
     const getFinalInstructions = () => {

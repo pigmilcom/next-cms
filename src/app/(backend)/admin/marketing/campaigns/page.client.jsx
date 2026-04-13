@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import AdminHeader from '@/app/(backend)/admin/components/AdminHeader';
 import AdminTable from '@/app/(backend)/admin/components/AdminTable';
 import GenerateCSV from '@/app/(backend)/admin/components/GenerateCSV';
+import GenerateAI from '@/app/(backend)/admin/components/GenerateAI';
 import { useAdminSettings } from '@/app/(backend)/admin/context/LayoutProvider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -1302,6 +1303,27 @@ export default function CampaignsClient({ initialData }) {
                                 </Label>
                                 {newCampaign.type === 'sms' ? (
                                     <>
+                                        <div className="flex items-center justify-end">
+                                            <GenerateAI
+                                                lang={selectedLanguage}
+                                                instructions="Write a concise promotional SMS campaign message under 160 characters. Keep it clear, engaging, and include a simple call to action. Return plain text only."
+                                                placeholder="e.g., New arrivals now live. Shop today and save 10% with code NEW10"
+                                                allowCode={false}
+                                                onGenerated={(generatedContent) =>
+                                                    setNewCampaign((prev) => ({
+                                                        ...prev,
+                                                        message: {
+                                                            ...prev.message,
+                                                            [selectedLanguage]: generatedContent.slice(0, 160)
+                                                        }
+                                                    }))
+                                                }
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-xs"
+                                                title="Generate"
+                                            />
+                                        </div>
                                         <Textarea
                                             id="campaign-content"
                                             value={newCampaign.message[selectedLanguage] || ''}
@@ -1634,6 +1656,32 @@ export default function CampaignsClient({ initialData }) {
                                             {availableLanguages.length > 1 &&
                                                 `(${languageLabels[selectedLanguage]})`}
                                         </Label>
+                                        <div className="mt-2 mb-2 flex items-center justify-end">
+                                            <GenerateAI
+                                                lang={selectedLanguage}
+                                                instructions="Rewrite this campaign as a concise SMS under 160 characters. Keep tone friendly and action-oriented. Return plain text only."
+                                                placeholder="e.g., Last chance: 20% off ends tonight. Shop now"
+                                                allowCode={false}
+                                                onGenerated={(generatedContent) =>
+                                                    setEditCampaignData((prev) => ({
+                                                        ...prev,
+                                                        message:
+                                                            typeof prev.message === 'object'
+                                                                ? {
+                                                                      ...prev.message,
+                                                                      [selectedLanguage]: generatedContent.slice(0, 160)
+                                                                  }
+                                                                : {
+                                                                      [selectedLanguage]: generatedContent.slice(0, 160)
+                                                                  }
+                                                    }))
+                                                }
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-xs"
+                                                title="Generate"
+                                            />
+                                        </div>
                                         <Textarea
                                             id="edit-message"
                                             value={
@@ -1657,6 +1705,7 @@ export default function CampaignsClient({ initialData }) {
                                             }
                                             placeholder="SMS message"
                                             rows={5}
+                                            maxLength={160}
                                         />
                                         <p className="text-sm text-muted-foreground mt-2">
                                             Characters:{' '}
@@ -1830,6 +1879,27 @@ export default function CampaignsClient({ initialData }) {
                                 </Label>
                                 {newCampaign.type === 'sms' ? (
                                     <>
+                                        <div className="flex items-center justify-end">
+                                            <GenerateAI
+                                                lang={selectedLanguage}
+                                                instructions="Write a concise promotional SMS campaign message under 160 characters. Keep it clear, engaging, and include a simple call to action. Return plain text only."
+                                                placeholder="e.g., New arrivals now live. Shop today and save 10% with code NEW10"
+                                                allowCode={false}
+                                                onGenerated={(generatedContent) =>
+                                                    setNewCampaign((prev) => ({
+                                                        ...prev,
+                                                        message: {
+                                                            ...prev.message,
+                                                            [selectedLanguage]: generatedContent.slice(0, 160)
+                                                        }
+                                                    }))
+                                                }
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-xs"
+                                                title="Generate"
+                                            />
+                                        </div>
                                         <Textarea
                                             id="campaign-content"
                                             value={newCampaign.message[selectedLanguage] || ''}

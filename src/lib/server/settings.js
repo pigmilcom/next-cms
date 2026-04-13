@@ -251,6 +251,14 @@ export const getStoreSettings = async (params = {}, includeAdminData = false) =>
             return null;
         }
 
+        const normalizeBoolean = (value) => value === true || value === 'true' || value === 1 || value === '1';
+        const normalizePayOnDelivery = (payOnDelivery) => {
+            if (typeof payOnDelivery === 'object' && payOnDelivery !== null) {
+                return { enabled: normalizeBoolean(payOnDelivery.enabled) };
+            }
+            return { enabled: normalizeBoolean(payOnDelivery) };
+        };
+
         // Determine which settings to return based on includeAdminData flag
         const paymentMethods = settings.paymentMethods || {};
         let storeSettings = {
@@ -272,9 +280,7 @@ export const getStoreSettings = async (params = {}, includeAdminData = false) =>
                     bic: paymentMethods.bankTransfer?.bic || '',
                     instructions: paymentMethods.bankTransfer?.instructions || ''
                 },
-                payOnDelivery: paymentMethods.payOnDelivery?.enabled !== undefined 
-                    ? paymentMethods.payOnDelivery 
-                    : { enabled: paymentMethods.payOnDelivery || false },
+                payOnDelivery: normalizePayOnDelivery(paymentMethods.payOnDelivery),
                 euPago: {
                     enabled: paymentMethods.euPago?.enabled || false,
                     apiUrl: paymentMethods.euPago?.apiUrl || 'https://sandbox.eupago.pt/',
@@ -317,7 +323,7 @@ export const getStoreSettings = async (params = {}, includeAdminData = false) =>
                         bic: '[PROTECTED]',
                         instructions: '[PROTECTED]'
                     },
-                    payOnDelivery: paymentMethods.payOnDelivery?.enabled  || false,
+                    payOnDelivery: normalizePayOnDelivery(paymentMethods.payOnDelivery),
                     euPago: {
                         enabled: paymentMethods.euPago?.enabled || false,
                         supportedMethods: paymentMethods.euPago?.supportedMethods || ['mb', 'mbway'],

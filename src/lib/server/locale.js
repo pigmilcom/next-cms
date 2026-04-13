@@ -87,6 +87,51 @@ export const getAllAvailableLanguages = async () => {
 };
 
 /**
+ * Get languages that can be used for invoices.
+ * Returns backend/frontend language sets and the shared set where Invoice.json exists.
+ * @returns {Promise<Object>} Invoice languages result
+ */
+export const getAvailableInvoiceLanguages = async () => {
+    try {
+        const [frontendResult, backendResult] = await Promise.all([
+            getAvailableLanguages({ frontend: true }),
+            getAvailableLanguages({ frontend: false })
+        ]);
+
+        const frontendLanguages = frontendResult?.success ? frontendResult.data : [];
+        const backendLanguages = backendResult?.success ? backendResult.data : [];
+
+        const backendWithInvoice = backendLanguages.filter((lang) => {
+            const invoiceFile = path.join(process.cwd(), 'src', 'locale', 'messages', lang, 'Invoice.json');
+            return fs.existsSync(invoiceFile);
+        });
+
+        const sharedInvoiceLanguages = backendWithInvoice.filter((lang) => frontendLanguages.includes(lang));
+        const available = sharedInvoiceLanguages.length > 0 ? sharedInvoiceLanguages : backendWithInvoice;
+
+        return {
+            success: true,
+            data: available,
+            frontend: frontendLanguages,
+            backend: backendLanguages,
+            backendWithInvoice,
+            shared: sharedInvoiceLanguages
+        };
+    } catch (error) {
+        console.error('Failed to get available invoice languages:', error);
+        return {
+            success: false,
+            error: error?.message || 'Failed to get available invoice languages',
+            data: [],
+            frontend: [],
+            backend: [],
+            backendWithInvoice: [],
+            shared: []
+        };
+    }
+};
+
+/**
  * Check if a specific language exists in a context directory
  * @param {string} languageCode - The language code to check (e.g., 'en', 'es')
  * @param {string} context - Context to check ('frontend', 'backend', 'auth')

@@ -25,7 +25,16 @@ import { updateStoreSettings } from '@/lib/server/admin';
 export default function StoreSettingsPage() {
     const router = useRouter();
     const { storeSettings, siteSettings } = useAdminSettings();
-    console.log(siteSettings);
+
+    const getPayOnDeliveryEnabled = (payOnDelivery) => {
+        const normalizeBoolean = (value) => value === true || value === 'true' || value === 1 || value === '1';
+
+        if (typeof payOnDelivery === 'object' && payOnDelivery !== null) {
+            return normalizeBoolean(payOnDelivery?.enabled);
+        }
+
+        return normalizeBoolean(payOnDelivery);
+    };
 
     // Default form state - matches settings.js structure
     const defaultFormState = {
@@ -45,7 +54,7 @@ export default function StoreSettingsPage() {
                 instructions: storeSettings?.paymentMethods?.bankTransfer?.instructions || ''
             },
             payOnDelivery: {
-                enabled: storeSettings?.paymentMethods?.payOnDelivery?.enabled || false
+                enabled: getPayOnDeliveryEnabled(storeSettings?.paymentMethods?.payOnDelivery)
             },
             euPago: {
                 enabled: storeSettings?.paymentMethods?.euPago?.enabled || false,
@@ -186,7 +195,7 @@ export default function StoreSettingsPage() {
                                 instructions: storeSettingsData.paymentMethods?.bankTransfer?.instructions || ''
                             },
                             payOnDelivery: {
-                                enabled: storeSettingsData.paymentMethods?.payOnDelivery?.enabled || storeSettingsData.paymentMethods?.payOnDelivery || false
+                                enabled: getPayOnDeliveryEnabled(storeSettingsData.paymentMethods?.payOnDelivery)
                             },
                             euPago: {
                                 enabled: storeSettingsData.paymentMethods?.euPago?.enabled || false,
@@ -255,6 +264,12 @@ export default function StoreSettingsPage() {
         try {
             const submissionData = {
                 ...formData,
+                paymentMethods: {
+                    ...formData.paymentMethods,
+                    payOnDelivery: {
+                        enabled: getPayOnDeliveryEnabled(formData.paymentMethods?.payOnDelivery)
+                    }
+                },
                 allowedCountries: selectedAllowedCountries,
                 bannedCountries: selectedBannedCountries,
                 carriers: carriers,
@@ -323,6 +338,7 @@ export default function StoreSettingsPage() {
                             <PaymentsTab
                                 formData={formData}
                                 handleNestedInputChange={handleNestedInputChange}
+                                getPayOnDeliveryEnabled={getPayOnDeliveryEnabled}
                                 errors={errors}
                             />
                         </TabsContent>
@@ -486,7 +502,7 @@ function BusinessTab({ formData, handleInputChange, handleNestedInputChange, err
 }
 
 // Payments Tab Component
-function PaymentsTab({ formData, handleNestedInputChange, errors }) {
+function PaymentsTab({ formData, handleNestedInputChange, getPayOnDeliveryEnabled, errors }) {
     const [showStripeSecret, setShowStripeSecret] = useState(false);
     const [showStripeConfig, setShowStripeConfig] = useState(false);
     const [showSumUpApiKey, setshowSumUpApiKey] = useState(false);
@@ -611,7 +627,7 @@ function PaymentsTab({ formData, handleNestedInputChange, errors }) {
                             </p>
                         </div>
                         <Switch
-                            checked={formData.paymentMethods?.payOnDelivery?.enabled || false}
+                            checked={getPayOnDeliveryEnabled(formData.paymentMethods?.payOnDelivery)}
                             onCheckedChange={(checked) =>
                                 handleNestedInputChange('paymentMethods', 'payOnDelivery.enabled', checked)
                             }

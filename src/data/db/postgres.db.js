@@ -600,9 +600,7 @@ class PostgresDBService {
     }
 
     // Insert a record directly with its original key (for backup restore)
-    // options.onConflict: 'update' (default upsert) | 'ignore' (skip if key exists)
-    async insertRecord(record, options = {}) {
-        const { onConflict = 'update' } = options;
+    async insertRecord(record) {
         try {
             await this.ensureTable();
             const pool = await this.ensurePool();
@@ -612,14 +610,12 @@ class PostgresDBService {
                 throw new Error('Record must have key and data properties');
             }
 
-            const conflictClause = onConflict === 'ignore'
-                ? 'ON CONFLICT (key) DO NOTHING'
-                : 'ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data, created_at = EXCLUDED.created_at';
-
+            // Use ON CONFLICT to handle duplicates (upsert)
             const result = await pool.query(
                 `INSERT INTO kv_store (key, data, created_at)
                 VALUES ($1, $2, $3)
-                ${conflictClause}
+                ON CONFLICT (key) DO UPDATE
+                SET data = EXCLUDED.data, created_at = EXCLUDED.created_at
                 RETURNING *`,
                 [
                     record.key,
@@ -631,32 +627,10 @@ class PostgresDBService {
             if (!result.rows) {
                 return null;
             }
-            // DO NOTHING returns empty rows when record was skipped (already exists)
-            return result.rows.length > 0 ? result.rows[0].data : null;
+            return result.rows[0].data;
         } catch (err) {
             console.error(`❌ insertRecord error:`, err.message);
             throw new Error(`Insert record failed for key ${record.key}: ${err.message}`);
-        }
-    }
-
-    // Delete all records except those belonging to specified tables (for backup restore)
-    async deleteAllRecordsExcept(excludeTablePatterns = []) {
-        try {
-            await this.ensureTable();
-            const pool = await this.ensurePool();
-
-            if (excludeTablePatterns.length === 0) {
-                await pool.query('DELETE FROM kv_store');
-            } else {
-                const conditions = excludeTablePatterns.map((_, i) => `key NOT LIKE $${i + 1}`).join(' AND ');
-                const values = excludeTablePatterns.map(pattern => `${pattern}:%`);
-                await pool.query(`DELETE FROM kv_store WHERE ${conditions}`, values);
-            }
-
-            return true;
-        } catch (err) {
-            console.error(`❌ deleteAllRecordsExcept error:`, err.message);
-            throw new Error(`Delete all records except failed: ${err.message}`);
         }
     }
 

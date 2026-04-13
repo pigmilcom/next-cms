@@ -1,6 +1,7 @@
 {
     "Invoice": {
         "invoiceTitle": "Invoice",
+        "orderId": "Order ID",
         "invoiceNumber": "Invoice Number",
         "date": "Date",
         "billTo": "Bill To",
@@ -29,6 +30,10 @@
         "noItemsFound": "No items found",
         "thankYouMessage": "Thank you for choosing us!",
         "vat": "VAT",
+        "vatNumberLabel": "VAT Number",
+        "phone": "Phone",
+        "invoiceDisclaimer": "This invoice was generated electronically and is valid without a signature.",
+        "scanToViewInvoice": "Scan to view invoice",
         "paymentMethods": {
             "card": "Credit/Debit Card",
             "bank_transfer": "Bank Transfer",

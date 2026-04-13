@@ -122,13 +122,24 @@ export function validateOrderData(orderData) {
             lastName: sanitizeString(orderData.customer.lastName),
             email: sanitizeString(orderData.customer.email.toLowerCase()),
             phone: sanitizeString(orderData.customer.phone || ''),
+            isProfessional:
+                orderData.customer.isProfessional === true ||
+                !!orderData.customer.customerBusinessName ||
+                !!orderData.customer.customerTvaNumber,
+            customerBusinessName: sanitizeString(orderData.customer.customerBusinessName || ''),
+            customerTvaNumber: sanitizeString(orderData.customer.customerTvaNumber || ''),
             streetAddress: sanitizeString(orderData.customer.streetAddress || ''),
             apartmentUnit: sanitizeString(orderData.customer.apartmentUnit || ''),
             city: sanitizeString(orderData.customer.city || ''),
             state: sanitizeString(orderData.customer.state || ''),
             zipCode: sanitizeString(orderData.customer.zipCode || ''),
             country: sanitizeString(orderData.customer.country || ''),
-            countryIso: sanitizeString(orderData.customer.countryIso || '')
+            countryIso: sanitizeString(orderData.customer.countryIso || ''),
+            emailNotifications: orderData.customer.emailNotifications ?? true,
+            orderUpdates: orderData.customer.orderUpdates ?? true,
+            marketingEmails: orderData.customer.marketingEmails ?? true,
+            newsletter: orderData.customer.newsletter ?? true,
+            smsNotifications: orderData.customer.smsNotifications ?? false
         },
         items: orderData.items.map((item) => ({
             ...item,

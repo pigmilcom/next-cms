@@ -29,6 +29,7 @@ import { v6 as uuidv6 } from 'uuid';
 import AdminHeader from '@/app/(backend)/admin/components/AdminHeader';
 import AdminTable from '@/app/(backend)/admin/components/AdminTable';
 import GenerateCSV from '@/app/(backend)/admin/components/GenerateCSV';
+import GenerateAI from '@/app/(backend)/admin/components/GenerateAI';
 import { useAdminSettings } from '@/app/(backend)/admin/context/LayoutProvider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,7 +62,14 @@ const initialFormData = {
     email: '',
     phone: '',
     country: '',
+    countryIso: '',
+    streetAddress: '',
+    apartmentUnit: '',
+    city: '',
+    state: '',
+    zipCode: '',
     isProfessional: false,
+    customerBusinessName: '',
     customerTvaNumber: '',
     role: 'user',
     password: '',
@@ -214,8 +222,8 @@ export default function CustomersPage() {
         {
             key: 'basicInfo',
             label: 'Basic Information',
-            headers: ['Name', 'Email', 'Phone', 'VAT / Tax Number'],
-            fields: ['displayName', 'email', 'phone', 'customerTvaNumber'],
+            headers: ['Name', 'Email', 'Phone', 'Business Name', 'VAT / Tax Number'],
+            fields: ['displayName', 'email', 'phone', 'customerBusinessName', 'customerTvaNumber'],
             defaultChecked: true
         },
         {
@@ -272,11 +280,14 @@ export default function CustomersPage() {
                 'No Name',
             email: customer.email || '',
             phone: customer.phone || '',
+            customerBusinessName: customer.customerBusinessName || '',
             customerTvaNumber: customer.customerTvaNumber || '',
             streetAddress: customer.streetAddress || '',
+            apartmentUnit: customer.apartmentUnit || '',
             city: customer.city || '',
             state: customer.state || '',
             country: customer.country || '',
+            countryIso: customer.countryIso || '',
             zipCode: customer.zipCode || '',
             orderCount: customer.orderCount || 0,
             totalSpent: (customer.totalSpent || 0).toFixed(2),
@@ -348,7 +359,14 @@ export default function CustomersPage() {
                             lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
                             phone: user.phone || '',
                             country: user.country || '',
+                            countryIso: user.countryIso || '',
+                            streetAddress: user.streetAddress || '',
+                            apartmentUnit: user.apartmentUnit || '',
+                            city: user.city || '',
+                            state: user.state || '',
+                            zipCode: user.zipCode || '',
                             isProfessional: user.isProfessional || false,
+                            customerBusinessName: user.customerBusinessName || '',
                             customerTvaNumber: user.customerTvaNumber || '',
                             role: user.role || 'user',
                             // User preferences
@@ -395,7 +413,14 @@ export default function CustomersPage() {
                             lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
                             phone: user.phone || '',
                             country: user.country || '',
+                            countryIso: user.countryIso || '',
+                            streetAddress: user.streetAddress || '',
+                            apartmentUnit: user.apartmentUnit || '',
+                            city: user.city || '',
+                            state: user.state || '',
+                            zipCode: user.zipCode || '',
                             isProfessional: user.isProfessional || false,
+                            customerBusinessName: user.customerBusinessName || '',
                             customerTvaNumber: user.customerTvaNumber || '',
                             role: user.role || 'user',
                             preferences: {
@@ -514,8 +539,15 @@ export default function CustomersPage() {
                 email: formData.email,
                 phone: formData.phone || '',
                 country: formData.country || '',
+                countryIso: formData.countryIso || '',
+                streetAddress: formData.streetAddress || '',
+                apartmentUnit: formData.apartmentUnit || '',
+                city: formData.city || '',
+                state: formData.state || '',
+                zipCode: formData.zipCode || '',
                 isProfessional: formData.isProfessional || false,
-                customerTvaNumber: formData.customerTvaNumber || '',
+                customerBusinessName: formData.isProfessional ? formData.customerBusinessName || '' : '',
+                customerTvaNumber: formData.isProfessional ? formData.customerTvaNumber || '' : '',
                 // Include user preferences
                 emailNotifications: formData.emailNotifications,
                 orderUpdates: formData.orderUpdates,
@@ -602,7 +634,14 @@ export default function CustomersPage() {
             email: customer.email || '',
             phone: customer.phone || '',
             country: customer.country || '',
+            countryIso: customer.countryIso || '',
+            streetAddress: customer.streetAddress || '',
+            apartmentUnit: customer.apartmentUnit || '',
+            city: customer.city || '',
+            state: customer.state || '',
+            zipCode: customer.zipCode || '',
             isProfessional: customer.isProfessional || false,
+            customerBusinessName: customer.customerBusinessName || '',
             customerTvaNumber: customer.customerTvaNumber || '',
             role: customer.role || 'user',
             password: '',
@@ -1251,9 +1290,70 @@ export default function CustomersPage() {
                             </label>
                             <CountryDropdown
                                 defaultValue={formData.country}
-                                onChange={(country) => setFormData({ ...formData, country: country.alpha2 })}
+                                onChange={(country) =>
+                                    setFormData({
+                                        ...formData,
+                                        country: country.alpha2,
+                                        countryIso: country.alpha2
+                                    })
+                                }
                                 placeholder="Select country"
                             />
+                        </div>
+
+                        <div>
+                            <label className="text-muted-foreground text-sm">
+                                Street Address <span className="text-muted-foreground/60">(optional)</span>
+                            </label>
+                            <Input
+                                value={formData.streetAddress}
+                                onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                                placeholder="Street name and number"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-muted-foreground text-sm">
+                                Apartment / Unit <span className="text-muted-foreground/60">(optional)</span>
+                            </label>
+                            <Input
+                                value={formData.apartmentUnit}
+                                onChange={(e) => setFormData({ ...formData, apartmentUnit: e.target.value })}
+                                placeholder="Apt, suite, unit, etc."
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    City <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.city}
+                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                    placeholder="City"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    State <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.state}
+                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                    placeholder="State"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    ZIP Code <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.zipCode}
+                                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                                    placeholder="ZIP / Postal code"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -1263,6 +1363,7 @@ export default function CustomersPage() {
                                     setFormData({
                                         ...formData,
                                         isProfessional: !!v,
+                                        customerBusinessName: !v ? '' : formData.customerBusinessName,
                                         customerTvaNumber: !v ? '' : formData.customerTvaNumber
                                     })
                                 }
@@ -1274,16 +1375,32 @@ export default function CustomersPage() {
                         </div>
 
                         {formData.isProfessional && (
-                            <div>
-                                <label className="text-muted-foreground text-sm">
-                                    VAT / Tax Number <span className="text-muted-foreground/60">(optional)</span>
-                                </label>
-                                <Input
-                                    value={formData.customerTvaNumber}
-                                    onChange={(e) => setFormData({ ...formData, customerTvaNumber: e.target.value })}
-                                    placeholder="e.g. PT123456789"
-                                />
-                            </div>
+                            <>
+                                <div>
+                                    <label className="text-muted-foreground text-sm">
+                                        Business Name <span className="text-muted-foreground/60">(optional)</span>
+                                    </label>
+                                    <Input
+                                        value={formData.customerBusinessName}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, customerBusinessName: e.target.value })
+                                        }
+                                        placeholder="e.g. ACME, LDA"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-muted-foreground text-sm">
+                                        VAT / Tax Number <span className="text-muted-foreground/60">(optional)</span>
+                                    </label>
+                                    <Input
+                                        value={formData.customerTvaNumber}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, customerTvaNumber: e.target.value })
+                                        }
+                                        placeholder="e.g. PT123456789"
+                                    />
+                                </div>
+                            </>
                         )}
 
                         {/* Role selector - hidden for create (defaults to 'user'), checkbox-controlled for edit */}
@@ -1636,14 +1753,33 @@ export default function CustomersPage() {
                                     style={{ opacity: isSending ? 0.5 : 1, pointerEvents: isSending ? 'none' : 'auto' }}
                                 />
                             ) : (
-                                <Textarea
-                                    id="message"
-                                    placeholder="Enter SMS message (keep it short)"
-                                    value={messageForm.message}
-                                    onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
-                                    className="min-h-32"
-                                    disabled={isSending}
-                                />
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-muted-foreground">AI assist</span>
+                                        <GenerateAI
+                                            lang={siteSettings?.language || 'en'}
+                                            instructions="Write a concise and professional SMS for a customer. Keep it under 160 characters, clear, friendly, and action-oriented. Return plain text only."
+                                            placeholder="e.g., Reminder about your order status update and next step"
+                                            allowCode={false}
+                                            onGenerated={(generatedContent) =>
+                                                setMessageForm({ ...messageForm, message: generatedContent.slice(0, 160) })
+                                            }
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs"
+                                            title="Generate"
+                                        />
+                                    </div>
+                                    <Textarea
+                                        id="message"
+                                        placeholder="Enter SMS message (keep it short)"
+                                        value={messageForm.message}
+                                        onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
+                                        className="min-h-32"
+                                        disabled={isSending}
+                                        maxLength={160}
+                                    />
+                                </div>
                             )}
                             {messageType === 'sms' && (
                                 <p className="text-xs text-muted-foreground">
@@ -1719,10 +1855,37 @@ export default function CustomersPage() {
                                                 <p className="font-medium uppercase">{viewCustomer.country}</p>
                                             </div>
                                         )}
+                                        {viewCustomer.customerBusinessName && (
+                                            <div>
+                                                <p className="text-muted-foreground">Business Name</p>
+                                                <p className="font-medium">{viewCustomer.customerBusinessName}</p>
+                                            </div>
+                                        )}
                                         {viewCustomer.customerTvaNumber && (
                                             <div>
                                                 <p className="text-muted-foreground">VAT / Tax Number</p>
                                                 <p className="font-medium">{viewCustomer.customerTvaNumber}</p>
+                                            </div>
+                                        )}
+                                        {(viewCustomer.streetAddress ||
+                                            viewCustomer.apartmentUnit ||
+                                            viewCustomer.city ||
+                                            viewCustomer.state ||
+                                            viewCustomer.zipCode) && (
+                                            <div className="col-span-2">
+                                                <p className="text-muted-foreground">Address</p>
+                                                {viewCustomer.streetAddress && (
+                                                    <p className="font-medium">{viewCustomer.streetAddress}</p>
+                                                )}
+                                                {viewCustomer.apartmentUnit && (
+                                                    <p className="font-medium">{viewCustomer.apartmentUnit}</p>
+                                                )}
+                                                <p className="font-medium">
+                                                    {[viewCustomer.city, viewCustomer.state]
+                                                        .filter(Boolean)
+                                                        .join(', ')}
+                                                    {viewCustomer.zipCode ? ` ${viewCustomer.zipCode}` : ''}
+                                                </p>
                                             </div>
                                         )}
                                         <div>

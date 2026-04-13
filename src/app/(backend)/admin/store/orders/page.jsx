@@ -52,6 +52,8 @@ import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
 import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
 import { getCatalog } from '@/lib/server/store';
 import { createAppointment, deleteAppointmentsByOrderId } from '@/lib/server/workspace';
+import { formatAvailableLanguages } from '@/lib/i18n.js';
+import { getAvailableInvoiceLanguages } from '@/lib/server/locale';
 import { generateUID } from '@/lib/shared/helpers';
 import { generatePDF } from '@/utils/generatePDF';
 
@@ -63,6 +65,8 @@ const initialFormData = {
         lastName: '',
         email: '',
         phone: '',
+        isProfessional: false,
+        customerBusinessName: '',
         customerTvaNumber: '',
         streetAddress: '',
         apartmentUnit: '',
@@ -70,7 +74,12 @@ const initialFormData = {
         state: '',
         zipCode: '',
         country: 'Portugal',
-        countryIso: 'PT'
+        countryIso: 'PT',
+        emailNotifications: true,
+        orderUpdates: true,
+        marketingEmails: true,
+        newsletter: true,
+        smsNotifications: false
     },
     items: [],
     subtotal: 0,
@@ -110,8 +119,8 @@ const PAYMENT_STATUS_VALUES = ['pending', 'processing', 'paid', 'failed', 'refun
 export default function OrdersPage() {
     const t = useTranslations('Admin.Orders');
 
-    // Get storeSettings from LayoutProvider context
-    const { storeSettings } = useAdminSettings();
+    // Get settings from LayoutProvider context
+    const { storeSettings, siteSettings } = useAdminSettings();
 
     const ORDER_STATUS = ORDER_STATUS_VALUES.map((value) => ({
         value,
@@ -149,7 +158,35 @@ export default function OrdersPage() {
     const [trackingNumber, setTrackingNumber] = useState('');
     const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
     const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState(null);
+    const [invoiceLanguage, setInvoiceLanguage] = useState('pt');
+    const [availableInvoiceLanguages, setAvailableInvoiceLanguages] = useState([]);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+    useEffect(() => {
+        const loadInvoiceLanguages = async () => {
+            try {
+                const result = await getAvailableInvoiceLanguages();
+                const rawLanguages =
+                    result?.success && Array.isArray(result.data) && result.data.length > 0
+                        ? result.data
+                        : ['pt', 'en', 'es', 'fr'];
+
+                const formatted = formatAvailableLanguages(
+                    rawLanguages,
+                    siteSettings?.adminLanguage || siteSettings?.language || 'en'
+                );
+                setAvailableInvoiceLanguages(formatted);
+                setInvoiceLanguage((prev) => (rawLanguages.includes(prev) ? prev : rawLanguages[0]));
+            } catch (_error) {
+                const fallbackCodes = ['pt', 'en', 'es', 'fr'];
+                const fallback = formatAvailableLanguages(fallbackCodes);
+                setAvailableInvoiceLanguages(fallback);
+                setInvoiceLanguage((prev) => (fallbackCodes.includes(prev) ? prev : fallbackCodes[0]));
+            }
+        };
+
+        loadInvoiceLanguages();
+    }, [siteSettings?.adminLanguage, siteSettings?.language]);
     const [isEditingStatus, setIsEditingStatus] = useState(false);
     const [editStatusData, setEditStatusData] = useState({
         status: '',
@@ -698,7 +735,27 @@ export default function OrdersPage() {
                         displayName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim() || existingCustomer.displayName,
                         phone: orderData.customer.phone || existingCustomer.phone || '',
                         country: orderData.customer.country || existingCustomer.country || '',
-                        customerTvaNumber: orderData.customer.customerTvaNumber || existingCustomer.customerTvaNumber || ''
+                        countryIso: orderData.customer.countryIso || existingCustomer.countryIso || '',
+                        streetAddress: orderData.customer.streetAddress || existingCustomer.streetAddress || '',
+                        apartmentUnit: orderData.customer.apartmentUnit || existingCustomer.apartmentUnit || '',
+                        city: orderData.customer.city || existingCustomer.city || '',
+                        state: orderData.customer.state || existingCustomer.state || '',
+                        zipCode: orderData.customer.zipCode || existingCustomer.zipCode || '',
+                        isProfessional:
+                            orderData.customer.isProfessional === true ||
+                            !!orderData.customer.customerBusinessName ||
+                            !!orderData.customer.customerTvaNumber,
+                        customerBusinessName:
+                            orderData.customer.customerBusinessName || existingCustomer.customerBusinessName || '',
+                        customerTvaNumber: orderData.customer.customerTvaNumber || existingCustomer.customerTvaNumber || '',
+                        emailNotifications:
+                            orderData.customer.emailNotifications ?? existingCustomer.emailNotifications ?? true,
+                        orderUpdates: orderData.customer.orderUpdates ?? existingCustomer.orderUpdates ?? true,
+                        marketingEmails:
+                            orderData.customer.marketingEmails ?? existingCustomer.marketingEmails ?? true,
+                        newsletter: orderData.customer.newsletter ?? existingCustomer.newsletter ?? true,
+                        smsNotifications:
+                            orderData.customer.smsNotifications ?? existingCustomer.smsNotifications ?? false
                     };
                     const customerKey = existingCustomer.key || existingCustomer.id;
                     await updateUser(customerKey, updatedUserData);
@@ -710,7 +767,23 @@ export default function OrdersPage() {
                         email: orderData.customer.email,
                         phone: orderData.customer.phone || '',
                         country: orderData.customer.country || '',
+                        countryIso: orderData.customer.countryIso || '',
+                        streetAddress: orderData.customer.streetAddress || '',
+                        apartmentUnit: orderData.customer.apartmentUnit || '',
+                        city: orderData.customer.city || '',
+                        state: orderData.customer.state || '',
+                        zipCode: orderData.customer.zipCode || '',
+                        isProfessional:
+                            orderData.customer.isProfessional === true ||
+                            !!orderData.customer.customerBusinessName ||
+                            !!orderData.customer.customerTvaNumber,
+                        customerBusinessName: orderData.customer.customerBusinessName || '',
                         customerTvaNumber: orderData.customer.customerTvaNumber || '',
+                        emailNotifications: orderData.customer.emailNotifications ?? true,
+                        orderUpdates: orderData.customer.orderUpdates ?? true,
+                        marketingEmails: orderData.customer.marketingEmails ?? true,
+                        newsletter: orderData.customer.newsletter ?? true,
+                        smsNotifications: orderData.customer.smsNotifications ?? false,
                         role: 'user'
                     });
 
@@ -927,10 +1000,16 @@ export default function OrdersPage() {
         }
     };
 
-    const handleGenerateInvoice = async (order) => {
+    const handleGenerateInvoice = async (order, pdfLanguage = null) => {
         setIsGeneratingPDF(true);
         try {
-            await generatePDF(order, storeSettings);
+            const selectedLanguage =
+                pdfLanguage ||
+                invoiceLanguage ||
+                siteSettings?.adminLanguage ||
+                siteSettings?.language ||
+                'pt';
+            await generatePDF(order, { siteSettings, storeSettings }, selectedLanguage);
             toast.success(t('toasts.invoiceGenerated'));
         } catch (error) {
             console.log('Error generating PDF:', error);
@@ -942,6 +1021,9 @@ export default function OrdersPage() {
 
     const openInvoiceDialog = (order) => {
         setSelectedOrderForInvoice(order);
+        const preferred = siteSettings?.adminLanguage || siteSettings?.language || 'pt';
+        const availableCodes = availableInvoiceLanguages.map((item) => item.code);
+        setInvoiceLanguage(availableCodes.includes(preferred) ? preferred : availableCodes[0] || preferred);
         setIsInvoiceDialogOpen(true);
     };
 
@@ -2054,6 +2136,12 @@ export default function OrdersPage() {
                                             <div>
                                                 <label className="font-medium text-gray-500 text-sm">{t('details.customer.phone')}</label>
                                                 <p className="text-sm">{selectedOrder.customer.phone}</p>
+                                            </div>
+                                        )}
+                                        {selectedOrder.customer.customerBusinessName && (
+                                            <div>
+                                                <label className="font-medium text-gray-500 text-sm">Business Name</label>
+                                                <p className="text-sm">{selectedOrder.customer.customerBusinessName}</p>
                                             </div>
                                         )}
                                         {selectedOrder.customer.customerTvaNumber && (
@@ -3611,14 +3699,21 @@ export default function OrdersPage() {
                                                     lastName,
                                                     email: customer.email || '',
                                                     phone: customer.phone || '',
+                                                    isProfessional: customer.isProfessional || false,
+                                                    customerBusinessName: customer.customerBusinessName || '',
                                                     customerTvaNumber: customer.customerTvaNumber || '',
-                                                    streetAddress: '',
-                                                    apartmentUnit: '',
-                                                    city: '',
-                                                    state: '',
-                                                    zipCode: '',
+                                                    streetAddress: customer.streetAddress || '',
+                                                    apartmentUnit: customer.apartmentUnit || '',
+                                                    city: customer.city || '',
+                                                    state: customer.state || '',
+                                                    zipCode: customer.zipCode || '',
                                                     country: customer.country || 'Portugal',
-                                                    countryIso: customer.countryIso || 'PT'
+                                                    countryIso: customer.countryIso || 'PT',
+                                                    emailNotifications: customer.emailNotifications ?? true,
+                                                    orderUpdates: customer.orderUpdates ?? true,
+                                                    marketingEmails: customer.marketingEmails ?? true,
+                                                    newsletter: customer.newsletter ?? true,
+                                                    smsNotifications: customer.smsNotifications ?? false
                                                 }
                                             });
                                         } else {
@@ -3720,6 +3815,29 @@ export default function OrdersPage() {
                                         />
                                     </div>
                                     <div className="space-y-2">
+                                        <label htmlFor="customerBusinessName">
+                                            Business Name{' '}
+                                            <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
+                                        </label>
+                                        <Input
+                                            id="customerBusinessName"
+                                            value={formData.customer.customerBusinessName || ''}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    customer: {
+                                                        ...formData.customer,
+                                                        customerBusinessName: e.target.value,
+                                                        isProfessional:
+                                                            !!e.target.value ||
+                                                            !!formData.customer.customerTvaNumber
+                                                    }
+                                                })
+                                            }
+                                            placeholder="e.g. ACME, LDA"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
                                         <label htmlFor="customerTvaNumber">
                                             {t('create.customerTvaNumber')}{' '}
                                             <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
@@ -3732,7 +3850,10 @@ export default function OrdersPage() {
                                                     ...formData,
                                                     customer: {
                                                         ...formData.customer,
-                                                        customerTvaNumber: e.target.value
+                                                        customerTvaNumber: e.target.value,
+                                                        isProfessional:
+                                                            !!e.target.value ||
+                                                            !!formData.customer.customerBusinessName
                                                     }
                                                 })
                                             }
@@ -3831,7 +3952,7 @@ export default function OrdersPage() {
                                             <label htmlFor="country">{t('create.country')}</label>
                                             <CountryDropdown
                                                 id="country"
-                                                defaultValue={formData.customer.countryIso || 'FR'}
+                                                defaultValue={formData.customer.countryIso || 'PT'}
                                                 onChange={(country) =>
                                                     setFormData({
                                                         ...formData,
@@ -4374,6 +4495,26 @@ export default function OrdersPage() {
                     </DialogHeader>
                     {selectedOrderForInvoice && (
                         <div className="space-y-6">
+                            <div className="rounded-lg border border-border bg-card/60 p-3">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                    <Label htmlFor="invoice-language" className="text-sm font-medium">
+                                        PDF / Print language
+                                    </Label>
+                                    <Select value={invoiceLanguage} onValueChange={setInvoiceLanguage}>
+                                        <SelectTrigger id="invoice-language" className="w-full sm:w-48">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableInvoiceLanguages.map((lang) => (
+                                                <SelectItem key={lang.code} value={lang.code}>
+                                                    {lang.flag} {lang.name} ({lang.code.toUpperCase()})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             {/* Invoice Preview Area */}
                             <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
                                 {/* Invoice Header */}
@@ -4415,12 +4556,20 @@ export default function OrdersPage() {
                                     <div>
                                         <h3 className="mb-2 font-semibold ">{t('invoice.billTo')}:</h3>
                                         <div className="text-gray-600 text-sm">
+                                            {selectedOrderForInvoice.customer.customerBusinessName && (
+                                                <p className="font-semibold">
+                                                    {selectedOrderForInvoice.customer.customerBusinessName}
+                                                </p>
+                                            )}
                                             <p className="font-medium">
                                                 {`${selectedOrderForInvoice.customer.firstName} ${selectedOrderForInvoice.customer.lastName}`.trim()}
                                             </p>
                                             <p>{selectedOrderForInvoice.customer.email}</p>
                                             {selectedOrderForInvoice.customer.phone && (
                                                 <p>{selectedOrderForInvoice.customer.phone}</p>
+                                            )}
+                                            {selectedOrderForInvoice.customer.customerTvaNumber && (
+                                                <p>VAT N°: {selectedOrderForInvoice.customer.customerTvaNumber}</p>
                                             )}
                                             <div className="mt-2">
                                                 <p>{selectedOrderForInvoice.customer.streetAddress}</p>
@@ -4586,22 +4735,14 @@ export default function OrdersPage() {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Footer */}
-                                <div className="mt-8 border-t pt-4 text-center text-gray-500 text-sm">
-                                    <p>{t('invoice.thankYou')}</p>
-                                    {storeSettings?.businessWebsite && (
-                                        <p className="mt-1">{storeSettings.businessWebsite}</p>
-                                    )}
-                                </div>
+                                </div> 
                             </div>
 
                             {/* Invoice Actions */}
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                                 <Button
                                     variant="outline"
-                                    onClick={() => handleGenerateInvoice(selectedOrderForInvoice)}
+                                    onClick={() => handleGenerateInvoice(selectedOrderForInvoice, invoiceLanguage)}
                                     disabled={isGeneratingPDF}
                                     className="w-full">
                                     <Download className="mr-2 h-4 w-4" />
@@ -4611,7 +4752,7 @@ export default function OrdersPage() {
                                 <Button
                                     variant="outline"
                                     onClick={() => {
-                                        handleGenerateInvoice(selectedOrderForInvoice);
+                                        handleGenerateInvoice(selectedOrderForInvoice, invoiceLanguage);
                                         // Print logic would go here - opens PDF and triggers print dialog
                                     }}
                                     disabled={isGeneratingPDF}
@@ -4631,7 +4772,7 @@ export default function OrdersPage() {
                                             });
 
                                             // Generate PDF first, then handle email
-                                            await handleGenerateInvoice(selectedOrderForInvoice);
+                                            await handleGenerateInvoice(selectedOrderForInvoice, invoiceLanguage);
 
                                             // Create mailto link
                                             const mailtoLink = `mailto:${selectedOrderForInvoice.customer.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

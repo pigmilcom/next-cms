@@ -298,6 +298,7 @@ export async function createOrder(orderData, options = { sendEmail: true, create
             id: orderId,
             cst_email: validatedOrderData.customer.email.toLowerCase(),
             cst_name: `${validatedOrderData.customer.firstName} ${validatedOrderData.customer.lastName}`,
+            cst_businessName: validatedOrderData.customer.customerBusinessName || '',
             finalTotal: validatedOrderData.finalTotal,
             subtotal: validatedOrderData.subtotal,
             shippingCost: validatedOrderData.shippingCost,

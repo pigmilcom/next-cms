@@ -747,7 +747,14 @@ export async function createUser(userData) {
             displayName: userData.displayName || userData.email,
             phone: userData.phone || '',
             country: userData.country || '',
+            countryIso: userData.countryIso || '',
+            streetAddress: userData.streetAddress || '',
+            apartmentUnit: userData.apartmentUnit || '',
+            city: userData.city || '',
+            state: userData.state || '',
+            zipCode: userData.zipCode || '',
             isProfessional: userData.isProfessional || false,
+            customerBusinessName: userData.customerBusinessName || '',
             customerTvaNumber: userData.customerTvaNumber || '',
             role: userData.role || 'user',
             emailVerified: false,
@@ -761,7 +768,7 @@ export async function createUser(userData) {
             orderUpdates: userData.orderUpdates ?? true,
             marketingEmails: userData.marketingEmails ?? true,
             newsletter: userData.newsletter ?? true,
-            smsNotifications: userData.smsNotifications ?? true,
+            smsNotifications: userData.smsNotifications ?? false,
             // Club data matching getUser structure
             clubMember: userData.clubMember || false,
             clubPoints: userData.clubPoints || 0,
@@ -881,9 +888,60 @@ export async function createUserFromCustomer(orderData) {
                 updateData.country = customerData.country;
             }
 
+            // Compare and update address fields if different and provided
+            if (customerData.countryIso && currentUser.countryIso !== customerData.countryIso) {
+                updateData.countryIso = customerData.countryIso;
+            }
+            if (customerData.streetAddress && currentUser.streetAddress !== customerData.streetAddress) {
+                updateData.streetAddress = customerData.streetAddress;
+            }
+            if (customerData.apartmentUnit && currentUser.apartmentUnit !== customerData.apartmentUnit) {
+                updateData.apartmentUnit = customerData.apartmentUnit;
+            }
+            if (customerData.city && currentUser.city !== customerData.city) {
+                updateData.city = customerData.city;
+            }
+            if (customerData.state && currentUser.state !== customerData.state) {
+                updateData.state = customerData.state;
+            }
+            if (customerData.zipCode && currentUser.zipCode !== customerData.zipCode) {
+                updateData.zipCode = customerData.zipCode;
+            }
+
+            // Compare and update communication preferences if provided
+            if (customerData.emailNotifications !== undefined && currentUser.emailNotifications !== customerData.emailNotifications) {
+                updateData.emailNotifications = customerData.emailNotifications;
+            }
+            if (customerData.orderUpdates !== undefined && currentUser.orderUpdates !== customerData.orderUpdates) {
+                updateData.orderUpdates = customerData.orderUpdates;
+            }
+            if (customerData.marketingEmails !== undefined && currentUser.marketingEmails !== customerData.marketingEmails) {
+                updateData.marketingEmails = customerData.marketingEmails;
+            }
+            if (customerData.newsletter !== undefined && currentUser.newsletter !== customerData.newsletter) {
+                updateData.newsletter = customerData.newsletter;
+            }
+            if (customerData.smsNotifications !== undefined && currentUser.smsNotifications !== customerData.smsNotifications) {
+                updateData.smsNotifications = customerData.smsNotifications;
+            }
+
             // Compare and update customerTvaNumber if different and provided
             if (customerData.customerTvaNumber && currentUser.customerTvaNumber !== customerData.customerTvaNumber) {
                 updateData.customerTvaNumber = customerData.customerTvaNumber;
+            }
+
+            // Compare and update customerBusinessName if different and provided
+            if (customerData.customerBusinessName && currentUser.customerBusinessName !== customerData.customerBusinessName) {
+                updateData.customerBusinessName = customerData.customerBusinessName;
+            }
+
+            const isProfessional =
+                customerData.isProfessional === true ||
+                !!customerData.customerBusinessName ||
+                !!customerData.customerTvaNumber;
+
+            if (currentUser.isProfessional !== isProfessional) {
+                updateData.isProfessional = isProfessional;
             }
 
             // Only update if there are changes
@@ -919,8 +977,23 @@ export async function createUserFromCustomer(orderData) {
             displayName,
             phone: customerData.phone || '',
             country: customerData.country || '',
-            isProfessional: customerData.isProfessional || false,
+            countryIso: customerData.countryIso || '',
+            streetAddress: customerData.streetAddress || '',
+            apartmentUnit: customerData.apartmentUnit || '',
+            city: customerData.city || '',
+            state: customerData.state || '',
+            zipCode: customerData.zipCode || '',
+            isProfessional:
+                customerData.isProfessional === true ||
+                !!customerData.customerBusinessName ||
+                !!customerData.customerTvaNumber,
+            customerBusinessName: customerData.customerBusinessName || '',
             customerTvaNumber: customerData.customerTvaNumber || '',
+            emailNotifications: customerData.emailNotifications ?? true,
+            orderUpdates: customerData.orderUpdates ?? true,
+            marketingEmails: customerData.marketingEmails ?? true,
+            newsletter: customerData.newsletter ?? true,
+            smsNotifications: customerData.smsNotifications ?? false,
             role: 'user'
         };
 

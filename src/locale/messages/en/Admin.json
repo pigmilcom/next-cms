@@ -1041,12 +1041,15 @@
                 "slug": "Slug",
                 "slugHelp": "URL-friendly version of the name. Auto-generated from name but can be edited.",
                 "description": "Description",
+                "shortDescription": "Short Description",
+                "shortDescriptionHelper": "Brief description for product listings (max 250 characters)",
                 "activeItem": "Active Item",
                 "featuredItem": "Featured Item",
                 "placeholders": {
                     "name": "Enter item name ({lang})",
                     "slug": "item-slug",
-                    "description": "Enter item description ({lang})"
+                    "description": "Enter item description ({lang})",
+                    "shortDescription": "Enter short description ({lang})"
                 }
             },
             "pricing": {

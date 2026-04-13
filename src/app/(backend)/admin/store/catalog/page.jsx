@@ -42,6 +42,8 @@ const initialFormData = {
     sku: '',
     description: '', // Will be converted to multi-language object
     descriptionML: {}, // Multi-language descriptions
+    shortDescription: '', // Will be converted to multi-language object (max 250 chars)
+    shortDescriptionML: {}, // Multi-language short descriptions
     price: 0,
     currency: 'EUR',
     discountAmount: 0,

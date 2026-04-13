@@ -2012,6 +2012,9 @@ export const getCustomers = async (params = {}) => {
                             firstName: user.displayName?.split(' ')[0] || '',
                             lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
                             phone: user.phone || '',
+                            isProfessional: user.isProfessional || false,
+                            customerBusinessName: user.customerBusinessName || '',
+                            customerTvaNumber: user.customerTvaNumber || '',
                             role: user.role || 'user',
                             preferences: user.preferences || {
                                 emailNotifications: true,

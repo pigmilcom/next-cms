@@ -1039,12 +1039,15 @@
                 "slug": "Slug",
                 "slugHelp": "Versión del nombre apta para URL. Se genera automáticamente a partir del nombre, pero se puede editar.",
                 "description": "Descripción",
+                "shortDescription": "Descripción Corta",
+                "shortDescriptionHelper": "Descripción breve para listados de productos (máx. 250 caracteres)",
                 "activeItem": "Elemento activo",
                 "featuredItem": "Elemento destacado",
                 "placeholders": {
                     "name": "Introduce el nombre del elemento ({lang})",
                     "slug": "item-slug",
-                    "description": "Introduce la descripción del elemento ({lang})"
+                    "description": "Introduce la descripción del elemento ({lang})",
+                    "shortDescription": "Introduce la descripción corta ({lang})"
                 }
             },
             "pricing": {

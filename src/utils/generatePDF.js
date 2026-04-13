@@ -1,6 +1,8 @@
 import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
+import { getCountryName } from '@/lib/i18n.js';
 
-export const generatePDF = async (order, storeSettings = null, locale = 'pt') => {
+export const generatePDF = async (order, settingsInput = null, locale = 'pt') => {
     // Load translations from JSON file directly (client-safe)
     const translations = await import(`@/locale/messages/${locale}/Invoice.json`).then((mod) => mod.default.Invoice);
 
@@ -15,20 +17,62 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
         return value;
     };
 
-    const doc = new jsPDF();
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-    // Fallback store settings matching the actual structure from getStoreSettings
-    const defaultSettings = {
-        businessName: 'My Store',
-        tvaNumber: '',
-        address: '123 Main St, City, Country',
-        currency: 'EUR',
-        vatEnabled: true,
-        vatPercentage: 20,
-        vatIncludedInPrice: true
+    // Backward-compatible settings normalization:
+    // 1) generatePDF(order, { siteSettings, storeSettings }, locale)
+    // 2) generatePDF(order, storeSettings, locale)
+    const siteSettings =
+        settingsInput && typeof settingsInput === 'object' && 'siteSettings' in settingsInput
+            ? settingsInput.siteSettings || {}
+            : {};
+    const storeSettings =
+        settingsInput && typeof settingsInput === 'object' && 'storeSettings' in settingsInput
+            ? settingsInput.storeSettings || {}
+            : settingsInput || {};
+
+    const settings = {
+        businessName: storeSettings.businessName || siteSettings.siteName ||  siteSettings.baseUrl?.replace(/^https?:\/\//, '').replace(/\/$/, '') || '',
+        tvaNumber: storeSettings.tvaNumber || '',
+        address: storeSettings.address || siteSettings.businessAddress || '',
+        currency: storeSettings.currency || siteSettings.currency || 'EUR',
+        vatEnabled: storeSettings.vatEnabled !== false,
+        vatPercentage: storeSettings.vatPercentage || 0,
+        vatIncludedInPrice: storeSettings.vatIncludedInPrice !== false,
+        siteEmail: siteSettings.siteEmail || '',
+        sitePhone: siteSettings.sitePhone || '',
+        baseUrl: siteSettings.baseUrl || '',
+        businessWebsite: siteSettings.baseUrl || '',
+        logoPath: siteSettings.siteLogo || 'images/logo.png'
     };
 
-    const settings = storeSettings || defaultSettings;
+    const encodeInvoiceId = (value) => {
+        const raw = String(value || '');
+        if (!raw) return '';
+        return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    };
+
+    const orderId = order.id || order.uid || order.orderId || '';
+    const encodedOrderId = encodeInvoiceId(orderId);
+    const origin =
+        (settings.baseUrl && String(settings.baseUrl).trim()) ||
+        (typeof window !== 'undefined' ? window.location.origin : '');
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '';
+    const invoicePath = `/invoice/${encodedOrderId}`;
+    const invoiceUrl = normalizedOrigin ? `${normalizedOrigin}${invoicePath}` : invoicePath;
+
+    let qrCodeDataUrl = null;
+    try {
+        if (encodedOrderId) {
+            qrCodeDataUrl = await QRCode.toDataURL(invoiceUrl, {
+                errorCorrectionLevel: 'M',
+                margin: 1,
+                width: 180
+            });
+        }
+    } catch {
+        qrCodeDataUrl = null;
+    }
 
     // Helper function to safely parse JSON strings or objects
     const parseJSON = (data, fallback = {}) => {
@@ -46,6 +90,44 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
     const customer = parseJSON(order.customer, {});
     const shippingAddress = parseJSON(order.shippingAddress || order.shipping_address, customer);
     const items = parseJSON(order.items, []);
+
+    const loadImageAsDataUrl = async (src) => {
+        try {
+            if (!src) return null;
+            const cleaned = String(src).trim();
+            const candidates = Array.from(
+                new Set([
+                    cleaned,
+                    cleaned.startsWith('/') ? cleaned : `/${cleaned}`,
+                    cleaned.startsWith('/public/') ? cleaned.replace('/public/', '/') : cleaned,
+                    cleaned.startsWith('public/') ? `/${cleaned.replace('public/', '')}` : cleaned
+                ])
+            );
+
+            for (const candidate of candidates) {
+                const response = await fetch(candidate);
+                if (!response.ok) continue;
+
+                const blob = await response.blob();
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+
+                const mime = blob.type || '';
+                let format = 'PNG';
+                if (mime.includes('jpeg') || mime.includes('jpg')) format = 'JPEG';
+                if (mime.includes('webp')) format = 'WEBP';
+
+                return { dataUrl, format };
+            }
+
+            return null;
+        } catch {
+            return null;
+        }
+    };
 
     // Helper function to format currency
     const formatCurrency = (amount, currency = null) => {
@@ -87,124 +169,145 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
         return statusMap[status] || status || 'Pendente';
     };
 
-    // Helper function to convert country ISO code to full country name
-    const getCountryName = (countryCode) => {
-        if (!countryCode) return '';
+    const line = {
+        dark: [17, 24, 39],
+        medium: [75, 85, 99],
+        light: [229, 231, 235],
+        lighter: [243, 244, 246]
+    };
 
-        // If it's already a full name (length > 2), return as is
-        if (countryCode.length > 2) return countryCode;
+    const marginX = 16;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const rightEdge = pageWidth - marginX;
 
-        // Map of ISO codes to country names
-        const countryMap = {
-            PT: 'Portugal',
-            ES: 'Spain',
-            FR: 'France',
-            DE: 'Germany',
-            IT: 'Italy',
-            GB: 'United Kingdom',
-            UK: 'United Kingdom',
-            US: 'United States',
-            CA: 'Canada',
-            BR: 'Brazil',
-            MX: 'Mexico',
-            AR: 'Argentina',
-            CL: 'Chile',
-            CO: 'Colombia',
-            PE: 'Peru',
-            NL: 'Netherlands',
-            BE: 'Belgium',
-            CH: 'Switzerland',
-            SE: 'Sweden',
-            NO: 'Norway',
-            DK: 'Denmark',
-            FI: 'Finland',
-            PL: 'Poland',
-            AT: 'Austria',
-            IE: 'Ireland',
-            GR: 'Greece',
-            CZ: 'Czech Republic',
-            RO: 'Romania',
-            HU: 'Hungary',
-            AU: 'Australia',
-            NZ: 'New Zealand',
-            JP: 'Japan',
-            CN: 'China',
-            IN: 'India',
-            SG: 'Singapore',
-            KR: 'South Korea',
-            TH: 'Thailand',
-            MY: 'Malaysia',
-            ID: 'Indonesia',
-            PH: 'Philippines',
-            VN: 'Vietnam',
-            HK: 'Hong Kong',
-            TW: 'Taiwan',
-            AE: 'United Arab Emirates',
-            SA: 'Saudi Arabia',
-            IL: 'Israel',
-            TR: 'Turkey',
-            QA: 'Qatar',
-            KW: 'Kuwait',
-            ZA: 'South Africa',
-            EG: 'Egypt',
-            NG: 'Nigeria',
-            KE: 'Kenya'
-        };
+    const textLines = (value, maxWidth) => doc.splitTextToSize(String(value || ''), maxWidth);
+    const drawTextLines = (lines, x, y, options = {}) => {
+        if (!lines || lines.length === 0) return y;
+        const lineHeight = options.lineHeight || 4;
+        doc.text(lines, x, y, options);
+        return y + lineHeight * lines.length;
+    };
 
-        return countryMap[countryCode.toUpperCase()] || countryCode;
+    const drawKv = (label, value, x, y, valueX) => {
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(...line.medium);
+        doc.text(`${label}:`, x, y);
+        doc.setTextColor(...line.dark);
+        doc.text(String(value || ''), valueX, y, { align: 'right' });
+        return y + 4.5;
+    };
+
+    const drawFooter = (pageNumber, totalPages) => {
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const footerTopY = pageHeight - 24;
+        const qrSize = 16;
+
+        doc.setDrawColor(...line.light);
+        doc.setLineWidth(0.25);
+        doc.line(marginX, footerTopY - 2, rightEdge, footerTopY - 2);
+
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(...line.medium);
+
+        const disclaimerText = t('invoiceDisclaimer');
+        const disclaimerLines = textLines(disclaimerText, 120);
+        doc.text(disclaimerLines, marginX, footerTopY + 2);
+
+        if (qrCodeDataUrl) {
+            doc.addImage(qrCodeDataUrl, 'PNG', rightEdge - qrSize, footerTopY - 1, qrSize, qrSize);
+            doc.setFontSize(6.5);
+            doc.text(t('scanToViewInvoice'), rightEdge - qrSize / 2, footerTopY + qrSize + 2, { align: 'center' });
+        }
+
+        doc.setFontSize(7);
+        doc.text(`${pageNumber}/${totalPages}`, rightEdge, pageHeight - 4, { align: 'right' });
     };
 
     // ===== INVOICE HEADER =====
-    let yPos = 20;
+    let yPos = 18;
+    doc.setDrawColor(...line.light);
+    doc.setLineWidth(0.4);
 
-    // Left side - INVOICE title and Order ID
     doc.setFontSize(22);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(17, 24, 39); // gray-900
-    doc.text(t('invoiceTitle').toUpperCase(), 20, yPos);
+    doc.setTextColor(...line.dark);
+    doc.text(t('invoiceTitle').toUpperCase(), marginX, yPos);
 
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
-    doc.setTextColor(75, 85, 99); // gray-600
-    doc.text(`#${order.id || order.uid || order.orderId || 'N/A'}`, 20, yPos + 6);
+    doc.setTextColor(...line.medium);
+    doc.text(`${t('orderId')}: ${orderId || 'N/A'}`, marginX, yPos + 5);
 
-    // Right side - Business Information
-    yPos = 20;
-    const businessName = settings.businessName || '';
+    const logoResult = await loadImageAsDataUrl(settings.logoPath);
+    let brandY = yPos;
+    if (logoResult?.dataUrl) {
+        const logoWidth = 28;
+        const logoHeight = 14;
+        doc.addImage(logoResult.dataUrl, logoResult.format, rightEdge - logoWidth, brandY - 4, logoWidth, logoHeight);
+        brandY += 12;
+    }
+
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text(businessName, 190, yPos, { align: 'right' });
+    doc.setTextColor(...line.dark);
+    doc.text(settings.businessName || '', rightEdge, brandY, { align: 'right' });
+    brandY += 5;
 
-    yPos += 6;
     doc.setFontSize(8);
     doc.setFont(undefined, 'normal');
-    doc.setTextColor(75, 85, 99);
+    doc.setTextColor(...line.medium);
+
+    if (settings.siteEmail) {
+        const emailLines = textLines(settings.siteEmail, 70);
+        brandY = drawTextLines(emailLines, rightEdge, brandY, { align: 'right', lineHeight: 3.6 });
+    }
+    if (settings.sitePhone) {
+        const phoneLines = textLines(settings.sitePhone, 70);
+        brandY = drawTextLines(phoneLines, rightEdge, brandY, { align: 'right', lineHeight: 3.6 });
+    }
+    if (settings.baseUrl) {
+        const urlLines = textLines(settings.baseUrl, 70);
+        brandY = drawTextLines(urlLines, rightEdge, brandY, { align: 'right', lineHeight: 3.6 });
+    }
 
     if (settings.address) {
-        doc.text(settings.address, 190, yPos, { align: 'right' });
-        yPos += 4;
+        const addressLines = textLines(settings.address, 70);
+        brandY = drawTextLines(addressLines, rightEdge, brandY, { align: 'right', lineHeight: 3.6 });
     }
     if (settings.tvaNumber) {
-        doc.text(`${settings.tvaNumber}`, 190, yPos, { align: 'right' });
-        yPos += 4;
+        doc.text(`${settings.tvaNumber}`, rightEdge, brandY, { align: 'right' });
+        brandY += 4;
     }
 
+    yPos = Math.max(yPos + 12, brandY + 2);
+    doc.line(marginX, yPos, rightEdge, yPos);
+    yPos += 8;
+
     // ===== BILL TO & INVOICE DETAILS SECTION =====
-    yPos = 45;
-    const leftColX = 20;
+    const leftColX = marginX;
     const rightColX = 110;
 
-    // Bill To (Left Column)
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text(t('billTo') + ':', leftColX, yPos);
+    doc.setTextColor(...line.dark);
+    doc.text(`${t('billTo')}:`, leftColX, yPos);
+    doc.text(`${t('invoiceDetails')}:`, rightColX, yPos);
 
-    yPos += 6;
+    yPos += 5;
+    let leftY = yPos;
+    let rightY = yPos;
+
     doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(75, 85, 99);
+    doc.setTextColor(...line.dark);
+
+    const customerBusinessName =
+        customer.customerBusinessName || shippingAddress.customerBusinessName || order.customer?.customerBusinessName;
+
+    if (customerBusinessName) {
+        doc.setFont(undefined, 'bold');
+        leftY = drawTextLines(textLines(customerBusinessName, 82), leftColX, leftY, { lineHeight: 3.8 });
+    }
 
     // Customer name
     const customerName =
@@ -213,113 +316,86 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
         order.cst_name ||
         'N/A';
     doc.setFont(undefined, 'bold');
-    doc.text(customerName, leftColX, yPos);
-    yPos += 4;
+    leftY = drawTextLines(textLines(customerName, 82), leftColX, leftY, { lineHeight: 3.8 });
 
     doc.setFont(undefined, 'normal');
+    doc.setTextColor(...line.medium);
     // Customer email
     const customerEmail =
         customer.email || shippingAddress.email || order.email || order.customerEmail || order.cst_email;
     if (customerEmail) {
-        doc.text(customerEmail, leftColX, yPos);
-        yPos += 4;
+        leftY = drawTextLines(textLines(customerEmail, 82), leftColX, leftY, { lineHeight: 3.8 });
     }
 
     // Customer phone
     const customerPhone = customer.phone || shippingAddress.phone;
     if (customerPhone) {
-        doc.text(customerPhone, leftColX, yPos);
-        yPos += 4;
+        leftY = drawTextLines(textLines(`${t('phone')}: ${customerPhone}`, 82), leftColX, leftY, { lineHeight: 3.8 });
     }
 
     // Customer address
-    yPos += 2;
+    leftY += 1;
     const streetAddress =
         customer.streetAddress || shippingAddress.streetAddress || customer.street || shippingAddress.street;
     if (streetAddress) {
-        doc.text(streetAddress, leftColX, yPos);
-        yPos += 4;
+        leftY = drawTextLines(textLines(streetAddress, 82), leftColX, leftY, { lineHeight: 3.8 });
     }
 
     const apartmentUnit =
         customer.apartmentUnit || shippingAddress.apartmentUnit || customer.apartment || shippingAddress.apartment;
     if (apartmentUnit) {
-        doc.text(apartmentUnit, leftColX, yPos);
-        yPos += 4;
+        leftY = drawTextLines(textLines(apartmentUnit, 82), leftColX, leftY, { lineHeight: 3.8 });
     }
 
     const city = customer.city || shippingAddress.city;
     const state = customer.state || shippingAddress.state;
     const zipCode = customer.zipCode || shippingAddress.zipCode || customer.zip || shippingAddress.zip;
     if (city || state || zipCode) {
-        doc.text(`${city || ''}${state ? ', ' + state : ''} ${zipCode || ''}`, leftColX, yPos);
-        yPos += 4;
+        leftY = drawTextLines(textLines(`${city || ''}${state ? ', ' + state : ''} ${zipCode || ''}`, 82), leftColX, leftY, {
+            lineHeight: 3.8
+        });
     }
 
     const country = customer.country || shippingAddress.country || customer.countryIso || shippingAddress.countryIso;
     if (country) {
-        doc.text(getCountryName(country), leftColX, yPos);
+        leftY = drawTextLines(textLines(getCountryName(country, locale), 82), leftColX, leftY, { lineHeight: 3.8 });
+    }
+
+    const customerTvaNumber =
+        customer.customerTvaNumber || shippingAddress.customerTvaNumber || order.customer?.customerTvaNumber;
+    if (customerTvaNumber) {
+        leftY = drawTextLines(textLines(`${t('vatNumberLabel')}: ${customerTvaNumber}`, 82), leftColX, leftY, {
+            lineHeight: 3.8
+        });
     }
 
     // Invoice Details (Right Column)
-    yPos = 45;
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text(t('invoiceDetails') + ':', rightColX, yPos);
-
-    yPos += 6;
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(75, 85, 99);
-
-    // Invoice Date
-    doc.text(t('invoiceDate') + ':', rightColX, yPos);
-    doc.text(formatDate(order.createdAt || order.created_at || order.orderDate), 190, yPos, { align: 'right' });
-    yPos += 4;
-
-    // Payment Method
-    doc.text(t('paymentMethod') + ':', rightColX, yPos);
-    doc.text(formatPaymentMethod(order.paymentMethod || order.method), 190, yPos, { align: 'right' });
-    yPos += 4;
+    rightY = drawKv(t('invoiceDate'), formatDate(order.createdAt || order.created_at || order.orderDate), rightColX, rightY, rightEdge);
+    rightY = drawKv(t('paymentMethod'), formatPaymentMethod(order.paymentMethod || order.method), rightColX, rightY, rightEdge);
 
     // EuPago details if available
     if (order.eupagoReference) {
-        doc.text(t('reference') + ':', rightColX, yPos);
-        doc.setFont(undefined, 'bold');
-        doc.text(order.eupagoReference, 190, yPos, { align: 'right' });
-        doc.setFont(undefined, 'normal');
-        yPos += 4;
+        rightY = drawKv(t('reference'), order.eupagoReference, rightColX, rightY, rightEdge);
 
         if (order.eupagoEntity) {
-            doc.text(t('entity') + ':', rightColX, yPos);
-            doc.setFont(undefined, 'bold');
-            doc.text(order.eupagoEntity, 190, yPos, { align: 'right' });
-            doc.setFont(undefined, 'normal');
-            yPos += 4;
+            rightY = drawKv(t('entity'), order.eupagoEntity, rightColX, rightY, rightEdge);
         }
     }
 
     // Order Status
-    doc.text(t('status') + ':', rightColX, yPos);
-    doc.setFont(undefined, 'bold');
-    doc.text(formatOrderStatus(order.paymentStatus || 'pending'), 190, yPos, { align: 'right' });
-    doc.setFont(undefined, 'normal');
+    rightY = drawKv(t('status'), formatOrderStatus(order.paymentStatus || 'pending'), rightColX, rightY, rightEdge);
 
     // ===== ITEMS TABLE =====
-    yPos = Math.max(yPos, 100) + 10;
-
-    // ===== ITEMS TABLE =====
-    yPos = Math.max(yPos, 100) + 10;
+    yPos = Math.max(leftY, rightY) + 10;
 
     // Table Header
-    doc.setFillColor(249, 250, 251); // gray-50
-    doc.rect(20, yPos - 3, 170, 7, 'F');
+    doc.setFillColor(...line.lighter); // gray-100
+    doc.rect(marginX, yPos - 3, 178, 7, 'F');
 
     doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(17, 24, 39);
-    doc.text(t('description'), 22, yPos);
+    doc.setTextColor(...line.dark);
+    doc.text(t('description'), marginX + 2, yPos);
     doc.text(t('qty'), 130, yPos, { align: 'center' });
     doc.text(t('price'), 155, yPos, { align: 'right' });
     doc.text(t('total'), 188, yPos, { align: 'right' });
@@ -327,14 +403,14 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
     yPos += 7;
 
     // Table border line
-    doc.setDrawColor(229, 231, 235); // gray-200
+    doc.setDrawColor(...line.light); // gray-200
     doc.setLineWidth(0.3);
-    doc.line(20, yPos, 190, yPos);
+    doc.line(marginX, yPos, rightEdge, yPos);
     yPos += 4;
 
     // Items
     doc.setFont(undefined, 'normal');
-    doc.setTextColor(17, 24, 39);
+    doc.setTextColor(...line.dark);
     doc.setFontSize(8);
 
     if (items && items.length > 0) {
@@ -343,46 +419,57 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
             if (yPos > 250) {
                 doc.addPage();
                 yPos = 20;
+                doc.setFillColor(...line.lighter);
+                doc.rect(marginX, yPos - 3, 178, 7, 'F');
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(...line.dark);
+                doc.text(t('description'), marginX + 2, yPos);
+                doc.text(t('qty'), 130, yPos, { align: 'center' });
+                doc.text(t('price'), 155, yPos, { align: 'right' });
+                doc.text(t('total'), 188, yPos, { align: 'right' });
+                yPos += 7;
+                doc.setDrawColor(...line.light);
+                doc.line(marginX, yPos, rightEdge, yPos);
+                yPos += 4;
             }
 
             const itemPrice = parseFloat(item.price) || 0;
             const itemQuantity = parseInt(item.quantity, 10) || 1;
             const itemTotal = itemPrice * itemQuantity;
 
-            // Item name (truncate if too long)
-            const productName = item.name || 'Product';
-            const maxNameLength = 45;
-            const displayName =
-                productName.length > maxNameLength ? `${productName.substring(0, maxNameLength - 3)}...` : productName;
+            const productName = item.name || t('item');
+            const itemLines = textLines(productName, 105);
+            const rowHeight = Math.max(4.5, itemLines.length * 3.8);
 
-            doc.text(displayName, 22, yPos);
+            doc.text(itemLines, marginX + 2, yPos);
             doc.text(`${itemQuantity}`, 130, yPos, { align: 'center' });
             doc.text(formatCurrency(itemPrice), 155, yPos, { align: 'right' });
             doc.setFont(undefined, 'bold');
             doc.text(formatCurrency(itemTotal), 188, yPos, { align: 'right' });
             doc.setFont(undefined, 'normal');
 
-            yPos += 5;
+            yPos += rowHeight;
 
             // Light separator line between items
             if (index < items.length - 1) {
-                doc.setDrawColor(243, 244, 246); // gray-100
-                doc.line(20, yPos, 190, yPos);
+                doc.setDrawColor(...line.lighter); // gray-100
+                doc.line(marginX, yPos, rightEdge, yPos);
                 yPos += 3;
             }
         });
     } else {
         doc.setTextColor(107, 114, 128);
-        doc.text(t('noItemsFound'), 22, yPos);
+        doc.text(t('noItemsFound'), marginX + 2, yPos);
         yPos += 5;
     }
 
     yPos += 5;
 
     // ===== TOTALS SECTION =====
-    doc.setDrawColor(229, 231, 235); // gray-200
+    doc.setDrawColor(...line.light); // gray-200
     doc.setLineWidth(0.3);
-    doc.line(20, yPos, 190, yPos);
+    doc.line(marginX, yPos, rightEdge, yPos);
     yPos += 8;
 
     // Calculate totals
@@ -394,7 +481,7 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
 
     doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(17, 24, 39);
+    doc.setTextColor(...line.dark);
 
     // Subtotal
     doc.text(t('subtotal') + ':', 155, yPos, { align: 'right' });
@@ -428,7 +515,7 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
 
     // Total line
     yPos += 2;
-    doc.setDrawColor(17, 24, 39); // gray-900
+    doc.setDrawColor(...line.dark); // gray-900
     doc.setLineWidth(0.5);
     doc.line(130, yPos, 190, yPos);
     yPos += 7;
@@ -451,37 +538,26 @@ export const generatePDF = async (order, storeSettings = null, locale = 'pt') =>
 
         doc.setFontSize(8);
         doc.setFont(undefined, 'bold');
-        doc.setTextColor(75, 85, 99);
-        doc.text(t('deliveryNotes') + ':', 20, yPos);
+        doc.setTextColor(...line.medium);
+        doc.text(t('deliveryNotes') + ':', marginX, yPos);
         yPos += 4;
 
         doc.setFont(undefined, 'normal');
         const notes = order.deliveryNotes || order.delivery_notes;
-        const maxWidth = 170;
+        const maxWidth = 178;
         const lines = doc.splitTextToSize(notes, maxWidth);
-        doc.text(lines, 20, yPos);
+        doc.text(lines, marginX, yPos);
         yPos += lines.length * 4 + 8;
-    }
-
-    // Thank you message
-    if (yPos > 260) {
-        doc.addPage();
-        yPos = 20;
-    }
-
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(107, 114, 128);
-    doc.text(t('thankYouMessage'), 105, yPos, { align: 'center' });
-    yPos += 5;
-
-    if (settings.businessWebsite) {
-        doc.setFontSize(8);
-        doc.text(settings.businessWebsite, 105, yPos, { align: 'center' });
-    }
+    } 
 
     // Save the PDF
-    const fileName = `invoice-${order.id || order.uid || order.orderId}-${formatDate(order.createdAt || order.created_at || order.orderDate).replace(/\//g, '-')}.pdf`;
+    const totalPages = doc.getNumberOfPages();
+    for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+        doc.setPage(pageNumber);
+        drawFooter(pageNumber, totalPages);
+    }
+
+    const fileName = `invoice-${orderId}-${formatDate(order.createdAt || order.created_at || order.orderDate).replace(/\//g, '-')}.pdf`;
     doc.save(fileName);
 
     return fileName;

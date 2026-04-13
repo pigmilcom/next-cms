@@ -1,6 +1,7 @@
 {
     "Invoice": {
         "invoiceTitle": "Facture",
+        "orderId": "ID de Commande",
         "invoiceNumber": "Numéro de Facture",
         "date": "Date",
         "billTo": "Facturer à",
@@ -29,6 +30,10 @@
         "noItemsFound": "Aucun article trouvé",
         "thankYouMessage": "Merci de nous avoir choisis !",
         "vat": "TVA",
+        "vatNumberLabel": "Numéro de TVA",
+        "phone": "Téléphone",
+        "invoiceDisclaimer": "Cette facture a été générée électroniquement et est valable sans signature.",
+        "scanToViewInvoice": "Scannez pour voir la facture",
         "paymentMethods": {
             "card": "Carte de Crédit/Débit",
             "bank_transfer": "Virement Bancaire",

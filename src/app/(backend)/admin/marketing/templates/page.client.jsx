@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import AdminHeader from '@/app/(backend)/admin/components/AdminHeader';
 import AdminTable from '@/app/(backend)/admin/components/AdminTable';
 import GenerateCSV from '@/app/(backend)/admin/components/GenerateCSV';
+import GenerateAI from '@/app/(backend)/admin/components/GenerateAI';
 import { useAdminSettings } from '@/app/(backend)/admin/context/LayoutProvider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -614,7 +615,22 @@ export default function TemplatesPageClient({ initialData }) {
 
                             {newTemplate.type === 'sms' && (
                                 <div>
-                                    <Label htmlFor="template-message">SMS Message</Label>
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <Label htmlFor="template-message">SMS Message</Label>
+                                        <GenerateAI
+                                            lang={siteSettings?.language || 'en'}
+                                            instructions="Write a concise SMS template under 160 characters. Keep it clear, reusable, and action-oriented. Return plain text only."
+                                            placeholder="e.g., Hi {name}, your order is ready for pickup. Reply HELP for support."
+                                            allowCode={false}
+                                            onGenerated={(generatedContent) =>
+                                                setNewTemplate((prev) => ({ ...prev, message: generatedContent.slice(0, 300) }))
+                                            }
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs"
+                                            title="Generate"
+                                        />
+                                    </div>
                                     <Textarea
                                         id="template-message"
                                         value={newTemplate.message}
@@ -736,7 +752,22 @@ export default function TemplatesPageClient({ initialData }) {
 
                             {editTemplateData.type === 'sms' && (
                                 <div>
-                                    <Label htmlFor="edit-template-message">SMS Message</Label>
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <Label htmlFor="edit-template-message">SMS Message</Label>
+                                        <GenerateAI
+                                            lang={siteSettings?.language || 'en'}
+                                            instructions="Rewrite this SMS template to be concise, reusable, and clear. Keep under 160 characters when possible. Return plain text only."
+                                            placeholder="e.g., Hi {name}, your booking is confirmed for {date}."
+                                            allowCode={false}
+                                            onGenerated={(generatedContent) =>
+                                                setEditTemplateData((prev) => ({ ...prev, message: generatedContent.slice(0, 300) }))
+                                            }
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-xs"
+                                            title="Generate"
+                                        />
+                                    </div>
                                     <Textarea
                                         id="edit-template-message"
                                         value={editTemplateData.message}

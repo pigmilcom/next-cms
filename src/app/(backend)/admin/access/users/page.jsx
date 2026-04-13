@@ -37,6 +37,12 @@ const initialFormData = {
     email: '',
     phone: '',
     country: '',
+    countryIso: '',
+    streetAddress: '',
+    apartmentUnit: '',
+    city: '',
+    state: '',
+    zipCode: '',
     role: 'user',
     password: '',
     points: 0,
@@ -126,8 +132,8 @@ export default function UsersPage() {
         {
             key: 'basicInfo',
             label: 'Basic Information',
-            headers: ['Display Name', 'Email', 'Phone', 'Country'],
-            fields: ['displayName', 'email', 'phone', 'country'],
+            headers: ['Display Name', 'Email', 'Phone', 'Country', 'Street', 'City', 'State', 'ZIP'],
+            fields: ['displayName', 'email', 'phone', 'country', 'streetAddress', 'city', 'state', 'zipCode'],
             defaultChecked: true
         },
         {
@@ -167,6 +173,10 @@ export default function UsersPage() {
             email: user.email || '',
             phone: user.phone || '',
             country: user.country || '',
+            streetAddress: user.streetAddress || '',
+            city: user.city || '',
+            state: user.state || '',
+            zipCode: user.zipCode || '',
             role: user.role || '',
             status: user.status || 'active',
             points: user.points || 0,
@@ -373,6 +383,12 @@ export default function UsersPage() {
                 email: formData.email,
                 phone: formData.phone || '',
                 country: formData.country || '',
+                countryIso: formData.countryIso || '',
+                streetAddress: formData.streetAddress || '',
+                apartmentUnit: formData.apartmentUnit || '',
+                city: formData.city || '',
+                state: formData.state || '',
+                zipCode: formData.zipCode || '',
                 role: formData.role,
                 // Include user preferences
                 emailNotifications: formData.emailNotifications,
@@ -478,6 +494,12 @@ export default function UsersPage() {
             email: user.email || '',
             phone: user.phone || '',
             country: user.country || '',
+            countryIso: user.countryIso || '',
+            streetAddress: user.streetAddress || '',
+            apartmentUnit: user.apartmentUnit || '',
+            city: user.city || '',
+            state: user.state || '',
+            zipCode: user.zipCode || '',
             role: user.role || 'user',
             password: '',
             points: user.points || 0,
@@ -843,9 +865,70 @@ export default function UsersPage() {
                             </label>
                             <CountryDropdown
                                 defaultValue={formData.country}
-                                onChange={(country) => setFormData({ ...formData, country: country.alpha2 })}
+                                onChange={(country) =>
+                                    setFormData({
+                                        ...formData,
+                                        country: country.alpha2,
+                                        countryIso: country.alpha2
+                                    })
+                                }
                                 placeholder="Select country"
                             />
+                        </div>
+
+                        <div>
+                            <label className="text-muted-foreground text-sm">
+                                Street Address <span className="text-muted-foreground/60">(optional)</span>
+                            </label>
+                            <Input
+                                value={formData.streetAddress}
+                                onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                                placeholder="Street name and number"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-muted-foreground text-sm">
+                                Apartment / Unit <span className="text-muted-foreground/60">(optional)</span>
+                            </label>
+                            <Input
+                                value={formData.apartmentUnit}
+                                onChange={(e) => setFormData({ ...formData, apartmentUnit: e.target.value })}
+                                placeholder="Apt, suite, unit, etc."
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    City <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.city}
+                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                    placeholder="City"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    State <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.state}
+                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                    placeholder="State"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-muted-foreground text-sm">
+                                    ZIP Code <span className="text-muted-foreground/60">(optional)</span>
+                                </label>
+                                <Input
+                                    value={formData.zipCode}
+                                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                                    placeholder="ZIP / Postal code"
+                                />
+                            </div>
                         </div>
 
                         <div>
@@ -1185,6 +1268,25 @@ export default function UsersPage() {
                                             <div>
                                                 <p className="text-muted-foreground">Country</p>
                                                 <p className="font-medium uppercase">{viewUser.country}</p>
+                                            </div>
+                                        )}
+                                        {(viewUser.streetAddress ||
+                                            viewUser.apartmentUnit ||
+                                            viewUser.city ||
+                                            viewUser.state ||
+                                            viewUser.zipCode) && (
+                                            <div className="col-span-2">
+                                                <p className="text-muted-foreground">Address</p>
+                                                {viewUser.streetAddress && (
+                                                    <p className="font-medium">{viewUser.streetAddress}</p>
+                                                )}
+                                                {viewUser.apartmentUnit && (
+                                                    <p className="font-medium">{viewUser.apartmentUnit}</p>
+                                                )}
+                                                <p className="font-medium">
+                                                    {[viewUser.city, viewUser.state].filter(Boolean).join(', ')}
+                                                    {viewUser.zipCode ? ` ${viewUser.zipCode}` : ''}
+                                                </p>
                                             </div>
                                         )}
                                         <div>

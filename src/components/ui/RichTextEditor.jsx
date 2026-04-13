@@ -265,30 +265,37 @@ const RichTextEditor = ({
         const loadAIConfig = async () => {
             try {
                 const settingsResult = await getAISettings();
-                if (settingsResult.success && settingsResult.data?.enabled) {
-                    setAiEnabled(true);
+                const siteAIEnabled = siteSettings?.aiEnabled === true;
+                const settingsAIEnabled = settingsResult.success && settingsResult.data?.enabled === true;
+                const shouldEnableAI = siteAIEnabled || settingsAIEnabled;
 
-                    // Load available text models
-                    const modelsResult = await getAllAIModels({ enabledOnly: true });
-                    if (modelsResult.success && modelsResult.data) {
-                        // Filter for text models only
-                        const textModels = modelsResult.data.filter(
-                            (model) => model.modelType === 'text' || !model.modelType
-                        );
-                        setAiModels(textModels);
-                        // Set first model as default
-                        if (textModels.length > 0) {
-                            setSelectedAIModel(textModels[0].id);
-                        }
+                setAiEnabled(shouldEnableAI);
+
+                if (!shouldEnableAI) {
+                    setAiModels([]);
+                    setSelectedAIModel('');
+                    return;
+                }
+
+                // Load available text models
+                const modelsResult = await getAllAIModels({ enabledOnly: true });
+                if (modelsResult.success && modelsResult.data) {
+                    // Filter for text models only
+                    const textModels = modelsResult.data.filter((model) => model.modelType === 'text' || !model.modelType);
+                    setAiModels(textModels);
+                    // Set first model as default
+                    if (textModels.length > 0) {
+                        setSelectedAIModel(textModels[0].id);
                     }
                 }
             } catch (error) {
                 console.error('Failed to load AI configuration:', error);
+                setAiEnabled(siteSettings?.aiEnabled === true);
             }
         };
 
         loadAIConfig();
-    }, []);
+    }, [siteSettings?.aiEnabled]);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -1162,7 +1169,7 @@ const RichTextEditor = ({
                         </ToolbarButton>
 
                         {/* AI Generate Button */}
-                        {aiEnabled && aiModels.length > 0 && (
+                        {aiEnabled && (
                             <ToolbarButton
                                 onClick={handleGenerateButtonClick}
                                 title="Generate with AI"

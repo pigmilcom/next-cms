@@ -26,6 +26,12 @@ export const getAISettings = async (params = {}) => {
         const cached = await loadCacheData('ai_settings', params);
         if (cached) return cached;
 
+        // AI enablement/token are managed in site settings
+        const businessSettings = await getSettings();
+        const siteSettings = businessSettings?.adminSiteSettings || {};
+        const siteAIEnabled = siteSettings?.aiEnabled === true;
+        const siteReplicateApiKey = siteSettings?.replicateApiKey || '';
+
         const response = await DBService.readBy('id', 'ai_settings', 'ai_settings');
 
         // Check if response is valid and has data
@@ -46,7 +52,11 @@ export const getAISettings = async (params = {}) => {
 
             const result = {
                 success: true,
-                data: created.data || defaultSettings
+                data: {
+                    ...(created.data || defaultSettings),
+                    enabled: siteAIEnabled,
+                    replicateApiKey: siteReplicateApiKey
+                }
             };
 
             await saveCacheData('ai_settings', params, result);
@@ -58,7 +68,11 @@ export const getAISettings = async (params = {}) => {
 
         const result = {
             success: true,
-            data: allSettings
+            data: {
+                ...allSettings,
+                enabled: siteAIEnabled,
+                replicateApiKey: siteReplicateApiKey
+            }
         };
 
         await saveCacheData('ai_settings', params, result);
