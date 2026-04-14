@@ -494,7 +494,6 @@ const InvoicePageContent = ({
                     amount: Math.round(effectiveTotal * 100),
                     currency: currentCurrency.toLowerCase(),
                     email: currentOrder.email || currentOrder.cst_email || '',
-                    automatic_payment_methods: true,
                     metadata: {
                         order_id: currentOrder.id,
                         source: 'invoice_preview'
