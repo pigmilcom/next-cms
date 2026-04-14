@@ -47,7 +47,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createUser, getAllUsers, updateUser } from '@/lib/server/users';
 import { calculateOrderPoints } from '@/lib/server/club';
-import { sendOrderConfirmationEmail, sendOrderUpdateEmail } from '@/lib/server/email';
+import { sendInvoiceEmail, sendOrderConfirmationEmail, sendOrderUpdateEmail } from '@/lib/server/email';
 import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
 import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
 import { getCatalog } from '@/lib/server/store';
@@ -55,7 +55,9 @@ import { createAppointment, deleteAppointmentsByOrderId } from '@/lib/server/wor
 import { formatAvailableLanguages } from '@/lib/i18n.js';
 import { getAvailableInvoiceLanguages } from '@/lib/server/locale';
 import { generateUID } from '@/lib/shared/helpers';
+import { buildPublicInvoiceUrl } from '@/lib/shared/order-links.js';
 import { generatePDF } from '@/utils/generatePDF';
+import { printInvoicePdf } from '@/utils/printInvoicePdf.js';
 
 const ORDER_STATUS_VALUES = ['pending', 'processing', 'delivered', 'complete', 'cancelled'];
 
@@ -287,6 +289,8 @@ export default function OrdersPage() {
     const [invoiceLanguage, setInvoiceLanguage] = useState('pt');
     const [availableInvoiceLanguages, setAvailableInvoiceLanguages] = useState([]);
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+    const [isPrintingInvoice, setIsPrintingInvoice] = useState(false);
+    const [isSendingInvoiceEmail, setIsSendingInvoiceEmail] = useState(false);
 
     useEffect(() => {
         const loadInvoiceLanguages = async () => {
@@ -1103,6 +1107,78 @@ export default function OrdersPage() {
             toast.error(t('toasts.invoiceGenerateFailed'));
         } finally {
             setIsGeneratingPDF(false);
+        }
+    };
+
+    const getInvoiceUrl = (order, language = null) => {
+        const selectedLanguage =
+            language ||
+            invoiceLanguage ||
+            siteSettings?.adminLanguage ||
+            siteSettings?.language ||
+            'pt';
+        const baseUrl =
+            siteSettings?.baseUrl ||
+            (typeof window !== 'undefined' ? window.location.origin : '');
+
+        return buildPublicInvoiceUrl(baseUrl, order?.id || order?.orderId || '', selectedLanguage);
+    };
+
+    const handleCopyInvoiceUrl = async (order, language = null) => {
+        try {
+            const invoiceUrl = getInvoiceUrl(order, language);
+            if (!invoiceUrl) {
+                throw new Error('Invoice URL unavailable');
+            }
+
+            await navigator.clipboard.writeText(invoiceUrl);
+            toast.success(t('toasts.invoiceUrlCopied'));
+        } catch (error) {
+            console.error('Failed to copy invoice URL:', error);
+            toast.error(t('toasts.copyInvoiceUrlFailed'));
+        }
+    };
+
+    const handlePrintInvoice = async (order, pdfLanguage = null) => {
+        setIsPrintingInvoice(true);
+        try {
+            const selectedLanguage =
+                pdfLanguage ||
+                invoiceLanguage ||
+                siteSettings?.adminLanguage ||
+                siteSettings?.language ||
+                'pt';
+
+            await printInvoicePdf(order, { siteSettings, storeSettings }, selectedLanguage, t('toasts.invoiceGenerateFailed'));
+        } catch (error) {
+            console.error('Error printing invoice:', error);
+            toast.error(error?.message || t('toasts.invoiceGenerateFailed'));
+        } finally {
+            setIsPrintingInvoice(false);
+        }
+    };
+
+    const handleEmailInvoice = async (order, emailLanguage = null) => {
+        setIsSendingInvoiceEmail(true);
+        try {
+            const selectedLanguage =
+                emailLanguage ||
+                invoiceLanguage ||
+                siteSettings?.adminLanguage ||
+                siteSettings?.language ||
+                'pt';
+            const response = await sendInvoiceEmail(order, selectedLanguage);
+
+            if (!response?.success) {
+                throw new Error(response?.error || t('toasts.prepareEmailFailed'));
+            }
+
+            toast.success(t('toasts.invoiceEmailSent'));
+        } catch (error) {
+            console.error('Error sending invoice email:', error);
+            toast.error(error?.message || t('toasts.prepareEmailFailed'));
+        } finally {
+            setIsSendingInvoiceEmail(false);
         }
     };
 
@@ -4594,7 +4670,7 @@ export default function OrdersPage() {
                                         <SelectContent>
                                             {availableInvoiceLanguages.map((lang) => (
                                                 <SelectItem key={lang.code} value={lang.code}>
-                                                    {lang.flag} {lang.name} ({lang.code.toUpperCase()})
+                                                    {lang.flag} {lang.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -4826,7 +4902,15 @@ export default function OrdersPage() {
                             </div>
 
                             {/* Invoice Actions */}
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleCopyInvoiceUrl(selectedOrderForInvoice, invoiceLanguage)}
+                                    className="w-full">
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    {t('invoice.copyInvoiceUrl')}
+                                </Button>
+
                                 <Button
                                     variant="outline"
                                     onClick={() => handleGenerateInvoice(selectedOrderForInvoice, invoiceLanguage)}
@@ -4838,41 +4922,27 @@ export default function OrdersPage() {
 
                                 <Button
                                     variant="outline"
-                                    onClick={() => {
-                                        handleGenerateInvoice(selectedOrderForInvoice, invoiceLanguage);
-                                        // Print logic would go here - opens PDF and triggers print dialog
-                                    }}
-                                    disabled={isGeneratingPDF}
+                                    onClick={() => handlePrintInvoice(selectedOrderForInvoice, invoiceLanguage)}
+                                    disabled={isPrintingInvoice}
                                     className="w-full">
-                                    <Printer className="mr-2 h-4 w-4" />
+                                    {isPrintingInvoice ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Printer className="mr-2 h-4 w-4" />
+                                    )}
                                     {t('invoice.printInvoice')}
                                 </Button>
 
                                 <Button
                                     variant="outline"
-                                    onClick={async () => {
-                                        try {
-                                            const subject = t('invoice.emailSubject', { orderId: selectedOrderForInvoice.id });
-                                            const body = t('invoice.emailBody', {
-                                                firstName: selectedOrderForInvoice.customer.firstName,
-                                                orderId: selectedOrderForInvoice.id
-                                            });
-
-                                            // Generate PDF first, then handle email
-                                            await handleGenerateInvoice(selectedOrderForInvoice, invoiceLanguage);
-
-                                            // Create mailto link
-                                            const mailtoLink = `mailto:${selectedOrderForInvoice.customer.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                                            window.open(mailtoLink);
-
-                                            toast.success(t('toasts.emailClientOpened'));
-                                        } catch (_error) {
-                                            toast.error(t('toasts.prepareEmailFailed'));
-                                        }
-                                    }}
-                                    disabled={isGeneratingPDF}
+                                    onClick={() => handleEmailInvoice(selectedOrderForInvoice, invoiceLanguage)}
+                                    disabled={isSendingInvoiceEmail}
                                     className="w-full">
-                                    <Send className="mr-2 h-4 w-4" />
+                                    {isSendingInvoiceEmail ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Send className="mr-2 h-4 w-4" />
+                                    )}
                                     {t('invoice.emailInvoice')}
                                 </Button>
                             </div>

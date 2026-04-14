@@ -99,7 +99,8 @@
             "eupago_mb": "Multibanco",
             "eupago_mbway": "MB WAY",
             "eupago": "EuPago",
-            "none": "N/A"
+            "none": "N/A",
+            "pending": "Pending"
         }
     }
 }

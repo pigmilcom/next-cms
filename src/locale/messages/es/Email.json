@@ -191,6 +191,16 @@
             "mbway": "MB WAY",
             "none": "Pendiente"
         },
+        "invoiceEmail": {
+            "subject": "Tu factura del pedido #{orderId}",
+            "preview": "Tu factura del pedido #{orderId} está lista",
+            "badge": "Factura Disponible",
+            "title": "Tu factura está lista",
+            "greeting": "Hola {customerName},",
+            "message": "Tu pedido se creó correctamente y tu factura ya está disponible online. Puedes abrirla en cualquier momento con el botón de abajo.",
+            "summaryTitle": "Resumen de la Factura",
+            "viewInvoice": "Ver Factura"
+        },
         "passwordReset": {
             "subject": "Código de Redefinição de Palavra-passe",
             "preview": "O seu código de redefinição de palavra-passe: {resetCode}",

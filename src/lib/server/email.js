@@ -156,8 +156,8 @@ const getOrderCustomerPhone = (orderData = {}) => {
     return orderData.customer?.phone || orderData.phone || getOrderShippingAddress(orderData)?.phone || '';
 };
 
-const getOrderInvoiceUrl = (baseUrl, orderData = {}) => {
-    return buildPublicInvoiceUrl(baseUrl, orderData.id || orderData.orderId || '');
+const getOrderInvoiceUrl = (baseUrl, orderData = {}, locale = '') => {
+    return buildPublicInvoiceUrl(baseUrl, orderData.id || orderData.orderId || '', locale);
 };
 
 const getOrderTotalAmount = (orderData = {}) => {
@@ -206,7 +206,7 @@ const getOrderEmailTemplateData = (orderData = {}, settings = {}, resolvedLocale
         supportEmail: siteSettings?.siteEmail || emailSettings.siteEmail || DEFAULT_SUPPORT_EMAIL,
         sitePhone: siteSettings?.sitePhone || '',
         socialNetworks: siteSettings?.socialNetworks || [],
-        orderSummaryUrl: getOrderInvoiceUrl(baseUrl, orderData),
+        orderSummaryUrl: getOrderInvoiceUrl(baseUrl, orderData, resolvedLocale),
         locale: resolvedLocale,
         status: orderData.status || 'pending',
         isServiceAppointment: orderData.isServiceAppointment || false
@@ -923,6 +923,43 @@ export async function sendOrderAdminConfirmationEmail(orderData, locale) {
     }
 }
 
+export async function sendInvoiceEmail(orderData, locale) {
+    try {
+        const { siteSettings, storeSettings } = await getSettings();
+        const emailSettings = await getEmailSettings();
+        const resolvedLocale = resolveEmailLocale(locale, siteSettings);
+        const t = await loadEmailTranslations(resolvedLocale);
+        const templateData = getOrderEmailTemplateData(
+            orderData,
+            { siteSettings, storeSettings, emailSettings },
+            resolvedLocale
+        );
+
+        if (!templateData.customerEmail) {
+            return { success: false, error: 'Customer email not available' };
+        }
+
+        const { InvoiceEmailTemplate } = await import('@/emails/InvoiceEmailTemplate');
+
+        return await sendEmail(
+            templateData.customerEmail,
+            t.invoiceEmail?.subject?.replace('{orderId}', templateData.orderId) ||
+                `Invoice for Order #${templateData.orderId}`,
+            InvoiceEmailTemplate,
+            {
+                ...templateData,
+                customer: orderData.customer || {},
+                shipping: orderData.shipping || {},
+                orderType: orderData.orderType || 'manual'
+            },
+            { locale: resolvedLocale }
+        );
+    } catch (error) {
+        console.error('Failed to send invoice email:', error);
+        return { success: false, error: error.message || 'Failed to send invoice email' };
+    }
+}
+
 /**
  * Send order update email to customer
  * @param {string} to - Customer email address
@@ -1031,7 +1068,7 @@ export async function sendOrderUpdateEmail(
         const subject = getSubjectFromTranslations(status, orderId, t);
 
         const { OrderUpdateTemplate } = await import('@/emails/OrderUpdateTemplate');
-        const orderSummaryUrl = buildPublicInvoiceUrl(baseUrl, orderId);
+        const orderSummaryUrl = buildPublicInvoiceUrl(baseUrl, orderId, resolvedLocale);
 
         const emailResponse = await sendEmail(
             to,
@@ -1039,8 +1076,8 @@ export async function sendOrderUpdateEmail(
             OrderUpdateTemplate,
             {
                 customerName,
-            customerEmail,
-            customerPhone,
+                customerEmail,
+                customerPhone,
                 orderId,
                 orderDate: localizedOrderDate,
                 status,
@@ -1096,7 +1133,11 @@ export async function sendOrderStatusUpdateEmail(orderData, locale) {
         const emailSettings = await getEmailSettings();
         const { siteSettings, storeSettings } = await getSettings();
         const resolvedLocale = resolveEmailLocale(locale || orderData.locale, siteSettings);
-        const orderSummaryUrl = buildPublicInvoiceUrl(siteSettings?.baseUrl || emailSettings.siteUrl, orderData.orderId || orderData.id);
+        const orderSummaryUrl = buildPublicInvoiceUrl(
+            siteSettings?.baseUrl || emailSettings.siteUrl,
+            orderData.orderId || orderData.id,
+            resolvedLocale
+        );
         const t = await loadEmailTranslations(resolvedLocale);
         await sendEmail(
             orderData.email || orderData.customer?.email,

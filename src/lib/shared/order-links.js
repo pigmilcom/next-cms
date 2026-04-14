@@ -45,7 +45,7 @@ export const decodePublicInvoiceId = (encodedId = '') => {
     }
 };
 
-export const buildPublicInvoiceUrl = (baseUrl = '', orderId = '') => {
+export const buildPublicInvoiceUrl = (baseUrl = '', orderId = '', locale = '') => {
     const encodedOrderId = encodePublicInvoiceId(orderId);
     if (!encodedOrderId) {
         return '';
@@ -53,6 +53,8 @@ export const buildPublicInvoiceUrl = (baseUrl = '', orderId = '') => {
 
     const normalizedBaseUrl = String(baseUrl || '').trim().replace(/\/$/, '');
     const invoicePath = `/invoice/${encodedOrderId}`;
+    const normalizedLocale = String(locale || '').trim();
+    const localeQuery = normalizedLocale ? `?locale=${encodeURIComponent(normalizedLocale)}` : '';
 
-    return normalizedBaseUrl ? `${normalizedBaseUrl}${invoicePath}` : invoicePath;
+    return normalizedBaseUrl ? `${normalizedBaseUrl}${invoicePath}${localeQuery}` : `${invoicePath}${localeQuery}`;
 };

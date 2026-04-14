@@ -3,7 +3,7 @@
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { AlertCircle, CheckCircle2, CreditCard, Download, Loader2, MapPinned, Package, Printer, ShieldCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import { formatAvailableLanguages, getCountryName } from '@/lib/i18n.js';
 import { createEuPagoReference, createStripePaymentIntent } from '@/lib/server/gateways.js';
 import { updateOrder } from '@/lib/server/orders.js';
 import { generatePDF } from '@/utils/generatePDF.js';
+import { printInvoicePdf } from '@/utils/printInvoicePdf.js';
 import ShippingMethodSelector from '../../cart/checkout/ShippingMethodSelector.jsx';
 
 let stripePromise = null;
@@ -93,6 +94,8 @@ const InvoicePageContent = ({
     elements
 }) => {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const locale = useLocale();
     const { resolvedTheme } = useTheme();
     const { siteSettings: contextSiteSettings, storeSettings: contextStoreSettings } = useSettings();
@@ -115,6 +118,8 @@ const InvoicePageContent = ({
         invoiceTranslationsMap?.[selectedInvoiceLanguage] || invoiceTranslations || invoiceTranslationsMap?.en || {};
     const t = createInvoiceTranslator(activeInvoiceTranslations);
     const languageOptions = formatAvailableLanguages(availableInvoiceLanguages || [invoiceLocale || 'en'], selectedInvoiceLanguage);
+    const searchParamsString = searchParams?.toString() || '';
+    const requestedLocale = searchParams?.get('locale') || '';
 
     const normalizedSettings = {
         businessName:
@@ -228,6 +233,31 @@ const InvoicePageContent = ({
 
     const availablePaymentMethods = getAvailablePaymentMethods();
 
+    const updateInvoiceLocaleInUrl = (language) => {
+        if (!pathname) {
+            return;
+        }
+
+        const nextParams = new URLSearchParams(searchParamsString);
+        if (language) {
+            nextParams.set('locale', language);
+        } else {
+            nextParams.delete('locale');
+        }
+
+        const nextQuery = nextParams.toString();
+        router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+    };
+
+    const handleInvoiceLanguageChange = (language) => {
+        setSelectedInvoiceLanguage(language);
+        updateInvoiceLocaleInUrl(language);
+
+        if (typeof document !== 'undefined') {
+            document.documentElement.lang = language;
+        }
+    };
+
     useEffect(() => {
         if (!availablePaymentMethods.length) {
             return;
@@ -246,6 +276,29 @@ const InvoicePageContent = ({
     }, [currentPaymentMethod, selectedPaymentMethod, availablePaymentMethods]);
 
     useEffect(() => {
+        const availableCodes = (availableInvoiceLanguages || []).map((language) => String(language || '').trim()).filter(Boolean);
+
+        if (!requestedLocale) {
+            if (typeof document !== 'undefined') {
+                document.documentElement.lang = selectedInvoiceLanguage || invoiceLocale || locale;
+            }
+            return;
+        }
+
+        if (!availableCodes.includes(requestedLocale)) {
+            return;
+        }
+
+        if (requestedLocale !== selectedInvoiceLanguage) {
+            setSelectedInvoiceLanguage(requestedLocale);
+        }
+
+        if (typeof document !== 'undefined') {
+            document.documentElement.lang = requestedLocale;
+        }
+    }, [availableInvoiceLanguages, invoiceLocale, locale, requestedLocale, selectedInvoiceLanguage]);
+
+    useEffect(() => {
         if (!elements || selectedPaymentMethod !== 'stripe') {
             return;
         }
@@ -257,77 +310,20 @@ const InvoicePageContent = ({
     }, [currentCurrency, effectiveTotal, elements, selectedPaymentMethod]);
 
     const handlePrint = async () => {
-        let pdfUrl = null;
-        let printFrame = null;
-
         try {
             setIsPrintingPdf(true);
 
-            const pdfResult = await generatePDF(currentOrder, { siteSettings, storeSettings }, selectedInvoiceLanguage, {
-                action: 'blob-url'
-            });
-
-            pdfUrl = pdfResult?.url;
-            if (!pdfUrl) {
-                throw new Error(t('printPdfError'));
-            }
-            const cleanup = () => {
-                if (printFrame?.parentNode) {
-                    printFrame.parentNode.removeChild(printFrame);
-                    printFrame = null;
-                }
-
-                if (pdfUrl) {
-                    URL.revokeObjectURL(pdfUrl);
-                    pdfUrl = null;
-                }
-            };
-
-            printFrame = document.createElement('iframe');
-            printFrame.setAttribute('title', pdfResult.fileName || 'invoice.pdf');
-            printFrame.style.position = 'fixed';
-            printFrame.style.right = '0';
-            printFrame.style.bottom = '0';
-            printFrame.style.width = '0';
-            printFrame.style.height = '0';
-            printFrame.style.border = '0';
-            printFrame.style.opacity = '0';
-            printFrame.src = pdfUrl;
-
-            printFrame.onload = () => {
-                const frameWindow = printFrame?.contentWindow;
-                if (!frameWindow) {
-                    cleanup();
-                    return;
-                }
-
-                frameWindow.addEventListener(
-                    'afterprint',
-                    () => {
-                        cleanup();
-                    },
-                    { once: true }
-                );
-
-                setTimeout(() => {
-                    frameWindow.focus();
-                    frameWindow.print();
-                    setTimeout(cleanup, 1500);
-                }, 350);
-            };
-
-            document.body.appendChild(printFrame);
+            await printInvoicePdf(
+                currentOrder,
+                { siteSettings, storeSettings },
+                selectedInvoiceLanguage,
+                t('printPdfError')
+            );
         } catch (error) {
             console.error('Invoice PDF print error:', error);
             const message = error?.message || t('printPdfError');
             setErrorMessage(message);
             toast.error(message);
-            if (printFrame?.parentNode) {
-                printFrame.parentNode.removeChild(printFrame);
-            }
-            if (pdfUrl) {
-                URL.revokeObjectURL(pdfUrl);
-            }
         } finally {
             setIsPrintingPdf(false);
         }
@@ -433,56 +429,41 @@ const InvoicePageContent = ({
     };
 
     const handleShippingMethodsLoaded = (methods) => {
-        if (!Array.isArray(methods) || methods.length === 0 || selectedShippingMethod) {
+        if (!Array.isArray(methods) || methods.length === 0) {
+            setSelectedShippingMethod(null);
             return;
         }
 
-        const existingMethod = methods.find(
-            (method) =>
-                method.id === currentOrder.shipping?.id ||
-                method.name === currentOrder.shipping?.method ||
-                method.carrier_name === currentOrder.shipping?.carrier
-        );
+        const currentMethodName = currentOrder.shipping?.method || currentOrder.shipping?.carrier || '';
+        const matchedMethod =
+            methods.find(
+                (method) => method?.name === currentMethodName || method?.carrier_name === currentMethodName
+            ) || methods[0];
 
-        if (existingMethod) {
-            setSelectedShippingMethod(existingMethod);
-            return;
-        }
-
-        if (isEligibleForFreeShipping) {
-            const freeShippingMethod = methods.find((method) => method.id === 'free_shipping');
-            if (freeShippingMethod) {
-                setSelectedShippingMethod(freeShippingMethod);
-                return;
-            }
-        }
-
-        setSelectedShippingMethod(methods[0]);
+        setSelectedShippingMethod((prev) => prev || matchedMethod);
     };
 
     const handlePendingPayment = async () => {
-        setErrorMessage('');
-
-        if (!selectedPaymentMethod) {
-            const message = t('selectPaymentMethodFirst');
-            setErrorMessage(message);
-            toast.error(message);
-            return;
-        }
-
-        if (hasPhysicalItems && !selectedShippingMethod) {
-            const message = t('selectShippingMethodFirst');
-            setErrorMessage(message);
-            toast.error(message);
-            return;
-        }
-
-        setIsProcessing(true);
-
         try {
+            setIsProcessing(true);
+            setErrorMessage('');
+
+            if (!selectedPaymentMethod) {
+                throw new Error(t('paymentErrors.generic'));
+            }
+
+            if (
+                hasPhysicalItems &&
+                !selectedShippingMethod &&
+                !currentOrder.shipping?.method &&
+                !currentOrder.shipping?.carrier
+            ) {
+                throw new Error(t('paymentErrors.generic'));
+            }
+
             if (selectedPaymentMethod === 'stripe') {
                 if (!stripe || !elements) {
-                    throw new Error(t('paymentCardUnavailable'));
+                    throw new Error(t('paymentErrors.stripeInit'));
                 }
 
                 const { error: submitError } = await elements.submit();
@@ -492,11 +473,11 @@ const InvoicePageContent = ({
 
                 const stripeResult = await createStripePaymentIntent({
                     amount: Math.round(effectiveTotal * 100),
-                    currency: currentCurrency.toLowerCase(),
-                    email: currentOrder.email || currentOrder.cst_email || '',
+                    currency: currentCurrency,
+                    email: currentOrder.email || currentOrder.customer?.email || '',
                     metadata: {
                         order_id: currentOrder.id,
-                        source: 'invoice_preview'
+                        payment_context: 'invoice'
                     }
                 });
 
@@ -565,7 +546,9 @@ const InvoicePageContent = ({
                     orderId: currentOrder.id,
                     amount: effectiveTotal,
                     method: eupagoMethod,
-                    mobile: eupagoMethod === 'mbway' ? mbwayMobile : null
+                    mobile: eupagoMethod === 'mbway' ? mbwayMobile : null,
+                    customerEmail: currentOrder.email || currentOrder.customer?.email || '',
+                    customerName: currentOrder.customerName || ''
                 });
 
                 if (!eupagoResult?.success) {
@@ -642,7 +625,11 @@ const InvoicePageContent = ({
         { label: t('invoiceDate'), value: formatDate(currentOrder.createdAt || currentOrder.created_at || currentOrder.orderDate, selectedInvoiceLanguage) },
         {
             label: t('paymentMethod'),
-            value: t(`paymentMethods.${currentOrder.paymentMethod || 'none'}`) || currentOrder.paymentMethod || t('paymentMethods.none')
+            value:
+                t(`paymentMethods.${currentOrder.paymentMethod || 'none'}`) ===
+                `paymentMethods.${currentOrder.paymentMethod || 'none'}`
+                    ? currentOrder.paymentMethod || t('paymentMethods.none')
+                    : t(`paymentMethods.${currentOrder.paymentMethod || 'none'}`)
         },
         currentOrder.eupagoReference ? { label: t('reference'), value: currentOrder.eupagoReference } : null,
         currentOrder.eupagoEntity ? { label: t('entity'), value: currentOrder.eupagoEntity } : null,
@@ -663,7 +650,7 @@ const InvoicePageContent = ({
                         <LanguageSelector
                             languages={languageOptions}
                             value={selectedInvoiceLanguage}
-                            onChange={setSelectedInvoiceLanguage}
+                            onChange={handleInvoiceLanguageChange}
                         />
                         <ThemeSwitchButton className="border border-border bg-card text-card-foreground hover:bg-accent" />
                         <Button type="button" variant="outline" onClick={handlePrint} disabled={isPrintingPdf}>
@@ -795,8 +782,7 @@ const InvoicePageContent = ({
 
                                                     {method.value === 'stripe' ? (
                                                         stripeReady && stripeOptions ? (
-                                                            <div className="space-y-3">
-                                                                <p className="text-muted-foreground text-sm">{t('paymentMethodDescriptions.stripe')}</p>
+                                                            <div className="space-y-3"> 
                                                                 <PaymentElement />
                                                             </div>
                                                         ) : (

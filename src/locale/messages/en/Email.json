@@ -191,6 +191,16 @@
             "mbway": "MB WAY",
             "none": "Pending"
         },
+        "invoiceEmail": {
+            "subject": "Your invoice for order #{orderId}",
+            "preview": "Your invoice for order #{orderId} is ready",
+            "badge": "Invoice Ready",
+            "title": "Your invoice is ready",
+            "greeting": "Hello {customerName},",
+            "message": "Your order was created successfully and your invoice is now available online. You can open it anytime using the button below.",
+            "summaryTitle": "Invoice Summary",
+            "viewInvoice": "View Invoice"
+        },
         "passwordReset": {
             "subject": "Password Reset Code",
             "preview": "Your password reset code: {resetCode}",

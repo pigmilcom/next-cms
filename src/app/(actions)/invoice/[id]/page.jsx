@@ -139,8 +139,9 @@ const normalizeOrderForInvoice = (orderData, catalogLookup) => {
     };
 };
 
-const InvoicePage = async ({ params }) => {
+const InvoicePage = async ({ params, searchParams }) => {
     const { id: encodedId } = await params;
+    const resolvedSearchParams = (await searchParams) || {};
 
     if (!encodedId) {
         notFound();
@@ -158,11 +159,16 @@ const InvoicePage = async ({ params }) => {
         getAvailableInvoiceLanguages()
     ]);
 
-    const locale = settings?.siteSettings?.language || 'pt';
+    const siteDefaultLocale = settings?.siteSettings?.language || 'pt';
     const availableInvoiceLanguages =
         availableInvoiceLanguagesResult?.success && Array.isArray(availableInvoiceLanguagesResult.data)
             ? availableInvoiceLanguagesResult.data
-            : [locale];
+            : [siteDefaultLocale];
+    const requestedLocale = String(resolvedSearchParams?.locale || '').trim().toLowerCase();
+    const locale =
+        requestedLocale && availableInvoiceLanguages.includes(requestedLocale)
+            ? requestedLocale
+            : siteDefaultLocale;
     const invoiceTranslationEntries = await Promise.all(
         availableInvoiceLanguages.map(async (language) => [language, await loadInvoiceTranslations(language)])
     );

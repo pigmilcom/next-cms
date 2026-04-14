@@ -51,7 +51,7 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt', op
     const origin =
         (settings.baseUrl && String(settings.baseUrl).trim()) ||
         (typeof window !== 'undefined' ? window.location.origin : '');
-    const invoiceUrl = buildPublicInvoiceUrl(origin, orderId);
+    const invoiceUrl = buildPublicInvoiceUrl(origin, orderId, locale);
 
     let qrCodeDataUrl = null;
     try {

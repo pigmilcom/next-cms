@@ -32,7 +32,7 @@
  * Use this in child layouts when the root layout already provides siteSettings.
  *
  * @param {Object} options - Metadata generation options
- * @param {string} [options.title] - Page title (will be appended to site title)
+ * @param {string} [options.title] - Page title (root metadata template appends the site title automatically)
  * @param {string} [options.description] - Page description (overrides parent)
  * @param {string} [options.keywords] - Page keywords (comma-separated or array)
  * @param {string} [options.image] - OG/Twitter image URL
@@ -130,6 +130,7 @@ export function generateSiteMetadata(options = {}) {
     }
 
     const siteName = siteSettings?.siteName || '';
+    const titleSuffix = siteSettings?.siteTitle || siteSettings?.siteName || 'MyApp';
 
     // Extract canonical URL with proper fallback logic
     const canonicalUrl = canonical || siteSettings?.canonicalUrl || '/';
@@ -149,7 +150,7 @@ export function generateSiteMetadata(options = {}) {
     // Auto-extract title, description, keywords, and image from siteSettings if not provided
     const settingsTitle = siteSettings?.siteTitle || siteSettings?.siteName;
     const siteTitle = title || settingsTitle || 'MyApp';
-    const finalTitle = siteTitle === settingsTitle ? siteTitle : `${siteTitle} | ${settingsTitle}`;
+    const finalTitle = title && title !== titleSuffix ? `${title} | ${titleSuffix}` : siteTitle;
     const finalDescription = description || siteSettings?.siteDescription || '';
     const finalKeywords = keywords || siteSettings?.siteKeywords || '';
     const finalImage = image || siteSettings?.ogImage || `${baseUrl}/og-image.jpg`;
@@ -161,7 +162,10 @@ export function generateSiteMetadata(options = {}) {
     // Build metadata object
     const metadata = {
         metadataBase: new URL(baseUrl),
-        title: finalTitle,
+        title: {
+            default: siteTitle,
+            template: `%s | ${titleSuffix}`
+        },
         description: finalDescription,
         keywords: keywordsArray,
         openGraph: {

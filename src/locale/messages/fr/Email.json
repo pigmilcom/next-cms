@@ -191,6 +191,16 @@
             "mbway": "MB WAY",
             "none": "En attente"
         },
+        "invoiceEmail": {
+            "subject": "Votre facture pour la commande #{orderId}",
+            "preview": "Votre facture pour la commande #{orderId} est prête",
+            "badge": "Facture Disponible",
+            "title": "Votre facture est prête",
+            "greeting": "Bonjour {customerName},",
+            "message": "Votre commande a été créée avec succès et votre facture est maintenant disponible en ligne. Vous pouvez l'ouvrir à tout moment via le bouton ci-dessous.",
+            "summaryTitle": "Résumé de la Facture",
+            "viewInvoice": "Voir la Facture"
+        },
         "passwordReset": {
             "subject": "Code de Réinitialisation du Mot de Passe",
             "preview": "Votre code de réinitialisation du mot de passe : {resetCode}",

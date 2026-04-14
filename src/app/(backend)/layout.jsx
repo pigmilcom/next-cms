@@ -19,7 +19,7 @@ export async function generateMetadata() {
 }
 
 export default async function BackendLayout({ children }) {
-    // Session is already validated in auth.js - checks user exists in database    const session = await auth();
+    // Session is already validated in auth.js - checks user exists in database
     const session = await auth();
 
     if (!session?.user) {
