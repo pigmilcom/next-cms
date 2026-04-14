@@ -127,6 +127,7 @@ const InvoicePageContent = ({
         currency: storeSettings?.currency || siteSettings?.currency || order.currency || 'EUR',
         siteEmail: siteSettings?.siteEmail || '',
         sitePhone: siteSettings?.sitePhone || '',
+        siteLogo: siteSettings?.siteLogo || '',
         baseUrl: siteSettings?.baseUrl || ''
     };
 
@@ -654,9 +655,9 @@ const InvoicePageContent = ({
             <div className="mx-auto w-full max-w-5xl space-y-6">
                 <div className="flex gap-4 items-center justify-between print:hidden">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-semibold text-foreground">{t('invoiceTitle')}</h1>
+                        <img src={`${normalizedSettings.siteLogo || '/images/logo.webp'}`} alt={normalizedSettings.businessName} className="h-10 w-10 object-cover" />
                         <span className="hidden sm:inline-flex w-fit rounded-md bg-foreground px-3 py-1.5 font-medium text-background sm:px-4 sm:py-2 sm:text-sm">
-                            {t('printableView')}
+                            {t('invoiceTitle')}
                         </span>
                     </div> 
                     <div className="flex flex-wrap items-center gap-2">
