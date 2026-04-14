@@ -9,6 +9,12 @@
             "contactUs": "Contacta-nos",
             "helpCenter": "Centro de Ajuda",
             "haveQuestion": "Tens alguma questão?",
+            "customerInformation": "Información del Cliente",
+            "paymentDetails": "Detalles del Pago",
+            "phone": "Teléfono",
+            "appointment": "Cita",
+            "deliveryMethod": "Método de Entrega",
+            "digitalDelivery": "Entrega Digital",
             "allRightsReserved": "Todos os direitos reservados",
             "securityNotice": "Por razões de segurança, nunca partilhes este código com ninguém. {companyName} nunca solicitará a tua palavra-passe ou códigos de verificação por e-mail ou telefone."
         },
@@ -166,6 +172,24 @@
             "deliveryNotes": "Notas de Entrega",
             "viewOrderDetails": "Ver Detalhes da Encomenda",
             "contactSupport": "Contactar Suporte"
+        },
+        "paymentMethods": {
+            "stripe": "Tarjeta de Crédito / Débito",
+            "card": "Tarjeta de Crédito / Débito",
+            "credit_card": "Tarjeta de Crédito",
+            "debit_card": "Tarjeta de Débito",
+            "bank_transfer": "Transferencia Bancaria",
+            "pay_on_delivery": "Pago contra Entrega",
+            "paypal": "PayPal",
+            "cash": "Efectivo",
+            "crypto": "Criptomoneda",
+            "sumup": "SumUp",
+            "eupago": "EuPago",
+            "eupago_mb": "Multibanco",
+            "eupago_mbway": "MB WAY",
+            "multibanco": "Multibanco",
+            "mbway": "MB WAY",
+            "none": "Pendiente"
         },
         "passwordReset": {
             "subject": "Código de Redefinição de Palavra-passe",

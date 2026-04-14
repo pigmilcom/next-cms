@@ -15,21 +15,20 @@ import {
 } from '@react-email/components';
 import { EmailHeader } from './partials/EmailHeader';
 import { OrderFooter } from './partials/OrderFooter';
+import {
+    formatOrderEmailAddress,
+    formatOrderEmailCurrency,
+    formatOrderEmailPaymentMethod,
+    getOrderEmailFlags,
+    getOrderItemMetaLines,
+    loadOrderEmailTranslations
+} from './order-email.utils';
 import { emailStyles } from './styles';
-
-// Load translations (client-safe for email rendering)
-const loadTranslations = (locale = 'en') => {
-    try {
-        const translations = require(`@/locale/messages/${locale}/Email.json`);
-        return translations.Email;
-    } catch (error) {
-        console.error('Failed to load email translations:', error);
-        return {};
-    }
-};
 
 export const OrderConfirmationTemplate = ({
     customerName = '[Customer Name]',
+    customerEmail = '',
+    customerPhone = '',
     companyName = '[Your Company]',
     companyLogo = '',
     orderId = '#12345',
@@ -64,48 +63,23 @@ export const OrderConfirmationTemplate = ({
     bankTransferDetails = null,
     trackingNumber = null,
     estimatedDelivery = null,
-    deliveryNotes = null
+    deliveryNotes = null,
+    isServiceAppointment = false
 }) => {
-    const t = loadTranslations(locale);
+    const t = loadOrderEmailTranslations(locale);
     const logo_img = companyLogo || '';
-
-    // Format address for display
-    const formatAddress = () => {
-        const parts = [
-            shippingAddress.streetAddress,
-            shippingAddress.apartmentUnit,
-            shippingAddress.city,
-            shippingAddress.state,
-            shippingAddress.zipCode,
-            shippingAddress.country
-        ].filter(Boolean);
-        return parts.join(', ');
-    };
-
-    const formatPaymentMethod = (method) => {
-        const methods = {
-            stripe: 'Cartão de Crédito/Débito',
-            card: 'Cartão de Crédito/Débito',
-            bank_transfer: 'Transferência Bancária',
-            pay_on_delivery: 'Pagamento na Entrega',
-            cash: 'Dinheiro',
-            crypto: 'Criptomoeda',
-            eupago: 'EuPago (Multibanco/MB WAY)',
-            eupago_mbway: 'MB WAY',
-            eupago_mb: 'Multibanco',
-            none: 'Pendente'
-        };
-        return methods[method] || method;
-    };
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency || 'EUR'
-        }).format(amount || 0);
-    };
-
-    const paymentMethodFormatted = paymentMethod ? formatPaymentMethod(paymentMethod) : null;
+    const paymentMethodFormatted = paymentMethod ? formatOrderEmailPaymentMethod(paymentMethod, t) : null;
+    const addressText = formatOrderEmailAddress(shippingAddress);
+    const orderFlags = getOrderEmailFlags({
+        items,
+        shippingAddress,
+        shippingCost,
+        isServiceAppointment
+    });
+    const customerInfoLabel = t.common?.customerInformation || 'Customer Information';
+    const paymentDetailsLabel = t.common?.paymentDetails || 'Payment Details';
+    const phoneLabel = t.common?.phone || 'Phone';
+    const emailLabel = t.adminNotification?.email || 'Email';
 
     return (
         <Html>
@@ -210,14 +184,24 @@ export const OrderConfirmationTemplate = ({
                             </div>
                         </Section>
 
-                        {/* Payment Information - Show First When Pending */}
-                        {paymentStatus === 'pending' && paymentMethod && (
+                        <Section style={enhancedStyles.shippingSection}>
+                            <Text style={enhancedStyles.sectionTitle}>{customerInfoLabel}</Text>
+                            <div style={enhancedStyles.addressCard}>
+                                <Text style={enhancedStyles.addressName}>{customerName}</Text>
+                                {customerEmail ? <Text style={enhancedStyles.addressDetails}>{emailLabel}: {customerEmail}</Text> : null}
+                                {customerPhone ? <Text style={enhancedStyles.addressDetails}>{phoneLabel}: {customerPhone}</Text> : null}
+                            </div>
+                        </Section>
+
+                        {/* Payment Information */}
+                        {(paymentMethodFormatted || paymentReference || paymentEntity || bankTransferDetails) && (
                             <Section style={enhancedStyles.paymentSection}>
-                                <Text style={enhancedStyles.sectionTitle}>
-                                    {t.orderConfirmation?.paymentMethod || 'Payment Method'}
-                                </Text>
+                                <Text style={enhancedStyles.sectionTitle}>{paymentDetailsLabel}</Text>
                                 <Text style={enhancedStyles.paymentMethod}>
                                     {paymentMethodFormatted}
+                                    <span>
+                                        {t.orderUpdate?.status || 'Status'}: {paymentStatus}
+                                    </span>
                                     {paymentEntity && (
                                         <span>
                                             {t.orderConfirmation?.paymentEntity || 'Entity'}: {paymentEntity}
@@ -257,141 +241,108 @@ export const OrderConfirmationTemplate = ({
                             </Section>
                         )}
 
-                        {/* Products - Hide When Payment Pending */}
-                        {paymentStatus !== 'pending' && (
-                            <Section style={enhancedStyles.productsSection}>
-                                <Text style={enhancedStyles.sectionTitle}>
-                                    {t.orderConfirmation?.itemsOrdered || 'Items Ordered'}
-                                </Text>
+                        <Section style={enhancedStyles.productsSection}>
+                            <Text style={enhancedStyles.sectionTitle}>
+                                {t.orderConfirmation?.itemsOrdered || 'Items Ordered'}
+                            </Text>
 
-                                {items.map((product, index) => (
-                                    <div key={index} style={enhancedStyles.productRow}>
-                                        <div style={enhancedStyles.productInfo}>
-                                            <Text style={enhancedStyles.productName}>{product.name}</Text>
-                                            {product.size && (
-                                                <Text style={enhancedStyles.productDetails}>
-                                                    {t.orderConfirmation?.size || 'Size'}: {product.size}
-                                                </Text>
-                                            )}
+                            {items.map((product, index) => (
+                                <div key={index} style={enhancedStyles.productRow}>
+                                    <div style={enhancedStyles.productInfo}>
+                                        <Text style={enhancedStyles.productName}>{product.name}</Text>
+                                        {product.size && (
                                             <Text style={enhancedStyles.productDetails}>
-                                                {t.orderConfirmation?.qty || 'Qty'}: {product.quantity}
+                                                {t.orderConfirmation?.size || 'Size'}: {product.size}
                                             </Text>
-                                        </div>
-                                        <Text style={enhancedStyles.productPrice}>
-                                            {formatCurrency(product.price || 0)}
+                                        )}
+                                        <Text style={enhancedStyles.productDetails}>
+                                            {t.orderConfirmation?.qty || 'Qty'}: {product.quantity}
                                         </Text>
+                                        {getOrderItemMetaLines(product, t).map((line, metaIndex) => (
+                                            <Text key={`${index}-meta-${metaIndex}`} style={enhancedStyles.productDetails}>
+                                                {line}
+                                            </Text>
+                                        ))}
                                     </div>
-                                ))}
-                            </Section>
-                        )}
+                                    <Text style={enhancedStyles.productPrice}>
+                                        {formatOrderEmailCurrency((product.price || 0) * (product.quantity || 1), currency, locale)}
+                                    </Text>
+                                </div>
+                            ))}
+                        </Section>
 
-                        {/* Order Totals - Hide When Payment Pending */}
-                        {paymentStatus !== 'pending' && (
-                            <Section style={enhancedStyles.totalsSection}>
+                        <Section style={enhancedStyles.totalsSection}>
+                            <div style={enhancedStyles.totalRow}>
+                                <Text style={enhancedStyles.totalLabel}>
+                                    {vatEnabled && vatIncluded
+                                        ? t.orderStatusUpdate?.subtotalExclVat || 'Subtotal (excl. VAT)'
+                                        : t.orderConfirmation?.subtotal || 'Subtotal'}
+                                </Text>
+                                <Text style={enhancedStyles.totalValue}>
+                                    {formatOrderEmailCurrency(
+                                        vatEnabled && vatIncluded && vatAmount > 0 ? subtotal - vatAmount : subtotal,
+                                        currency,
+                                        locale
+                                    )}
+                                </Text>
+                            </div>
+
+                            {shippingCost > 0 && (
                                 <div style={enhancedStyles.totalRow}>
                                     <Text style={enhancedStyles.totalLabel}>
-                                        {t.orderConfirmation?.subtotal || 'Subtotal'}
+                                        {t.orderConfirmation?.shipping || 'Shipping'}
                                     </Text>
-                                    <Text style={enhancedStyles.totalValue}>{formatCurrency(subtotal)}</Text>
-                                </div>
-
-                                {shippingCost > 0 && (
-                                    <div style={enhancedStyles.totalRow}>
-                                        <Text style={enhancedStyles.totalLabel}>
-                                            {t.orderConfirmation?.shipping || 'Shipping'}
-                                        </Text>
-                                        <Text style={enhancedStyles.totalValue}>{formatCurrency(shippingCost)}</Text>
-                                    </div>
-                                )}
-
-                                {discountAmount > 0 && (
-                                    <div style={enhancedStyles.totalRow}>
-                                        <Text style={enhancedStyles.totalLabel}>
-                                            {t.orderConfirmation?.discount || 'Discount'}
-                                        </Text>
-                                        <Text style={enhancedStyles.discountValue}>
-                                            -{formatCurrency(discountAmount)}
-                                        </Text>
-                                    </div>
-                                )}
-
-                                {vatEnabled && vatAmount > 0 && (
-                                    <div style={enhancedStyles.totalRow}>
-                                        <Text style={enhancedStyles.totalLabel}>
-                                            {t.orderConfirmation?.vat || 'VAT'} ({parseFloat(vatPercentage).toFixed(1)}
-                                            %)
-                                        </Text>
-                                        <Text style={enhancedStyles.totalValue}>
-                                            {vatIncluded
-                                                ? t.orderConfirmation?.included || 'Included'
-                                                : formatCurrency(vatAmount)}
-                                        </Text>
-                                    </div>
-                                )}
-
-                                <Hr style={enhancedStyles.totalDivider} />
-
-                                <div style={enhancedStyles.finalTotalRow}>
-                                    <Text style={enhancedStyles.finalTotalLabel}>
-                                        {t.orderConfirmation?.total || 'Total'}
+                                    <Text style={enhancedStyles.totalValue}>
+                                        {formatOrderEmailCurrency(shippingCost, currency, locale)}
                                     </Text>
-                                    <Text style={enhancedStyles.finalTotalValue}>{formatCurrency(total)}</Text>
                                 </div>
-                            </Section>
-                        )}
+                            )}
 
-                        {/* Shipping Information - Hide When Payment Pending */}
-                        {paymentStatus !== 'pending' && (
+                            {discountAmount > 0 && (
+                                <div style={enhancedStyles.totalRow}>
+                                    <Text style={enhancedStyles.totalLabel}>
+                                        {t.orderConfirmation?.discount || 'Discount'}
+                                    </Text>
+                                    <Text style={enhancedStyles.discountValue}>
+                                        -{formatOrderEmailCurrency(discountAmount, currency, locale)}
+                                    </Text>
+                                </div>
+                            )}
+
+                            {vatEnabled && vatAmount > 0 && (
+                                <div style={enhancedStyles.totalRow}>
+                                    <Text style={enhancedStyles.totalLabel}>
+                                        {t.orderConfirmation?.vat || 'VAT'} ({parseFloat(vatPercentage).toFixed(1)}%)
+                                    </Text>
+                                    <Text style={enhancedStyles.totalValue}>
+                                        {vatIncluded
+                                            ? t.orderConfirmation?.included || 'Included'
+                                            : formatOrderEmailCurrency(vatAmount, currency, locale)}
+                                    </Text>
+                                </div>
+                            )}
+
+                            <Hr style={enhancedStyles.totalDivider} />
+
+                            <div style={enhancedStyles.finalTotalRow}>
+                                <Text style={enhancedStyles.finalTotalLabel}>
+                                    {t.orderConfirmation?.total || 'Total'}
+                                </Text>
+                                <Text style={enhancedStyles.finalTotalValue}>
+                                    {formatOrderEmailCurrency(total, currency, locale)}
+                                </Text>
+                            </div>
+                        </Section>
+
+                        {orderFlags.showShippingAddress && (
                             <Section style={enhancedStyles.shippingSection}>
                                 <Text style={enhancedStyles.sectionTitle}>
                                     {t.orderConfirmation?.shippingAddress || 'Shipping Address'}
                                 </Text>
                                 <div style={enhancedStyles.addressCard}>
                                     <Text style={enhancedStyles.addressName}>{customerName}</Text>
-                                    <Text style={enhancedStyles.addressDetails}>{formatAddress()}</Text>
+                                    <Text style={enhancedStyles.addressDetails}>{addressText}</Text>
                                 </div>
-                            </Section>
-                        )}
-
-                        {/* Payment Information - Show After Details When Paid */}
-                        {paymentStatus !== 'pending' && paymentMethod && (
-                            <Section style={enhancedStyles.paymentSection}>
-                                <Text style={enhancedStyles.sectionTitle}>
-                                    {t.orderConfirmation?.paymentMethod || 'Payment Method'}
-                                </Text>
-                                <Text style={enhancedStyles.paymentMethod}>
-                                    {paymentMethodFormatted}
-                                    {paymentEntity && (
-                                        <span>
-                                            {t.orderConfirmation?.paymentEntity || 'Entity'}: {paymentEntity}
-                                        </span>
-                                    )}
-                                    {paymentReference && (
-                                        <span>
-                                            {t.orderConfirmation?.paymentReference || 'Ref'}: {paymentReference}
-                                        </span>
-                                    )}
-                                </Text>
-                                {bankTransferDetails && (
-                                    <div style={enhancedStyles.bankDetailsCard}>
-                                        <Text style={enhancedStyles.bankDetailsTitle}>
-                                            {t.orderConfirmation?.bankTransferDetails || 'Bank Transfer Details'}
-                                        </Text>
-                                        <div style={enhancedStyles.bankDetails}>
-                                            {Object.entries(bankTransferDetails).map(([key, value]) => (
-                                                <div key={key} style={enhancedStyles.bankDetailRow}>
-                                                    <Text style={enhancedStyles.bankDetailLabel}>
-                                                        {key
-                                                            .replace(/([A-Z])/g, ' $1')
-                                                            .replace(/^./, (str) => str.toUpperCase())}
-                                                        :
-                                                    </Text>
-                                                    <Text style={enhancedStyles.bankDetailValue}>{value}</Text>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </Section>
                         )}
 
@@ -411,14 +362,12 @@ export const OrderConfirmationTemplate = ({
                         <Section style={enhancedStyles.actionSection}>
                             <Button href={orderSummaryUrl} style={enhancedStyles.primaryButton}>
                                 {paymentStatus === 'pending'
-                                    ? t.orderConfirmation?.viewOrderAndPayment || 'View Order & Complete Payment'
+                                    ? t.orderConfirmation?.viewOrderAndPayment || 'View Order and Complete Payment'
                                     : t.orderConfirmation?.viewOrderDetails || 'View Order Details'}
                             </Button>
-                            {paymentStatus !== 'pending' && (
-                                <Button href={`mailto:${supportEmail}`} style={enhancedStyles.secondaryButton}>
-                                    {t.orderConfirmation?.contactSupport || 'Contact Support'}
-                                </Button>
-                            )}
+                            <Button href={`mailto:${supportEmail}`} style={enhancedStyles.secondaryButton}>
+                                {t.orderConfirmation?.contactSupport || 'Contact Support'}
+                            </Button>
                         </Section>
 
                         {/* Footer */}

@@ -9,6 +9,12 @@
             "contactUs": "Contactez-nous",
             "helpCenter": "Centre d'Aide",
             "haveQuestion": "Vous avez une question ?",
+            "customerInformation": "Informations Client",
+            "paymentDetails": "Détails du Paiement",
+            "phone": "Téléphone",
+            "appointment": "Rendez-vous",
+            "deliveryMethod": "Méthode de Livraison",
+            "digitalDelivery": "Livraison Numérique",
             "allRightsReserved": "Tous droits réservés",
             "securityNotice": "Pour des raisons de sécurité, ne partagez jamais ce code avec qui que ce soit. {companyName} ne vous demandera jamais votre mot de passe ou vos codes de vérification par email ou téléphone."
         },
@@ -166,6 +172,24 @@
             "deliveryNotes": "Notes de Livraison",
             "viewOrderDetails": "Voir les Détails de la Commande",
             "contactSupport": "Contacter le Support"
+        },
+        "paymentMethods": {
+            "stripe": "Carte de Crédit / Débit",
+            "card": "Carte de Crédit / Débit",
+            "credit_card": "Carte de Crédit",
+            "debit_card": "Carte de Débit",
+            "bank_transfer": "Virement Bancaire",
+            "pay_on_delivery": "Paiement à la Livraison",
+            "paypal": "PayPal",
+            "cash": "Espèces",
+            "crypto": "Cryptomonnaie",
+            "sumup": "SumUp",
+            "eupago": "EuPago",
+            "eupago_mb": "Multibanco",
+            "eupago_mbway": "MB WAY",
+            "multibanco": "Multibanco",
+            "mbway": "MB WAY",
+            "none": "En attente"
         },
         "passwordReset": {
             "subject": "Code de Réinitialisation du Mot de Passe",

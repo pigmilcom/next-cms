@@ -7,28 +7,26 @@ import {
     Heading,
     Hr,
     Html,
-    Link,
     Preview,
     Section,
     Text
 } from '@react-email/components';
 import { EmailHeader } from './partials/EmailHeader';
 import { OrderFooter } from './partials/OrderFooter';
+import {
+    formatOrderEmailAddress,
+    formatOrderEmailCurrency,
+    formatOrderEmailPaymentMethod,
+    getOrderEmailFlags,
+    getOrderItemMetaLines,
+    loadOrderEmailTranslations
+} from './order-email.utils';
 import { emailStyles } from './styles';
-
-// Load translations (client-safe for email rendering)
-const loadTranslations = (locale = 'en') => {
-    try {
-        const translations = require(`@/locale/messages/${locale}/Email.json`);
-        return translations.Email;
-    } catch (error) {
-        console.error('Failed to load email translations:', error);
-        return {};
-    }
-};
 
 export const OrderUpdateTemplate = ({
     customerName = '[Customer Name]',
+    customerEmail = '',
+    customerPhone = '',
     companyName = '[Your Company]',
     companyLogo = '',
     orderId = '#12345',
@@ -59,50 +57,18 @@ export const OrderUpdateTemplate = ({
     orderSummaryUrl = 'https://yourapp.com/account/orders',
     paymentMethod = null,
     paymentStatus = 'pending',
+    paymentReference = null,
+    paymentEntity = null,
+    bankTransferDetails = null,
     trackingNumber = null,
     trackingUrl = null,
     estimatedDelivery = null,
     deliveryNotes = null,
-    customMessage = null
+    customMessage = null,
+    isServiceAppointment = false
 }) => {
-    const t = loadTranslations(locale);
+    const t = loadOrderEmailTranslations(locale);
     const logo_img = companyLogo || '';
-
-    // Format address for display
-    const formatAddress = () => {
-        const parts = [
-            shippingAddress.streetAddress,
-            shippingAddress.apartmentUnit,
-            shippingAddress.city,
-            shippingAddress.state,
-            shippingAddress.zipCode,
-            shippingAddress.country
-        ].filter(Boolean);
-        return parts.join(', ');
-    };
-
-    const formatPaymentMethod = (method) => {
-        const methods = {
-            stripe: 'Cartão de Crédito/Débito',
-            card: 'Cartão de Crédito/Débito',
-            bank_transfer: 'Transferência Bancária',
-            pay_on_delivery: 'Pagamento na Entrega',
-            cash: 'Dinheiro',
-            crypto: 'Criptomoeda',
-            eupago: 'EuPago (Multibanco/MB WAY)',
-            eupago_mbway: 'MB WAY',
-            eupago_mb: 'Multibanco',
-            none: 'Pendente'
-        };
-        return methods[method] || method;
-    };
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency || 'EUR'
-        }).format(amount || 0);
-    };
 
     // Status configuration
     const statusConfig = {
@@ -135,7 +101,18 @@ export const OrderUpdateTemplate = ({
     };
 
     const currentStatus = statusConfig[status] || statusConfig.pending;
-    const paymentMethodFormatted = paymentMethod ? formatPaymentMethod(paymentMethod) : null;
+    const paymentMethodFormatted = paymentMethod ? formatOrderEmailPaymentMethod(paymentMethod, t) : null;
+    const addressText = formatOrderEmailAddress(shippingAddress);
+    const orderFlags = getOrderEmailFlags({
+        items,
+        shippingAddress,
+        shippingCost,
+        isServiceAppointment
+    });
+    const customerInfoLabel = t.common?.customerInformation || 'Customer Information';
+    const paymentDetailsLabel = t.common?.paymentDetails || 'Payment Details';
+    const phoneLabel = t.common?.phone || 'Phone';
+    const emailLabel = t.adminNotification?.email || 'Email';
 
     return (
         <Html>
@@ -212,6 +189,15 @@ export const OrderUpdateTemplate = ({
 
                         {/* Products Section */}
                         <Section style={emailStyles.productsSection}>
+                            <Text style={emailStyles.sectionTitle}>{customerInfoLabel}</Text>
+                            <div style={emailStyles.addressCard}>
+                                <Text style={emailStyles.addressName}>{customerName}</Text>
+                                {customerEmail ? <Text style={emailStyles.addressDetails}>{emailLabel}: {customerEmail}</Text> : null}
+                                {customerPhone ? <Text style={emailStyles.addressDetails}>{phoneLabel}: {customerPhone}</Text> : null}
+                            </div>
+                        </Section>
+
+                        <Section style={emailStyles.productsSection}>
                             <Text style={emailStyles.sectionTitle}>
                                 {t.orderConfirmation?.itemsOrdered || 'Order Items'}
                             </Text>
@@ -227,9 +213,14 @@ export const OrderUpdateTemplate = ({
                                         <Text style={emailStyles.productDetails}>
                                             {t.orderConfirmation?.qty || 'Quantity'}: {item.quantity}
                                         </Text>
+                                        {getOrderItemMetaLines(item, t).map((line, metaIndex) => (
+                                            <Text key={`${index}-meta-${metaIndex}`} style={emailStyles.productDetails}>
+                                                {line}
+                                            </Text>
+                                        ))}
                                     </div>
                                     <Text style={emailStyles.productPrice}>
-                                        {formatCurrency(item.price * item.quantity)}
+                                        {formatOrderEmailCurrency(item.price * item.quantity, currency, locale)}
                                     </Text>
                                 </div>
                             ))}
@@ -240,12 +231,14 @@ export const OrderUpdateTemplate = ({
                             <div style={emailStyles.totalRow}>
                                 <Text style={emailStyles.totalLabel}>
                                     {vatEnabled && vatIncluded
-                                        ? t.orderConfirmation?.subtotalExclVat || 'Subtotal (excl. VAT)'
+                                        ? t.orderStatusUpdate?.subtotalExclVat || 'Subtotal (excl. VAT)'
                                         : t.orderConfirmation?.subtotal || 'Subtotal'}
                                 </Text>
                                 <Text style={emailStyles.totalValue}>
-                                    {formatCurrency(
-                                        vatEnabled && vatIncluded && vatAmount > 0 ? subtotal - vatAmount : subtotal
+                                    {formatOrderEmailCurrency(
+                                        vatEnabled && vatIncluded && vatAmount > 0 ? subtotal - vatAmount : subtotal,
+                                        currency,
+                                        locale
                                     )}
                                 </Text>
                             </div>
@@ -254,7 +247,11 @@ export const OrderUpdateTemplate = ({
                                     <Text style={emailStyles.totalLabel}>
                                         {t.orderConfirmation?.vat || 'VAT'} ({vatPercentage}%)
                                     </Text>
-                                    <Text style={emailStyles.totalValue}>{formatCurrency(vatAmount)}</Text>
+                                    <Text style={emailStyles.totalValue}>
+                                        {vatIncluded
+                                            ? t.orderConfirmation?.included || 'Included'
+                                            : formatOrderEmailCurrency(vatAmount, currency, locale)}
+                                    </Text>
                                 </div>
                             )}
                             {shippingCost > 0 && (
@@ -262,7 +259,9 @@ export const OrderUpdateTemplate = ({
                                     <Text style={emailStyles.totalLabel}>
                                         {t.orderConfirmation?.shipping || 'Shipping'}
                                     </Text>
-                                    <Text style={emailStyles.totalValue}>{formatCurrency(shippingCost)}</Text>
+                                    <Text style={emailStyles.totalValue}>
+                                        {formatOrderEmailCurrency(shippingCost, currency, locale)}
+                                    </Text>
                                 </div>
                             )}
                             {discountAmount > 0 && (
@@ -270,13 +269,17 @@ export const OrderUpdateTemplate = ({
                                     <Text style={emailStyles.totalLabel}>
                                         {t.orderConfirmation?.discount || 'Discount'}
                                     </Text>
-                                    <Text style={emailStyles.discountValue}>-{formatCurrency(discountAmount)}</Text>
+                                    <Text style={emailStyles.discountValue}>
+                                        -{formatOrderEmailCurrency(discountAmount, currency, locale)}
+                                    </Text>
                                 </div>
                             )}
                             <Hr style={emailStyles.totalDivider} />
                             <div style={emailStyles.finalTotalRow}>
                                 <Text style={emailStyles.finalTotalLabel}>{t.orderConfirmation?.total || 'Total'}</Text>
-                                <Text style={emailStyles.finalTotalValue}>{formatCurrency(total)}</Text>
+                                <Text style={emailStyles.finalTotalValue}>
+                                    {formatOrderEmailCurrency(total, currency, locale)}
+                                </Text>
                             </div>
                         </Section>
 
@@ -303,34 +306,53 @@ export const OrderUpdateTemplate = ({
                         )}
 
                         {/* Shipping Address */}
-                        <Section style={emailStyles.shippingSection}>
-                            <Text style={emailStyles.sectionTitle}>
-                                {t.orderConfirmation?.shippingAddress || 'Shipping Address'}
-                            </Text>
-                            <div style={emailStyles.addressCard}>
-                                <Text style={emailStyles.addressName}>{customerName}</Text>
-                                <Text style={emailStyles.addressDetails}>{formatAddress()}</Text>
-                            </div>
-
-                            {deliveryNotes && (
-                                <div style={{ marginTop: '15px' }}>
-                                    <Text style={emailStyles.metaLabel}>
-                                        {t.orderConfirmation?.deliveryNotes || 'Delivery Notes'}
-                                    </Text>
-                                    <Text style={emailStyles.addressDetails}>{deliveryNotes}</Text>
+                        {orderFlags.showShippingAddress && (
+                            <Section style={emailStyles.shippingSection}>
+                                <Text style={emailStyles.sectionTitle}>
+                                    {t.orderConfirmation?.shippingAddress || 'Shipping Address'}
+                                </Text>
+                                <div style={emailStyles.addressCard}>
+                                    <Text style={emailStyles.addressName}>{customerName}</Text>
+                                    <Text style={emailStyles.addressDetails}>{addressText}</Text>
                                 </div>
-                            )}
-                        </Section>
+
+                                {deliveryNotes && (
+                                    <div style={{ marginTop: '15px' }}>
+                                        <Text style={emailStyles.metaLabel}>
+                                            {t.orderStatusUpdate?.deliveryNotes || 'Delivery Notes'}
+                                        </Text>
+                                        <Text style={emailStyles.addressDetails}>{deliveryNotes}</Text>
+                                    </div>
+                                )}
+                            </Section>
+                        )}
 
                         {/* Payment Section */}
-                        {paymentMethodFormatted && (
+                        {(paymentMethodFormatted || paymentReference || paymentEntity || bankTransferDetails) && (
                             <Section style={emailStyles.paymentSection}>
-                                <Text style={emailStyles.sectionTitle}>
-                                    {t.orderConfirmation?.paymentMethod || 'Payment Method'}
-                                </Text>
+                                <Text style={emailStyles.sectionTitle}>{paymentDetailsLabel}</Text>
                                 <div style={emailStyles.paymentMethod}>
                                     <Text style={{ margin: '0', fontWeight: '600' }}>{paymentMethodFormatted}</Text>
+                                    <Text style={{ margin: '0' }}>
+                                        {t.orderUpdate?.status || 'Status'}: {paymentStatus}
+                                    </Text>
+                                    {paymentEntity ? <Text style={{ margin: '0' }}>{t.orderConfirmation?.paymentEntity || 'Entity'}: {paymentEntity}</Text> : null}
+                                    {paymentReference ? <Text style={{ margin: '0' }}>{t.orderConfirmation?.paymentReference || 'Reference'}: {paymentReference}</Text> : null}
                                 </div>
+                                {bankTransferDetails ? (
+                                    <div style={{ ...emailStyles.addressCard, marginTop: '12px' }}>
+                                        <Text style={emailStyles.addressName}>
+                                            {t.orderConfirmation?.bankTransferDetails || 'Bank Transfer Details'}
+                                        </Text>
+                                        {Object.entries(bankTransferDetails).map(([key, value]) =>
+                                            value ? (
+                                                <Text key={key} style={emailStyles.addressDetails}>
+                                                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, (char) => char.toUpperCase())}: {value}
+                                                </Text>
+                                            ) : null
+                                        )}
+                                    </div>
+                                ) : null}
                             </Section>
                         )}
 

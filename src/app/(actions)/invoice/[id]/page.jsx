@@ -5,6 +5,7 @@ import { getOrder } from '@/lib/server/orders.js';
 import { getAvailableInvoiceLanguages } from '@/lib/server/locale.js';
 import { getSettings } from '@/lib/server/settings.js';
 import { getCatalog } from '@/lib/server/store.js';
+import { decodePublicInvoiceId } from '@/lib/shared/order-links.js';
 import InvoicePageClient from './page.client';
 
 export const revalidate = 0;
@@ -15,18 +16,6 @@ export const metadata = {
     robots: {
         index: false,
         follow: false
-    }
-};
-
-const decodeInvoiceId = (encodedId = '') => {
-    try {
-        const normalized = String(encodedId || '')
-            .replace(/-/g, '+')
-            .replace(/_/g, '/');
-        const padded = normalized + '='.repeat((4 - (normalized.length % 4 || 4)) % 4);
-        return Buffer.from(padded, 'base64').toString('utf-8');
-    } catch {
-        return '';
     }
 };
 
@@ -157,7 +146,7 @@ const InvoicePage = async ({ params }) => {
         notFound();
     }
 
-    const orderId = decodeInvoiceId(encodedId);
+    const orderId = decodePublicInvoiceId(encodedId);
     if (!orderId || !orderId.startsWith('ORD')) {
         notFound();
     }

@@ -1,21 +1,20 @@
-import { Body, Button, Container, Head, Heading, Html, Link, Preview, Section, Text } from '@react-email/components';
-import { EmailFooter } from './partials/EmailFooter';
+import { Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text } from '@react-email/components';
 import { EmailHeader } from './partials/EmailHeader';
+import { OrderFooter } from './partials/OrderFooter';
+import {
+    formatOrderEmailAddress,
+    formatOrderEmailCurrency,
+    formatOrderEmailPaymentMethod,
+    getOrderEmailFlags,
+    getOrderItemMetaLines,
+    loadOrderEmailTranslations
+} from './order-email.utils';
 import { emailStyles } from './styles';
-
-const loadTranslations = (locale) => {
-    try {
-        const translations = require(`@/locale/messages/${locale}/Email.json`);
-        return translations.Email;
-    } catch (error) {
-        const fallback = require('@/locale/messages/en/Email.json');
-        return fallback.Email;
-    }
-};
 
 export const OrderAdminConfirmationTemplate = ({
     customerName = '[Customer Name]',
     customerEmail = '[customer@email.com]',
+    customerPhone = '',
     companyName = '[Company Name]',
     companyLogo = '',
     companyUrl = 'https://yourapp.com',
@@ -35,43 +34,37 @@ export const OrderAdminConfirmationTemplate = ({
     subtotal = '25.00',
     shippingCost = '5.00',
     discountAmount = '0.00',
+    vatEnabled = false,
+    vatPercentage = 0,
     vatAmount = '0.00',
+    vatIncluded = false,
     total = '30.00',
     currency = 'EUR',
     orderSummaryUrl = 'https://yourapp.com/admin/orders/12345',
-    locale = 'en'
+    locale = 'en',
+    paymentMethod = null,
+    paymentStatus = 'pending',
+    paymentReference = null,
+    paymentEntity = null,
+    bankTransferDetails = null,
+    trackingNumber = null,
+    estimatedDelivery = null,
+    deliveryNotes = null,
+    isServiceAppointment = false
 }) => {
-    const t = loadTranslations(locale);
-
-    // Format address for display
-    const formatAddress = () => {
-        const parts = [
-            shippingAddress.streetAddress,
-            shippingAddress.apartmentUnit,
-            shippingAddress.city,
-            shippingAddress.state,
-            shippingAddress.zipCode,
-            shippingAddress.country
-        ].filter(Boolean);
-        return parts.join(', ');
-    };
-
-    // Calculate total items count
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-
-    // Parse numeric values
-    const parseAmount = (value) => {
-        if (typeof value === 'number') return value;
-        return parseFloat(value) || 0;
-    };
-
-    // Format currency using Intl.NumberFormat (same as OrderConfirmationTemplate)
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: currency || 'EUR'
-        }).format(amount || 0);
-    };
+    const t = loadOrderEmailTranslations(locale);
+    const logo_img = companyLogo || '';
+    const paymentMethodFormatted = paymentMethod ? formatOrderEmailPaymentMethod(paymentMethod, t) : null;
+    const addressText = formatOrderEmailAddress(shippingAddress);
+    const orderFlags = getOrderEmailFlags({
+        items,
+        shippingAddress,
+        shippingCost,
+        isServiceAppointment
+    });
+    const customerInfoLabel = t.common?.customerInformation || 'Customer Information';
+    const paymentDetailsLabel = t.common?.paymentDetails || 'Payment Details';
+    const phoneLabel = t.common?.phone || 'Phone';
 
     return (
         <Html>
@@ -80,22 +73,16 @@ export const OrderAdminConfirmationTemplate = ({
                 {t.adminNotification.paymentConfirmedPreview
                     ?.replace('{orderId}', orderId)
                     .replace('{customerName}', customerName)
-                    .replace('{total}', total) ||
+                    .replace('{total}', formatOrderEmailCurrency(total, currency, locale)) ||
                     t.adminNotification.preview
                         .replace('{orderId}', orderId)
                         .replace('{customerName}', customerName)
-                        .replace('{total}', total)}
+                        .replace('{total}', formatOrderEmailCurrency(total, currency, locale))}
             </Preview>
             <Body style={emailStyles.main}>
                 <Container style={emailStyles.container}>
-                    {/* Header */}
-                    <EmailHeader
-                        companyLogo={companyLogo}
-                        companyName={companyName}
-                        customStyles={emailStyles.header}
-                    />
+                    <EmailHeader companyLogo={logo_img} companyName={companyName} customStyles={emailStyles.header} />
 
-                    {/* Header Content */}
                     <Section style={emailStyles.header}>
                         <div style={emailStyles.headerContent}>
                             <div
@@ -111,15 +98,12 @@ export const OrderAdminConfirmationTemplate = ({
                         </div>
                     </Section>
 
-                    {/* Main Heading */}
                     <Heading style={emailStyles.mainHeading}>{t.adminNotification.actionRequired}</Heading>
 
-                    {/* Greeting and main message */}
                     <Text style={emailStyles.greeting}>
                         {t.adminNotification.paymentConfirmedMessage || t.adminNotification.newOrderMessage}
                     </Text>
 
-                    {/* Order Summary Card */}
                     <Section style={emailStyles.orderCard}>
                         <div style={emailStyles.orderHeader}>
                             <Text style={emailStyles.orderTitle}>{t.adminNotification.orderDetails}</Text>
@@ -142,27 +126,27 @@ export const OrderAdminConfirmationTemplate = ({
                                         fontSize: '18px',
                                         fontWeight: 'bold'
                                     }}>
-                                    {formatCurrency(parseAmount(total))}
+                                    {formatOrderEmailCurrency(total, currency, locale)}
                                 </Text>
                             </div>
                         </div>
                     </Section>
 
-                    {/* Customer Information */}
                     <Section style={emailStyles.shippingSection}>
-                        <Text style={emailStyles.sectionTitle}>{t.adminNotification.customerInfo}</Text>
+                        <Text style={emailStyles.sectionTitle}>{customerInfoLabel}</Text>
                         <div style={emailStyles.addressCard}>
                             <Text style={emailStyles.addressName}>{customerName}</Text>
                             <Text style={emailStyles.addressDetails}>
                                 {t.adminNotification.email}: {customerEmail}
                             </Text>
-                            <Text style={emailStyles.addressDetails}>
-                                {t.adminNotification.shippingAddress}: {formatAddress()}
-                            </Text>
+                            {customerPhone ? (
+                                <Text style={emailStyles.addressDetails}>
+                                    {phoneLabel}: {customerPhone}
+                                </Text>
+                            ) : null}
                         </div>
                     </Section>
 
-                    {/* Products Section */}
                     <Section style={emailStyles.productsSection}>
                         <Text style={emailStyles.sectionTitle}>{t.adminNotification.productsOrdered}</Text>
 
@@ -170,52 +154,148 @@ export const OrderAdminConfirmationTemplate = ({
                             <div key={index} style={emailStyles.productRow}>
                                 <div style={emailStyles.productInfo}>
                                     <Text style={emailStyles.productName}>{item.name}</Text>
+                                    {item.size ? (
+                                        <Text style={emailStyles.productDetails}>
+                                            {t.adminNotification.size}: {item.size}
+                                        </Text>
+                                    ) : null}
                                     <Text style={emailStyles.productDetails}>
-                                        {t.adminNotification.size}: {item.size || 'N/A'} |{' '}
                                         {t.adminNotification.quantity}: {item.quantity}
                                     </Text>
                                     <Text style={emailStyles.productDetails}>
-                                        {t.adminNotification.unitPrice}: {formatCurrency(parseAmount(item.price))}
+                                        {t.adminNotification.unitPrice}: {formatOrderEmailCurrency(item.price, currency, locale)}
                                     </Text>
+                                    {getOrderItemMetaLines(item, t).map((line, metaIndex) => (
+                                        <Text key={`${index}-meta-${metaIndex}`} style={emailStyles.productDetails}>
+                                            {line}
+                                        </Text>
+                                    ))}
                                 </div>
                                 <div>
                                     <Text style={emailStyles.productPrice}>
-                                        {formatCurrency(parseAmount(item.price) * item.quantity)}
+                                        {formatOrderEmailCurrency((item.price || 0) * (item.quantity || 1), currency, locale)}
                                     </Text>
                                 </div>
                             </div>
                         ))}
                     </Section>
 
-                    {/* Totals Section */}
                     <Section style={emailStyles.totalsSection}>
                         <div style={emailStyles.totalRow}>
-                            <Text style={emailStyles.totalLabel}>{t.adminNotification.productsSubtotal}</Text>
-                            <Text style={emailStyles.totalValue}>{formatCurrency(parseAmount(subtotal))}</Text>
+                            <Text style={emailStyles.totalLabel}>
+                                {vatEnabled && vatIncluded
+                                    ? t.orderStatusUpdate?.subtotalExclVat || 'Subtotal (excl. VAT)'
+                                    : t.adminNotification.productsSubtotal}
+                            </Text>
+                            <Text style={emailStyles.totalValue}>
+                                {formatOrderEmailCurrency(
+                                    vatEnabled && vatIncluded && vatAmount > 0 ? subtotal - vatAmount : subtotal,
+                                    currency,
+                                    locale
+                                )}
+                            </Text>
                         </div>
-                        <div style={emailStyles.totalRow}>
-                            <Text style={emailStyles.totalLabel}>{t.adminNotification.shippingCost}</Text>
-                            <Text style={emailStyles.totalValue}>{formatCurrency(parseAmount(shippingCost))}</Text>
-                        </div>
-                        {parseAmount(discountAmount) > 0 && (
+                        {shippingCost > 0 && (
+                            <div style={emailStyles.totalRow}>
+                                <Text style={emailStyles.totalLabel}>{t.adminNotification.shippingCost}</Text>
+                                <Text style={emailStyles.totalValue}>
+                                    {formatOrderEmailCurrency(shippingCost, currency, locale)}
+                                </Text>
+                            </div>
+                        )}
+                        {discountAmount > 0 && (
                             <div style={emailStyles.totalRow}>
                                 <Text style={emailStyles.totalLabel}>{t.orderConfirmation.discount}</Text>
-                                <Text style={emailStyles.discountValue}>-{formatCurrency(parseAmount(discountAmount))}</Text>
+                                <Text style={emailStyles.discountValue}>
+                                    -{formatOrderEmailCurrency(discountAmount, currency, locale)}
+                                </Text>
                             </div>
                         )}
-                        {parseAmount(vatAmount) > 0 && (
+                        {vatEnabled && vatAmount > 0 && (
                             <div style={emailStyles.totalRow}>
-                                <Text style={emailStyles.totalLabel}>{t.orderConfirmation.vat}</Text>
-                                <Text style={emailStyles.totalValue}>{formatCurrency(parseAmount(vatAmount))}</Text>
+                                <Text style={emailStyles.totalLabel}>
+                                    {t.orderConfirmation.vat} ({parseFloat(vatPercentage || 0).toFixed(1)}%)
+                                </Text>
+                                <Text style={emailStyles.totalValue}>
+                                    {vatIncluded
+                                        ? t.orderConfirmation?.included || 'Included'
+                                        : formatOrderEmailCurrency(vatAmount, currency, locale)}
+                                </Text>
                             </div>
                         )}
+                        <Hr style={emailStyles.totalDivider} />
                         <div style={emailStyles.finalTotalRow}>
                             <Text style={emailStyles.finalTotalLabel}>{t.adminNotification.total}</Text>
-                            <Text style={emailStyles.finalTotalValue}>{formatCurrency(parseAmount(total))}</Text>
+                            <Text style={emailStyles.finalTotalValue}>
+                                {formatOrderEmailCurrency(total, currency, locale)}
+                            </Text>
                         </div>
                     </Section>
 
-                    {/* Quick Actions */}
+                    {(paymentMethodFormatted || paymentReference || paymentEntity || bankTransferDetails) && (
+                        <Section style={emailStyles.paymentSection}>
+                            <Text style={emailStyles.sectionTitle}>{paymentDetailsLabel}</Text>
+                            <div style={emailStyles.addressCard}>
+                                {paymentMethodFormatted ? (
+                                    <Text style={emailStyles.addressDetails}>
+                                        {t.orderConfirmation?.paymentMethod || 'Payment Method'}: {paymentMethodFormatted}
+                                    </Text>
+                                ) : null}
+                                <Text style={emailStyles.addressDetails}>
+                                    {t.orderUpdate?.status || 'Status'}: {paymentStatus}
+                                </Text>
+                                {paymentEntity ? (
+                                    <Text style={emailStyles.addressDetails}>
+                                        {t.orderConfirmation?.paymentEntity || 'Entity'}: {paymentEntity}
+                                    </Text>
+                                ) : null}
+                                {paymentReference ? (
+                                    <Text style={emailStyles.addressDetails}>
+                                        {t.orderConfirmation?.paymentReference || 'Reference'}: {paymentReference}
+                                    </Text>
+                                ) : null}
+                                {bankTransferDetails
+                                    ? Object.entries(bankTransferDetails).map(([key, value]) => (
+                                          <Text key={key} style={emailStyles.addressDetails}>
+                                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}: {String(value)}
+                                          </Text>
+                                      ))
+                                    : null}
+                            </div>
+                        </Section>
+                    )}
+
+                    {orderFlags.showShippingAddress && (
+                        <Section style={emailStyles.shippingSection}>
+                            <Text style={emailStyles.sectionTitle}>{t.adminNotification.shippingAddress}</Text>
+                            <div style={emailStyles.addressCard}>
+                                <Text style={emailStyles.addressName}>{customerName}</Text>
+                                <Text style={emailStyles.addressDetails}>{addressText}</Text>
+                            </div>
+                        </Section>
+                    )}
+
+                    {(trackingNumber || estimatedDelivery || deliveryNotes) && (
+                        <Section style={emailStyles.trackingSection}>
+                            <Text style={emailStyles.sectionTitle}>
+                                {t.orderConfirmation?.trackingInfo || 'Tracking Information'}
+                            </Text>
+                            {trackingNumber ? (
+                                <Text style={emailStyles.trackingNumber}>
+                                    {t.orderConfirmation?.trackingNumber || 'Tracking Number'}: {trackingNumber}
+                                </Text>
+                            ) : null}
+                            {estimatedDelivery ? (
+                                <Text style={emailStyles.addressDetails}>
+                                    {t.orderConfirmation?.estimatedDelivery || 'Estimated Delivery'}: {estimatedDelivery}
+                                </Text>
+                            ) : null}
+                            {deliveryNotes ? (
+                                <Text style={emailStyles.addressDetails}>{deliveryNotes}</Text>
+                            ) : null}
+                        </Section>
+                    )}
+
                     <Section style={emailStyles.paymentSection}>
                         <Text style={emailStyles.sectionTitle}>{t.adminNotification.quickActions}</Text>
                         <div style={emailStyles.addressCard}>
@@ -230,7 +310,6 @@ export const OrderAdminConfirmationTemplate = ({
                         </div>
                     </Section>
 
-                    {/* CTA Button */}
                     <Section style={emailStyles.actionSection}>
                         <Button
                             style={{
@@ -244,18 +323,17 @@ export const OrderAdminConfirmationTemplate = ({
                         </Button>
                     </Section>
 
-                    {/* Footer */}
-                    <EmailFooter
+                    <OrderFooter
                         companyName={companyName}
                         companyUrl={companyUrl}
                         supportEmail={supportEmail}
                         translations={{
-                            bestRegards: t.adminNotification.autoGenerated,
-                            theTeam: `${t.adminNotification.orderManagementSystem} ${companyName}`
+                            footerThankYou: t.adminNotification.autoGenerated,
+                            footerQuestion: t.adminNotification.adminEmail,
+                            allRightsReserved: t.common?.allRightsReserved
                         }}
                     />
 
-                    {/* Support Section */}
                     <Section style={emailStyles.supportSection}>
                         <Text style={emailStyles.supportText}>
                             {t.adminNotification.adminEmail}

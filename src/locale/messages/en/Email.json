@@ -9,6 +9,12 @@
             "contactUs": "Contact us",
             "helpCenter": "Help Center",
             "haveQuestion": "Got any questions?",
+            "customerInformation": "Customer Information",
+            "paymentDetails": "Payment Details",
+            "phone": "Phone",
+            "appointment": "Appointment",
+            "deliveryMethod": "Delivery Method",
+            "digitalDelivery": "Digital Delivery",
             "allRightsReserved": "All rights reserved",
             "securityNotice": "For security reasons, never share this code with anyone. {companyName} will never request your password or verification codes by email or phone."
         },
@@ -166,6 +172,24 @@
             "deliveryNotes": "Delivery Notes",
             "viewOrderDetails": "View Order Details",
             "contactSupport": "Contact Support"
+        },
+        "paymentMethods": {
+            "stripe": "Credit / Debit Card",
+            "card": "Credit / Debit Card",
+            "credit_card": "Credit Card",
+            "debit_card": "Debit Card",
+            "bank_transfer": "Bank Transfer",
+            "pay_on_delivery": "Pay on Delivery",
+            "paypal": "PayPal",
+            "cash": "Cash",
+            "crypto": "Cryptocurrency",
+            "sumup": "SumUp",
+            "eupago": "EuPago",
+            "eupago_mb": "Multibanco",
+            "eupago_mbway": "MB WAY",
+            "multibanco": "Multibanco",
+            "mbway": "MB WAY",
+            "none": "Pending"
         },
         "passwordReset": {
             "subject": "Password Reset Code",

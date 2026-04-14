@@ -47,7 +47,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createUser, getAllUsers, updateUser } from '@/lib/server/users';
 import { calculateOrderPoints } from '@/lib/server/club';
-import { sendOrderAdminConfirmationEmail, sendOrderUpdateEmail } from '@/lib/server/email';
+import { sendOrderConfirmationEmail, sendOrderUpdateEmail } from '@/lib/server/email';
 import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
 import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
 import { getCatalog } from '@/lib/server/store';
@@ -921,26 +921,8 @@ export default function OrdersPage() {
 
             // If email notification is enabled, send confirmation
             if (formData.sendEmail) {
-                await sendOrderAdminConfirmationEmail(orderData.customer.email, {
-                    customerEmail: orderData.customer.email,
-                    customerName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim(),
-                    orderId: response.orderId,
-                    orderDate: response.data.createdAt,
-                    items: orderData.items,
-                    subtotal: orderData.subtotal,
-                    shippingCost: orderData.shippingCost,
-                    discountAmount: orderData.discountAmount,
-                    vatAmount: orderData.vatAmount,
-                    total: orderData.total,
-                    shippingAddress: {
-                        streetAddress: orderData.customer.streetAddress,
-                        apartmentUnit: orderData.customer.apartmentUnit,
-                        city: orderData.customer.city,
-                        state: orderData.customer.state,
-                        zipCode: orderData.customer.zipCode,
-                        country: orderData.customer.country
-                    }
-                });
+                const emailLocale = siteSettings?.language || siteSettings?.adminLanguage || 'en';
+                await sendOrderConfirmationEmail(response.data, emailLocale);
             }
             toast.success(t('toasts.orderCreated'));
             resetCreateOrderDialog();

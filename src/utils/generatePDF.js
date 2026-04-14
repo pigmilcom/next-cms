@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { getCountryName } from '@/lib/i18n.js';
+import { buildPublicInvoiceUrl } from '@/lib/shared/order-links.js';
 
 export const generatePDF = async (order, settingsInput = null, locale = 'pt', options = {}) => {
     // Load translations from JSON file directly (client-safe)
@@ -46,24 +47,15 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt', op
         logoPath: siteSettings.siteLogo || 'images/logo.png'
     };
 
-    const encodeInvoiceId = (value) => {
-        const raw = String(value || '');
-        if (!raw) return '';
-        return btoa(raw).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-    };
-
     const orderId = order.id || order.uid || order.orderId || '';
-    const encodedOrderId = encodeInvoiceId(orderId);
     const origin =
         (settings.baseUrl && String(settings.baseUrl).trim()) ||
         (typeof window !== 'undefined' ? window.location.origin : '');
-    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '';
-    const invoicePath = `/invoice/${encodedOrderId}`;
-    const invoiceUrl = normalizedOrigin ? `${normalizedOrigin}${invoicePath}` : invoicePath;
+    const invoiceUrl = buildPublicInvoiceUrl(origin, orderId);
 
     let qrCodeDataUrl = null;
     try {
-        if (encodedOrderId) {
+        if (invoiceUrl) {
             qrCodeDataUrl = await QRCode.toDataURL(invoiceUrl, {
                 errorCorrectionLevel: 'M',
                 margin: 1,

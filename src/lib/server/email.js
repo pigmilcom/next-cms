@@ -5,6 +5,7 @@
 import { render } from '@react-email/render';
 import nodemailer from 'nodemailer';
 import { getSettings } from '@/lib/server/settings';
+import { buildPublicInvoiceUrl } from '@/lib/shared/order-links';
 import { recordCampaignEvent } from '@/lib/server/web-stats';
 
 const DEFAULT_APP_NAME = 'App';
@@ -132,6 +133,84 @@ const formatEmailDateTime = (dateInput, locale, siteSettings = null) => {
             return date.toISOString();
         }
     }
+};
+
+const getOrderShippingAddress = (orderData = {}) => {
+    return orderData.shippingAddress || orderData.shipping_address || orderData.customer || {};
+};
+
+const getOrderCustomerEmail = (orderData = {}) => {
+    return orderData.customer?.email || orderData.cst_email || orderData.customerEmail || orderData.email || '';
+};
+
+const getOrderCustomerName = (orderData = {}) => {
+    return (
+        orderData.customerName ||
+        orderData.cst_name ||
+        `${orderData.customer?.firstName || ''} ${orderData.customer?.lastName || ''}`.trim() ||
+        'Customer'
+    );
+};
+
+const getOrderCustomerPhone = (orderData = {}) => {
+    return orderData.customer?.phone || orderData.phone || getOrderShippingAddress(orderData)?.phone || '';
+};
+
+const getOrderInvoiceUrl = (baseUrl, orderData = {}) => {
+    return buildPublicInvoiceUrl(baseUrl, orderData.id || orderData.orderId || '');
+};
+
+const getOrderTotalAmount = (orderData = {}) => {
+    return parseFloat(orderData.finalTotal || orderData.total || orderData.amount || 0) || 0;
+};
+
+const getOrderCurrency = (orderData = {}, storeSettings = {}) => {
+    return orderData.currency || storeSettings?.currency || 'EUR';
+};
+
+const getOrderEmailTemplateData = (orderData = {}, settings = {}, resolvedLocale = 'en') => {
+    const siteSettings = settings.siteSettings || {};
+    const storeSettings = settings.storeSettings || {};
+    const emailSettings = settings.emailSettings || {};
+    const baseUrl = siteSettings?.baseUrl || DEFAULT_BASE_URL;
+
+    return {
+        customerName: getOrderCustomerName(orderData),
+        customerEmail: getOrderCustomerEmail(orderData),
+        customerPhone: getOrderCustomerPhone(orderData),
+        orderId: orderData.id || orderData.orderId,
+        orderDate:
+            orderData.orderDate || formatEmailDateTime(orderData.createdAt || new Date(), resolvedLocale, siteSettings),
+        items: orderData.items || [],
+        subtotal: parseFloat(orderData.subtotal || 0) || 0,
+        shippingCost: parseFloat(orderData.shippingCost || orderData.shipping?.cost || orderData.shipping || 0) || 0,
+        discountAmount: parseFloat(orderData.discountAmount || 0) || 0,
+        vatAmount: parseFloat(orderData.vatAmount || 0) || 0,
+        vatPercentage: parseFloat(orderData.vatPercentage || 0) || 0,
+        vatEnabled: orderData.vatEnabled || false,
+        vatIncluded: orderData.vatIncluded || false,
+        total: getOrderTotalAmount(orderData),
+        currency: getOrderCurrency(orderData, storeSettings),
+        shippingAddress: getOrderShippingAddress(orderData),
+        paymentMethod: orderData.paymentMethod || '',
+        paymentStatus: orderData.paymentStatus || 'pending',
+        paymentReference: orderData.eupagoReference || orderData.paymentReference || '',
+        paymentEntity: orderData.eupagoEntity || orderData.paymentEntity || '',
+        bankTransferDetails: orderData.bankTransferDetails || null,
+        trackingNumber: orderData.trackingNumber || null,
+        estimatedDelivery: orderData.estimatedDelivery || null,
+        deliveryNotes: orderData.deliveryNotes || orderData.delivery_notes || '',
+        companyName: siteSettings?.siteName || emailSettings.siteName || DEFAULT_COMPANY_NAME,
+        companyLogo: siteSettings?.siteLogo || '',
+        companyUrl: baseUrl,
+        supportEmail: siteSettings?.siteEmail || emailSettings.siteEmail || DEFAULT_SUPPORT_EMAIL,
+        sitePhone: siteSettings?.sitePhone || '',
+        socialNetworks: siteSettings?.socialNetworks || [],
+        orderSummaryUrl: getOrderInvoiceUrl(baseUrl, orderData),
+        locale: resolvedLocale,
+        status: orderData.status || 'pending',
+        isServiceAppointment: orderData.isServiceAppointment || false
+    };
 };
 let mailTransport = null;
 
@@ -722,66 +801,25 @@ export async function sendOrderConfirmationEmail(orderData, locale) {
         const emailSettings = await getEmailSettings();
         const resolvedLocale = resolveEmailLocale(locale, siteSettings);
         const t = await loadEmailTranslations(resolvedLocale);
-
-        // Extract settings values
-        const companyName = siteSettings?.siteName || 'Your Company';
-        const companyLogo = siteSettings?.siteLogo || '';
-        const baseUrl = siteSettings?.baseUrl || DEFAULT_BASE_URL;
-        const supportEmail = siteSettings?.siteEmail || emailSettings.siteEmail || 'support@yourcompany.com';
-
-        // Transform order data to match email template structure
-        const customerEmail = orderData.customer?.email || orderData.cst_email || orderData.customerEmail;
-        const customerName =
-            orderData.customerName ||
-            orderData.cst_name ||
-            `${orderData.customer?.firstName || ''} ${orderData.customer?.lastName || ''}`.trim() ||
-            'Customer';
-        const orderId = orderData.id || orderData.orderId;
-        const orderDate =
-            orderData.orderDate ||
-            formatEmailDateTime(orderData.createdAt || new Date(), resolvedLocale, siteSettings);
-
-        // Use shipping_address if shippingAddress is not available
-        const shippingAddress = orderData.shippingAddress || orderData.customer || {};
+        const templateData = getOrderEmailTemplateData(
+            orderData,
+            { siteSettings, storeSettings, emailSettings },
+            resolvedLocale
+        );
 
         const { OrderConfirmationTemplate } = await import('@/emails/OrderConfirmationTemplate');
 
-        const encodedOrderId = Buffer.from(orderData.id).toString('base64');
-
         // Send customer confirmation email
         const customerEmailResponse = await sendEmail(
-            customerEmail,
-            t.orderConfirmation?.subject?.replace('{orderId}', orderId) || `Order Confirmation #${orderId}`,
+            templateData.customerEmail,
+            t.orderConfirmation?.subject?.replace('{orderId}', templateData.orderId) ||
+                `Order Confirmation #${templateData.orderId}`,
             OrderConfirmationTemplate,
             {
-                customerName,
-                orderId,
-                orderDate,
-                items: orderData.items || [],
-                subtotal: orderData.subtotal || '0.00',
-                shippingCost: orderData.shippingCost || '0.00',
-                discountAmount: orderData.discountAmount || '0.00',
-                vatAmount: orderData.vatAmount || '0.00',
-                vatPercentage: orderData.vatPercentage || 0,
-                vatEnabled: orderData.vatEnabled || false,
-                vatIncluded: orderData.vatIncluded || false,
-                total: orderData.finalTotal || orderData.total || '0.00',
-                currency: orderData.currency || 'EUR',
-                shippingAddress: shippingAddress,
-                paymentMethod: orderData.paymentMethod || '',
-                paymentStatus: orderData.paymentStatus || 'pending',
-                paymentReference: orderData.eupagoReference || '',
-                paymentEntity: orderData.eupagoEntity || '',
-                bankTransferDetails: orderData.bankTransferDetails || null,
-                deliveryNotes: orderData.deliveryNotes || '',
-                status: orderData.status || 'pending',
-                companyName: companyName,
-                companyLogo: companyLogo,
-                companyUrl: baseUrl,
-                supportEmail: supportEmail,
-                socialNetworks: siteSettings?.socialNetworks || [],
-                orderSummaryUrl: `${baseUrl}/track?id=${encodedOrderId}`,
-                locale: resolvedLocale
+                ...templateData,
+                customer: orderData.customer || {},
+                shipping: orderData.shipping || {},
+                orderType: orderData.orderType || 'manual'
             },
             { locale: resolvedLocale }
         );
@@ -845,56 +883,35 @@ export async function sendOrderAdminConfirmationEmail(orderData, locale) {
             return { success: false, error: 'Admin email not configured' };
         }
 
-        // Extract settings values
-        const companyName = siteSettings?.siteName || 'Your Company';
-        const companyLogo = siteSettings?.siteLogo || '';
-        const baseUrl = siteSettings?.baseUrl || DEFAULT_BASE_URL;
-        const supportEmail = siteSettings?.siteEmail || emailSettings.siteEmail || 'support@yourcompany.com';
-        const currency = storeSettings?.currency || 'EUR';
-
-        // Transform order data to match email template structure
-        const customerEmail = orderData.customer?.email || orderData.cst_email || orderData.customerEmail;
-        const customerName =
-            orderData.customerName ||
-            orderData.cst_name ||
-            `${orderData.customer?.firstName || ''} ${orderData.customer?.lastName || ''}`.trim() ||
-            'Customer';
-        const orderId = orderData.id || orderData.orderId;
-        const orderDate =
-            orderData.orderDate ||
-            formatEmailDateTime(orderData.createdAt || new Date(), resolvedLocale, siteSettings);
-
-        // Use shipping_address if shippingAddress is not available
-        const shippingAddress = orderData.shippingAddress || orderData.customer || {};
+        const templateData = getOrderEmailTemplateData(
+            orderData,
+            { siteSettings, storeSettings, emailSettings },
+            resolvedLocale
+        );
 
         const { OrderAdminConfirmationTemplate } = await import('@/emails/OrderAdminConfirmationTemplate');
+        const isPaymentConfirmed = templateData.paymentStatus === 'paid';
+        const adminSubjectTemplate = isPaymentConfirmed
+            ? t.adminNotification?.paymentConfirmedSubject
+            : t.adminNotification?.subject;
 
         // Send admin notification email
         const adminEmailResponse = await sendEmail(
             adminEmail,
-            t.orderAdminConfirmation?.subject?.replace('{orderId}', orderId) || 
-                `🔔 New Order #${orderId} - ${customerName} - ${parseFloat(orderData.finalTotal || orderData.total || 0).toFixed(2)} ${currency}`,
+            adminSubjectTemplate
+                ?.replace('{orderId}', templateData.orderId)
+                .replace('{customerName}', templateData.customerName)
+                .replace('{total}', templateData.total.toFixed(2)) ||
+                `🔔 New Order #${templateData.orderId} - ${templateData.customerName} - ${templateData.total.toFixed(2)} ${templateData.currency}`,
             OrderAdminConfirmationTemplate,
             {
-                customerEmail,
-                customerName,
-                orderId,
-                orderDate,
-                items: orderData.items || [],
-                subtotal: orderData.subtotal || '0.00',
-                shippingCost: orderData.shippingCost || '0.00',
-                discountAmount: orderData.discountAmount || '0.00',
-                vatAmount: orderData.vatAmount || '0.00',
-                total: orderData.finalTotal || orderData.total || '0.00',
-                currency: currency,
-                shippingAddress: shippingAddress,
-                companyName: companyName,
-                companyLogo: companyLogo,
-                companyUrl: baseUrl,
-                supportEmail: supportEmail,
-                socialNetworks: siteSettings?.socialNetworks || [],
-                orderSummaryUrl: `${baseUrl}/admin/store/orders?id=${orderId}`,
-                locale: resolvedLocale
+                ...templateData,
+                paymentStatus: templateData.paymentStatus,
+                paymentReference: templateData.paymentReference,
+                paymentEntity: templateData.paymentEntity,
+                bankTransferDetails: templateData.bankTransferDetails,
+                orderSummaryUrl: `${siteSettings?.baseUrl || DEFAULT_BASE_URL}/admin/store/orders?id=${templateData.orderId}`,
+                orderType: orderData.orderType || 'manual'
             },
             { locale: resolvedLocale }
         );
@@ -939,6 +956,8 @@ export async function sendOrderUpdateEmail(
     to,
     {
         customerName,
+        customerEmail = '',
+        customerPhone = '',
         orderId,
         orderDate,
         status,
@@ -955,11 +974,15 @@ export async function sendOrderUpdateEmail(
         currency = 'EUR',
         paymentMethod = null,
         paymentStatus = 'pending',
+        paymentReference = null,
+        paymentEntity = null,
+        bankTransferDetails = null,
         trackingNumber = null,
         trackingUrl = null,
         estimatedDelivery = null,
         deliveryNotes = null,
-        customMessage = null
+        customMessage = null,
+        isServiceAppointment = false
     },
     locale
 ) {
@@ -1008,6 +1031,7 @@ export async function sendOrderUpdateEmail(
         const subject = getSubjectFromTranslations(status, orderId, t);
 
         const { OrderUpdateTemplate } = await import('@/emails/OrderUpdateTemplate');
+        const orderSummaryUrl = buildPublicInvoiceUrl(baseUrl, orderId);
 
         const emailResponse = await sendEmail(
             to,
@@ -1015,6 +1039,8 @@ export async function sendOrderUpdateEmail(
             OrderUpdateTemplate,
             {
                 customerName,
+            customerEmail,
+            customerPhone,
                 orderId,
                 orderDate: localizedOrderDate,
                 status,
@@ -1031,6 +1057,9 @@ export async function sendOrderUpdateEmail(
                 currency: currency || storeSettings?.currency || 'EUR',
                 paymentMethod,
                 paymentStatus,
+                paymentReference,
+                paymentEntity,
+                bankTransferDetails,
                 trackingNumber,
                 trackingUrl,
                 estimatedDelivery,
@@ -1041,8 +1070,9 @@ export async function sendOrderUpdateEmail(
                 companyUrl: baseUrl,
                 supportEmail: supportEmail,
                 socialNetworks: siteSettings?.socialNetworks || [],
-                orderSummaryUrl: `${baseUrl}/track?id=${orderId}`,
-                locale: resolvedLocale
+                orderSummaryUrl,
+                locale: resolvedLocale,
+                isServiceAppointment
             },
             { locale: resolvedLocale }
         );
@@ -1064,15 +1094,19 @@ export async function sendOrderStatusUpdateEmail(orderData, locale) {
     try {
         const { OrderStatusUpdateTemplate } = await import('@/emails/OrderStatusUpdateTemplate');
         const emailSettings = await getEmailSettings();
-        const { siteSettings } = await getSettings();
+        const { siteSettings, storeSettings } = await getSettings();
         const resolvedLocale = resolveEmailLocale(locale || orderData.locale, siteSettings);
-        const encodedOrderId = Buffer.from(orderData.orderId || orderData.id).toString('base64');
+        const orderSummaryUrl = buildPublicInvoiceUrl(siteSettings?.baseUrl || emailSettings.siteUrl, orderData.orderId || orderData.id);
+        const t = await loadEmailTranslations(resolvedLocale);
         await sendEmail(
             orderData.email || orderData.customer?.email,
-            `Order Status Update - ${orderData.orderId}`,
+            t.orderStatusUpdate?.subject?.replace('{orderId}', orderData.orderId || orderData.id) ||
+                `Order Status Update - ${orderData.orderId || orderData.id}`,
             OrderStatusUpdateTemplate,
             {
-                customerName: orderData.customerName || orderData.customer?.firstName || 'Customer',
+                customerName: getOrderCustomerName(orderData),
+                customerEmail: getOrderCustomerEmail(orderData),
+                customerPhone: getOrderCustomerPhone(orderData),
                 orderId: orderData.orderId || orderData.id,
                 orderDate: formatEmailDateTime(
                     orderData.createdAt || orderData.orderDate || new Date(),
@@ -1080,19 +1114,22 @@ export async function sendOrderStatusUpdateEmail(orderData, locale) {
                     siteSettings
                 ),
                 status: orderData.status || 'pending',
-                shippingAddress: orderData.shippingAddress || orderData.shipping_address || {},
+                shippingAddress: getOrderShippingAddress(orderData),
                 items: orderData.items || [],
                 subtotal: parseFloat(orderData.subtotal || 0),
-                shippingCost: parseFloat(orderData.shippingCost || 0),
+                shippingCost: parseFloat(orderData.shippingCost || orderData.shipping?.cost || 0),
                 discountAmount: parseFloat(orderData.discountAmount || 0),
                 vatEnabled: orderData.vatEnabled || false,
                 vatPercentage: parseFloat(orderData.vatPercentage || 0),
                 vatAmount: parseFloat(orderData.vatAmount || 0),
                 vatIncluded: orderData.vatIncluded || false,
-                total: parseFloat(orderData.total || 0),
-                currency: orderData.currency || 'EUR',
+                total: getOrderTotalAmount(orderData),
+                currency: getOrderCurrency(orderData, storeSettings),
                 paymentMethod: orderData.paymentMethod || null,
                 paymentStatus: orderData.paymentStatus || 'pending',
+                paymentReference: orderData.eupagoReference || '',
+                paymentEntity: orderData.eupagoEntity || '',
+                bankTransferDetails: orderData.bankTransferDetails || null,
                 trackingNumber: orderData.trackingNumber || null,
                 estimatedDelivery: orderData.estimatedDelivery || null,
                 deliveryNotes: orderData.deliveryNotes || null,
@@ -1100,8 +1137,9 @@ export async function sendOrderStatusUpdateEmail(orderData, locale) {
                 companyLogo: emailSettings.siteLogo || '',
                 companyUrl: emailSettings.siteUrl,
                 supportEmail: emailSettings.emailSupportEmail || emailSettings.siteEmail,
-                orderSummaryUrl: `${emailSettings.siteUrl}/track?id=${encodedOrderId}`,
-                locale: resolvedLocale
+                orderSummaryUrl,
+                locale: resolvedLocale,
+                isServiceAppointment: orderData.isServiceAppointment || false
             },
             { locale: resolvedLocale }
         );
