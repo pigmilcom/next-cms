@@ -103,6 +103,28 @@ const initialFormData = {
     isServiceAppointment: false
 };
 
+const createInitialOrderCustomerData = () => ({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    isProfessional: false,
+    customerBusinessName: '',
+    customerTvaNumber: '',
+    streetAddress: '',
+    apartmentUnit: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'Portugal',
+    countryIso: 'PT',
+    emailNotifications: true,
+    orderUpdates: true,
+    marketingEmails: true,
+    newsletter: true,
+    smsNotifications: false
+});
+
 const PAYMENT_METHOD_VALUES = [
     'none',
     'card',
@@ -134,6 +156,110 @@ export default function OrdersPage() {
         value,
         label: t(`status.method.${value}`)
     }));
+
+    const buildCustomerDisplayName = (customerData = {}) => {
+        const displayName = `${customerData.firstName || ''} ${customerData.lastName || ''}`.trim();
+        return displayName || customerData.email?.trim() || '';
+    };
+
+    const parseCustomerName = (customer = {}) => {
+        const displayName =
+            customer.displayName || `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || '';
+        const nameParts = displayName.split(' ').filter(Boolean);
+
+        return {
+            firstName: customer.firstName || nameParts[0] || '',
+            lastName: customer.lastName || nameParts.slice(1).join(' ') || ''
+        };
+    };
+
+    const mapUserToOrderCustomer = (customer = {}) => {
+        const { firstName, lastName } = parseCustomerName(customer);
+
+        return {
+            ...createInitialOrderCustomerData(),
+            firstName,
+            lastName,
+            email: customer.email || '',
+            phone: customer.phone || '',
+            isProfessional:
+                customer.isProfessional === true || !!customer.customerBusinessName || !!customer.customerTvaNumber,
+            customerBusinessName: customer.customerBusinessName || '',
+            customerTvaNumber: customer.customerTvaNumber || '',
+            streetAddress: customer.streetAddress || '',
+            apartmentUnit: customer.apartmentUnit || '',
+            city: customer.city || '',
+            state: customer.state || '',
+            zipCode: customer.zipCode || '',
+            country: customer.country || 'Portugal',
+            countryIso: customer.countryIso || 'PT',
+            emailNotifications: customer.emailNotifications ?? customer.preferences?.emailNotifications ?? true,
+            orderUpdates: customer.orderUpdates ?? customer.preferences?.orderUpdates ?? true,
+            marketingEmails: customer.marketingEmails ?? customer.preferences?.marketingEmails ?? true,
+            newsletter: customer.newsletter ?? customer.preferences?.newsletter ?? true,
+            smsNotifications: customer.smsNotifications ?? customer.preferences?.smsNotifications ?? false
+        };
+    };
+
+    const hasCustomerFormInput = (customerData = {}) => {
+        return Boolean(
+            customerData.firstName?.trim() ||
+                customerData.lastName?.trim() ||
+                customerData.email?.trim() ||
+                customerData.phone?.trim() ||
+                customerData.customerBusinessName?.trim() ||
+                customerData.customerTvaNumber?.trim() ||
+                customerData.streetAddress?.trim() ||
+                customerData.apartmentUnit?.trim() ||
+                customerData.city?.trim() ||
+                customerData.state?.trim() ||
+                customerData.zipCode?.trim()
+        );
+    };
+
+    const buildUserPayloadFromOrderCustomer = (customerData = {}, existingCustomer = null) => {
+        const isProfessional =
+            customerData.isProfessional === true || !!customerData.customerBusinessName || !!customerData.customerTvaNumber;
+
+        return {
+            displayName: buildCustomerDisplayName(customerData),
+            email: customerData.email.trim().toLowerCase(),
+            phone: customerData.phone || '',
+            country: customerData.country || existingCustomer?.country || '',
+            countryIso: customerData.countryIso || existingCustomer?.countryIso || '',
+            streetAddress: customerData.streetAddress || '',
+            apartmentUnit: customerData.apartmentUnit || '',
+            city: customerData.city || '',
+            state: customerData.state || '',
+            zipCode: customerData.zipCode || '',
+            isProfessional,
+            customerBusinessName: isProfessional ? customerData.customerBusinessName || '' : '',
+            customerTvaNumber: isProfessional ? customerData.customerTvaNumber || '' : '',
+            emailNotifications: customerData.emailNotifications ?? existingCustomer?.emailNotifications ?? true,
+            orderUpdates: customerData.orderUpdates ?? existingCustomer?.orderUpdates ?? true,
+            marketingEmails: customerData.marketingEmails ?? existingCustomer?.marketingEmails ?? true,
+            newsletter: customerData.newsletter ?? existingCustomer?.newsletter ?? true,
+            smsNotifications: customerData.smsNotifications ?? existingCustomer?.smsNotifications ?? false,
+            role: existingCustomer?.role || 'user'
+        };
+    };
+
+    const resetCreateOrderDialog = () => {
+        setIsCreateOpen(false);
+        setFormData(initialFormData);
+        setIsNewCustomer(false);
+        setSelectedCustomerId('');
+    };
+
+    const handleCreateDialogChange = (open) => {
+        setIsCreateOpen(open);
+
+        if (!open) {
+            setFormData(initialFormData);
+            setIsNewCustomer(false);
+            setSelectedCustomerId('');
+        }
+    };
 
     const [allOrders, setAllOrders] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -658,8 +784,16 @@ export default function OrdersPage() {
         try {
             setIsSubmitting(true);
 
+            const creatingCustomerFromForm = isNewCustomer || (!selectedCustomerId && hasCustomerFormInput(formData.customer));
+            const normalizedCustomer = {
+                ...formData.customer,
+                email: formData.customer.email.trim().toLowerCase(),
+                firstName: formData.customer.firstName.trim(),
+                lastName: formData.customer.lastName.trim()
+            };
+
             // Validate form data
-            if (!isNewCustomer && !selectedCustomerId) {
+            if (!creatingCustomerFromForm && !selectedCustomerId) {
                 throw new Error(t('toasts.selectCustomerRequired'));
             }
 
@@ -668,8 +802,8 @@ export default function OrdersPage() {
             }
 
             // Validate customer data for new customers
-            if (isNewCustomer) {
-                if (!formData.customer.firstName || !formData.customer.lastName || !formData.customer.email) {
+            if (creatingCustomerFromForm) {
+                if (!normalizedCustomer.firstName || !normalizedCustomer.lastName || !normalizedCustomer.email) {
                     throw new Error(t('toasts.customerFieldsRequired'));
                 }
             }
@@ -706,6 +840,14 @@ export default function OrdersPage() {
 
             const orderData = {
                 ...formData,
+                customer: {
+                    ...formData.customer,
+                    ...normalizedCustomer,
+                    isProfessional:
+                        normalizedCustomer.isProfessional === true ||
+                        !!normalizedCustomer.customerBusinessName ||
+                        !!normalizedCustomer.customerTvaNumber
+                },
                 subtotal,
                 discountAmount,
                 vatAmount,
@@ -717,7 +859,7 @@ export default function OrdersPage() {
 
             // Calculate club points for the order
             try {
-                const clubPointsResult = await calculateOrderPoints(orderData.finalTotal, formData.customer.email);
+                const clubPointsResult = await calculateOrderPoints(orderData.finalTotal, orderData.customer.email);
                 orderData.clubPoints = clubPointsResult?.data?.clubPoints || 0;
             } catch (error) {
                 console.error('Error calculating order points:', error);
@@ -725,67 +867,23 @@ export default function OrdersPage() {
             }
 
             // Create customer if new or update existing customer
-            if (isNewCustomer) {
+            if (creatingCustomerFromForm) {
                 // Check if customer with this email already exists
-                const existingCustomer = customers.find((c) => c.email === orderData.customer.email);
+                const existingCustomer = customers.find(
+                    (c) => c.email?.toLowerCase() === orderData.customer.email.toLowerCase()
+                );
+                const userPayload = buildUserPayloadFromOrderCustomer(orderData.customer, existingCustomer);
 
                 if (existingCustomer) {
-                    // Update existing user with new information
-                    const updatedUserData = {
-                        displayName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim() || existingCustomer.displayName,
-                        phone: orderData.customer.phone || existingCustomer.phone || '',
-                        country: orderData.customer.country || existingCustomer.country || '',
-                        countryIso: orderData.customer.countryIso || existingCustomer.countryIso || '',
-                        streetAddress: orderData.customer.streetAddress || existingCustomer.streetAddress || '',
-                        apartmentUnit: orderData.customer.apartmentUnit || existingCustomer.apartmentUnit || '',
-                        city: orderData.customer.city || existingCustomer.city || '',
-                        state: orderData.customer.state || existingCustomer.state || '',
-                        zipCode: orderData.customer.zipCode || existingCustomer.zipCode || '',
-                        isProfessional:
-                            orderData.customer.isProfessional === true ||
-                            !!orderData.customer.customerBusinessName ||
-                            !!orderData.customer.customerTvaNumber,
-                        customerBusinessName:
-                            orderData.customer.customerBusinessName || existingCustomer.customerBusinessName || '',
-                        customerTvaNumber: orderData.customer.customerTvaNumber || existingCustomer.customerTvaNumber || '',
-                        emailNotifications:
-                            orderData.customer.emailNotifications ?? existingCustomer.emailNotifications ?? true,
-                        orderUpdates: orderData.customer.orderUpdates ?? existingCustomer.orderUpdates ?? true,
-                        marketingEmails:
-                            orderData.customer.marketingEmails ?? existingCustomer.marketingEmails ?? true,
-                        newsletter: orderData.customer.newsletter ?? existingCustomer.newsletter ?? true,
-                        smsNotifications:
-                            orderData.customer.smsNotifications ?? existingCustomer.smsNotifications ?? false
-                    };
                     const customerKey = existingCustomer.key || existingCustomer.id;
-                    await updateUser(customerKey, updatedUserData);
+                    const updateResult = await updateUser(customerKey, userPayload);
+                    if (!updateResult?.success) {
+                        throw new Error(updateResult.error || t('toasts.createCustomerFailed'));
+                    }
                     orderData.email = existingCustomer.email;
                 } else {
                     // Create new user
-                    const userResult = await createUser({
-                        displayName: `${orderData.customer.firstName} ${orderData.customer.lastName}`.trim() || orderData.customer.email,
-                        email: orderData.customer.email,
-                        phone: orderData.customer.phone || '',
-                        country: orderData.customer.country || '',
-                        countryIso: orderData.customer.countryIso || '',
-                        streetAddress: orderData.customer.streetAddress || '',
-                        apartmentUnit: orderData.customer.apartmentUnit || '',
-                        city: orderData.customer.city || '',
-                        state: orderData.customer.state || '',
-                        zipCode: orderData.customer.zipCode || '',
-                        isProfessional:
-                            orderData.customer.isProfessional === true ||
-                            !!orderData.customer.customerBusinessName ||
-                            !!orderData.customer.customerTvaNumber,
-                        customerBusinessName: orderData.customer.customerBusinessName || '',
-                        customerTvaNumber: orderData.customer.customerTvaNumber || '',
-                        emailNotifications: orderData.customer.emailNotifications ?? true,
-                        orderUpdates: orderData.customer.orderUpdates ?? true,
-                        marketingEmails: orderData.customer.marketingEmails ?? true,
-                        newsletter: orderData.customer.newsletter ?? true,
-                        smsNotifications: orderData.customer.smsNotifications ?? false,
-                        role: 'user'
-                    });
+                    const userResult = await createUser(userPayload);
 
                     if (!userResult.success) {
                         // If user already exists, that's fine — proceed with the order
@@ -797,11 +895,20 @@ export default function OrdersPage() {
                     orderData.email = orderData.customer.email;
                 }
             } else {
-                // Validate that the selected customer exists
+                // Validate that the selected customer exists and keep the customer record in sync
                 const existingCustomer = customers.find((c) => c.id === selectedCustomerId);
                 if (!existingCustomer) {
                     throw new Error(t('errors.selectedCustomerInvalid'));
                 }
+
+                const updateResult = await updateUser(
+                    existingCustomer.key || existingCustomer.id,
+                    buildUserPayloadFromOrderCustomer(orderData.customer, existingCustomer)
+                );
+                if (!updateResult?.success) {
+                    throw new Error(updateResult.error || t('toasts.createCustomerFailed'));
+                }
+
                 orderData.email = existingCustomer.email;
             }
 
@@ -836,10 +943,8 @@ export default function OrdersPage() {
                 });
             }
             toast.success(t('toasts.orderCreated'));
-            setIsCreateOpen(false);
-            setFormData(initialFormData);
-            setIsNewCustomer(false);
-            setSelectedCustomerId('');
+            resetCreateOrderDialog();
+            await fetchCustomers(true);
 
             // Add new order to state instead of full reload
             addOrderToState(response.data);
@@ -3667,7 +3772,7 @@ export default function OrdersPage() {
             </Dialog>
 
             {/* Create Order Dialog */}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <Dialog open={isCreateOpen} onOpenChange={handleCreateDialogChange}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{t('dialogs.createOrder.title')}</DialogTitle>
@@ -3683,39 +3788,19 @@ export default function OrdersPage() {
                                     if (value === 'new') {
                                         setIsNewCustomer(true);
                                         setSelectedCustomerId('');
-                                        setFormData({ ...initialFormData });
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            customer: createInitialOrderCustomerData()
+                                        }));
                                     } else {
                                         setIsNewCustomer(false);
                                         setSelectedCustomerId(value);
                                         const customer = customers.find((c) => c.id === value);
                                         if (customer) {
-                                            const nameParts = (customer.displayName || '').split(' ');
-                                            const firstName = nameParts[0] || '';
-                                            const lastName = nameParts.slice(1).join(' ') || '';
-                                            setFormData({
-                                                ...formData,
-                                                customer: {
-                                                    firstName,
-                                                    lastName,
-                                                    email: customer.email || '',
-                                                    phone: customer.phone || '',
-                                                    isProfessional: customer.isProfessional || false,
-                                                    customerBusinessName: customer.customerBusinessName || '',
-                                                    customerTvaNumber: customer.customerTvaNumber || '',
-                                                    streetAddress: customer.streetAddress || '',
-                                                    apartmentUnit: customer.apartmentUnit || '',
-                                                    city: customer.city || '',
-                                                    state: customer.state || '',
-                                                    zipCode: customer.zipCode || '',
-                                                    country: customer.country || 'Portugal',
-                                                    countryIso: customer.countryIso || 'PT',
-                                                    emailNotifications: customer.emailNotifications ?? true,
-                                                    orderUpdates: customer.orderUpdates ?? true,
-                                                    marketingEmails: customer.marketingEmails ?? true,
-                                                    newsletter: customer.newsletter ?? true,
-                                                    smsNotifications: customer.smsNotifications ?? false
-                                                }
-                                            });
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                customer: mapUserToOrderCustomer(customer)
+                                            }));
                                         } else {
                                             console.warn('Customer not found:', value);
                                             toast.error(t('toasts.selectedCustomerNotFound'));
@@ -3814,52 +3899,77 @@ export default function OrdersPage() {
                                             }
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label htmlFor="customerBusinessName">
-                                            Business Name{' '}
-                                            <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
-                                        </label>
-                                        <Input
-                                            id="customerBusinessName"
-                                            value={formData.customer.customerBusinessName || ''}
-                                            onChange={(e) =>
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            id="isProfessional"
+                                            checked={!!formData.customer.isProfessional}
+                                            onCheckedChange={(checked) =>
                                                 setFormData({
                                                     ...formData,
                                                     customer: {
                                                         ...formData.customer,
-                                                        customerBusinessName: e.target.value,
-                                                        isProfessional:
-                                                            !!e.target.value ||
-                                                            !!formData.customer.customerTvaNumber
+                                                        isProfessional: !!checked,
+                                                        customerBusinessName: checked
+                                                            ? formData.customer.customerBusinessName
+                                                            : '',
+                                                        customerTvaNumber: checked
+                                                            ? formData.customer.customerTvaNumber
+                                                            : ''
                                                     }
                                                 })
                                             }
-                                            placeholder="e.g. ACME, LDA"
                                         />
+                                        <div className="flex-1">
+                                            <div className="font-medium text-sm">Professional / Brand</div>
+                                            <div className="text-muted-foreground text-sm">
+                                                Enable to add business and VAT information
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label htmlFor="customerTvaNumber">
-                                            {t('create.customerTvaNumber')}{' '}
-                                            <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
-                                        </label>
-                                        <Input
-                                            id="customerTvaNumber"
-                                            value={formData.customer.customerTvaNumber}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    customer: {
-                                                        ...formData.customer,
-                                                        customerTvaNumber: e.target.value,
-                                                        isProfessional:
-                                                            !!e.target.value ||
-                                                            !!formData.customer.customerBusinessName
+                                    {formData.customer.isProfessional && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label htmlFor="customerBusinessName">
+                                                    Business Name{' '}
+                                                    <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
+                                                </label>
+                                                <Input
+                                                    id="customerBusinessName"
+                                                    value={formData.customer.customerBusinessName || ''}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            customer: {
+                                                                ...formData.customer,
+                                                                customerBusinessName: e.target.value
+                                                            }
+                                                        })
                                                     }
-                                                })
-                                            }
-                                            placeholder={t('create.customerTvaNumberPlaceholder')}
-                                        />
-                                    </div>
+                                                    placeholder="e.g. ACME, LDA"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label htmlFor="customerTvaNumber">
+                                                    {t('create.customerTvaNumber')}{' '}
+                                                    <span className="text-muted-foreground text-xs">({t('create.optional')})</span>
+                                                </label>
+                                                <Input
+                                                    id="customerTvaNumber"
+                                                    value={formData.customer.customerTvaNumber}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            customer: {
+                                                                ...formData.customer,
+                                                                customerTvaNumber: e.target.value
+                                                            }
+                                                        })
+                                                    }
+                                                    placeholder={t('create.customerTvaNumberPlaceholder')}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                             <div>
@@ -4349,12 +4459,7 @@ export default function OrdersPage() {
                         <div className="flex flex-col justify-end gap-3 sm:flex-row">
                             <Button
                                 variant="outline"
-                                onClick={() => {
-                                    setIsCreateOpen(false);
-                                    setFormData(initialFormData);
-                                    setIsNewCustomer(false);
-                                    setSelectedCustomerId('');
-                                }}
+                                onClick={resetCreateOrderDialog}
                                 disabled={isSubmitting}
                                 className="w-full sm:w-auto">
                                 {t('actions.cancel')}

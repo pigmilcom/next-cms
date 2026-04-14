@@ -654,12 +654,12 @@ const InvoicePageContent = ({
         <main className="min-h-screen bg-background px-3 py-4 text-foreground sm:px-4 sm:py-8">
             <div className="mx-auto w-full max-w-5xl space-y-6">
                 <div className="flex gap-4 items-center justify-between print:hidden">
-                    <div className="flex items-center gap-3">
+                    <a href={normalizedSettings.baseUrl || '/'} className="flex items-center gap-3">
                         <img src={`${normalizedSettings.siteLogo || '/images/logo.webp'}`} alt={normalizedSettings.businessName} className="h-10 w-10 object-cover" />
                         <span className="hidden sm:inline-flex w-fit rounded-md bg-foreground px-3 py-1.5 font-medium text-background sm:px-4 sm:py-2 sm:text-sm">
                             {t('invoiceTitle')}
                         </span>
-                    </div> 
+                    </a> 
                     <div className="flex flex-wrap items-center gap-2">
                         <LanguageSelector
                             languages={languageOptions}
