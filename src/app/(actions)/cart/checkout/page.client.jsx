@@ -309,7 +309,7 @@ const CheckoutPageClient = ({ catalogItems = [] }) => {
 
     useEffect(() => {
         // Set up Stripe options when cart total or shipping changes
-        if (cartTotal > 0 && storeSettings && stripeReady && storeSettings.paymentMethods?.cardPayments) {
+        if (cartTotal > 0 && storeSettings && stripeReady && storeSettings.paymentMethods?.stripe?.enabled) {
             setStripeOptions({
                 mode: 'payment',
                 amount: Math.round(totalPrice * 100), // Convert to cents

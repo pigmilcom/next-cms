@@ -2,7 +2,10 @@
 
 import { notFound } from 'next/navigation';
 import { getOrder } from '@/lib/server/orders.js';
+import { getAvailableInvoiceLanguages } from '@/lib/server/locale.js';
 import { getSettings } from '@/lib/server/settings.js';
+import { getCatalog } from '@/lib/server/store.js';
+import InvoicePageClient from './page.client';
 
 export const revalidate = 0;
 
@@ -37,18 +40,114 @@ const parseJSON = (data, fallback = {}) => {
     }
 };
 
-const formatCurrency = (value, currency = 'EUR') => {
-    const amount = parseFloat(value || 0) || 0;
-    const locale = currency === 'EUR' ? 'fr-FR' : currency === 'USD' ? 'en-US' : 'en-GB';
-    return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: String(currency || 'EUR').toUpperCase()
-    }).format(amount);
+const loadInvoiceTranslations = async (language) => {
+    try {
+        return await import(`@/locale/messages/${language}/Invoice.json`).then((mod) => mod.default.Invoice);
+    } catch {
+        return null;
+    }
 };
 
-const formatDate = (value) => {
-    if (!value) return new Date().toLocaleDateString();
-    return new Date(value).toLocaleDateString();
+const buildCatalogLookup = (catalogItems = []) => {
+    const lookup = new Map();
+
+    for (const item of catalogItems) {
+        if (!item) continue;
+
+        if (item.id) {
+            lookup.set(String(item.id), item);
+        }
+
+        if (item.slug) {
+            lookup.set(String(item.slug), item);
+        }
+    }
+
+    return lookup;
+};
+
+const normalizeOrderForInvoice = (orderData, catalogLookup) => {
+    const customer = parseJSON(orderData.customer, {});
+    const shippingAddress = parseJSON(orderData.shippingAddress || orderData.shipping_address, customer);
+    const shipping = parseJSON(orderData.shipping, {});
+    const rawItems = parseJSON(orderData.items, []);
+
+    const items = rawItems.map((item) => {
+        const catalogItem =
+            catalogLookup.get(String(item.id || '')) ||
+            catalogLookup.get(String(item.productId || '')) ||
+            catalogLookup.get(String(item.slug || ''));
+
+        const appointment =
+            item.appointment ||
+            (item.appointmentDate || item.appointmentTime
+                ? {
+                      date: item.appointmentDate || item.appointment?.date || item.startDate || '',
+                      time: item.appointmentTime || item.appointment?.time || item.startTime || ''
+                  }
+                : null);
+
+        return {
+            ...item,
+            id: item.id || item.productId || item.slug || '',
+            productId: item.productId || item.id || '',
+            type: item.type || catalogItem?.type || 'catalog',
+            image: item.image || catalogItem?.image || catalogItem?.cover || '',
+            appointment,
+            deliveryMethod: item.deliveryMethod || orderData.deliveryMethod || item.shippingMethod || item.method || null
+        };
+    });
+
+    return {
+        id: orderData.id || orderData.uid || orderData.orderId,
+        uid: orderData.uid || orderData.id || orderData.orderId,
+        orderId: orderData.orderId || orderData.id || orderData.uid,
+        key: orderData.key || orderData.id || orderData.orderId,
+        paymentIntentId: orderData.paymentIntentId || orderData.tx || '',
+        paymentMethod: orderData.paymentMethod || orderData.method || 'pending',
+        paymentStatus: orderData.paymentStatus || 'pending',
+        status: orderData.status || 'pending',
+        createdAt: orderData.createdAt,
+        created_at: orderData.created_at || orderData.createdAt,
+        updatedAt: orderData.updatedAt || null,
+        customerName:
+            `${customer.firstName || shippingAddress.firstName || ''} ${customer.lastName || shippingAddress.lastName || ''}`.trim() ||
+            orderData.customerName ||
+            orderData.cst_name ||
+            'Customer',
+        email: customer.email || shippingAddress.email || orderData.email || orderData.customerEmail || orderData.cst_email,
+        cst_email: customer.email || shippingAddress.email || orderData.email || orderData.customerEmail || orderData.cst_email,
+        cst_name: orderData.cst_name || '',
+        customer,
+        shippingAddress,
+        shipping_address: shippingAddress,
+        items,
+        subtotal: parseFloat(orderData.subtotal || 0) || 0,
+        shippingCost: parseFloat(orderData.shippingCost || orderData.shipping || shipping.cost || 0) || 0,
+        shipping: {
+            ...shipping,
+            cost: parseFloat(shipping.cost || orderData.shippingCost || orderData.shipping || 0) || 0
+        },
+        vatAmount: parseFloat(orderData.vatAmount || 0) || 0,
+        vatPercentage: parseFloat(orderData.vatPercentage || 0) || 0,
+        vatIncluded: orderData.vatIncluded || false,
+        vatEnabled: orderData.vatEnabled || false,
+        discountAmount: parseFloat(orderData.discountAmount || 0) || 0,
+        total: parseFloat(orderData.total || orderData.finalTotal || orderData.amount || 0) || 0,
+        amount: parseFloat(orderData.amount || orderData.total || orderData.finalTotal || 0) || 0,
+        finalTotal: parseFloat(orderData.finalTotal || orderData.total || orderData.amount || 0) || 0,
+        currency: orderData.currency || 'EUR',
+        deliveryNotes: orderData.deliveryNotes || orderData.delivery_notes || '',
+        delivery_notes: orderData.deliveryNotes || orderData.delivery_notes || '',
+        shippingNotes: orderData.shippingNotes || '',
+        bankTransferDetails: orderData.bankTransferDetails || null,
+        eupagoReference: orderData.eupagoReference || '',
+        eupagoEntity: orderData.eupagoEntity || '',
+        eupagoTransactionId: orderData.eupagoTransactionId || orderData.tx || '',
+        eupagoMethod: orderData.eupagoMethod || '',
+        eupagoMobile: orderData.eupagoMobile || '',
+        expiryTime: orderData.expiryTime || null
+    };
 };
 
 const InvoicePage = async ({ params }) => {
@@ -63,158 +162,41 @@ const InvoicePage = async ({ params }) => {
         notFound();
     }
 
-    const [orderResult, settings] = await Promise.all([getOrder(orderId), getSettings()]);
+    const [orderResult, settings, catalogResult, availableInvoiceLanguagesResult] = await Promise.all([
+        getOrder(orderId),
+        getSettings(),
+        getCatalog({ limit: 0, activeOnly: false }),
+        getAvailableInvoiceLanguages()
+    ]);
 
     const locale = settings?.siteSettings?.language || 'pt';
-    const translations = await import(`@/locale/messages/${locale}/Invoice.json`).then((mod) => mod.default.Invoice);
-    const t = (key) => {
-        const keys = key.split('.');
-        let value = translations;
-        for (const k of keys) {
-            value = value?.[k];
-            if (value === undefined) return key;
-        }
-        return value;
-    };
+    const availableInvoiceLanguages =
+        availableInvoiceLanguagesResult?.success && Array.isArray(availableInvoiceLanguagesResult.data)
+            ? availableInvoiceLanguagesResult.data
+            : [locale];
+    const invoiceTranslationEntries = await Promise.all(
+        availableInvoiceLanguages.map(async (language) => [language, await loadInvoiceTranslations(language)])
+    );
+    const invoiceTranslationsMap = Object.fromEntries(invoiceTranslationEntries.filter(([, translations]) => Boolean(translations)));
+    const translations = invoiceTranslationsMap[locale] || (await loadInvoiceTranslations(locale)) || invoiceTranslationsMap.en || {};
 
     if (!orderResult?.success || !orderResult.data) {
         notFound();
     }
 
-    const order = orderResult.data;
-    const customer = parseJSON(order.customer, {});
-    const shippingAddress = parseJSON(order.shippingAddress || order.shipping_address, customer);
-    const items = parseJSON(order.items, []);
-
-    const customerName =
-        `${customer.firstName || shippingAddress.firstName || ''} ${customer.lastName || shippingAddress.lastName || ''}`.trim() ||
-        order.cst_name ||
-        'Customer';
-
-    const businessName = settings?.storeSettings?.businessName || settings?.siteSettings?.siteName || 'Store';
-    const businessAddress = settings?.storeSettings?.address || settings?.siteSettings?.businessAddress || '';
-    const businessEmail = settings?.siteSettings?.siteEmail || '';
-    const businessPhone = settings?.siteSettings?.sitePhone || '';
-    const currency = order.currency || settings?.storeSettings?.currency || 'EUR';
-
-    const subtotal = parseFloat(order.subtotal || 0) || 0;
-    const shippingCost = parseFloat(order.shippingCost || order.shipping || 0) || 0;
-    const vatAmount = parseFloat(order.vatAmount || 0) || 0;
-    const discountAmount = parseFloat(order.discountAmount || 0) || 0;
-    const total = parseFloat(order.finalTotal || order.total || order.amount || 0) || 0;
+    const catalogData = Array.isArray(catalogResult?.data) ? catalogResult.data : [];
+    const normalizedOrder = normalizeOrderForInvoice(orderResult.data, buildCatalogLookup(catalogData));
 
     return (
-        <main className='min-h-screen bg-neutral-50 py-8'>
-            <div className='mx-auto w-full max-w-4xl px-4'>
-                <div className='mb-4 flex items-center justify-between'>
-                    <h1 className='text-2xl font-semibold text-neutral-900'>{t('invoiceTitle')}</h1>
-                    <span className='rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white'>Printable View</span>
-                </div>
-
-                <section className='rounded-xl border border-neutral-200 bg-white p-6 shadow-sm'>
-                    <div className='grid gap-8 md:grid-cols-2'>
-                        <div>
-                            <p className='text-sm text-neutral-500'>From</p>
-                            <p className='mt-1 text-lg font-semibold text-neutral-900'>{businessName}</p>
-                            {businessAddress ? <p className='mt-1 text-sm text-neutral-700'>{businessAddress}</p> : null}
-                            {businessEmail ? <p className='text-sm text-neutral-700'>{businessEmail}</p> : null}
-                            {businessPhone ? <p className='text-sm text-neutral-700'>{businessPhone}</p> : null}
-                        </div>
-
-                        <div className='text-left md:text-right'>
-                            <p className='text-sm text-neutral-500'>{t('orderId')}</p>
-                            <p className='mt-1 text-base font-semibold text-neutral-900'>{order.id || order.orderId || orderId}</p>
-                            <p className='mt-2 text-sm text-neutral-500'>{t('invoiceDate')}</p>
-                            <p className='text-sm text-neutral-700'>{formatDate(order.createdAt || order.created_at || order.orderDate)}</p>
-                        </div>
-                    </div>
-
-                    <div className='mt-8 border-t border-neutral-200 pt-6'>
-                        <p className='text-sm text-neutral-500'>{t('billTo')}</p>
-                        <p className='mt-1 text-base font-semibold text-neutral-900'>{customerName}</p>
-                        {customer.email || shippingAddress.email || order.cst_email ? (
-                            <p className='text-sm text-neutral-700'>{customer.email || shippingAddress.email || order.cst_email}</p>
-                        ) : null}
-                        {shippingAddress.streetAddress ? <p className='text-sm text-neutral-700'>{shippingAddress.streetAddress}</p> : null}
-                        {shippingAddress.city || shippingAddress.zipCode ? (
-                            <p className='text-sm text-neutral-700'>
-                                {shippingAddress.city || ''} {shippingAddress.zipCode || ''}
-                            </p>
-                        ) : null}
-                        {shippingAddress.country ? <p className='text-sm text-neutral-700'>{shippingAddress.country}</p> : null}
-                    </div>
-
-                    <div className='mt-8 overflow-x-auto'>
-                        <table className='w-full border-collapse text-left text-sm'>
-                            <thead>
-                                <tr className='border-b border-neutral-200 text-neutral-600'>
-                                    <th className='py-2 font-medium'>{t('description')}</th>
-                                    <th className='py-2 text-center font-medium'>{t('qty')}</th>
-                                    <th className='py-2 text-right font-medium'>{t('price')}</th>
-                                    <th className='py-2 text-right font-medium'>{t('total')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {Array.isArray(items) && items.length > 0 ? (
-                                    items.map((item, index) => {
-                                        const qty = parseInt(item.quantity, 10) || 1;
-                                        const price = parseFloat(item.price) || 0;
-                                        const rowTotal = qty * price;
-                                        return (
-                                            <tr key={`${item.id || item.name || 'item'}-${index}`} className='border-b border-neutral-100'>
-                                                <td className='py-3 text-neutral-800'>{item.name || t('item')}</td>
-                                                <td className='py-3 text-center text-neutral-700'>{qty}</td>
-                                                <td className='py-3 text-right text-neutral-700'>{formatCurrency(price, currency)}</td>
-                                                <td className='py-3 text-right font-medium text-neutral-900'>
-                                                    {formatCurrency(rowTotal, currency)}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                ) : (
-                                    <tr>
-                                        <td colSpan={4} className='py-4 text-center text-neutral-500'>
-                                            {t('noItemsFound')}
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className='mt-6 ml-auto w-full max-w-xs space-y-2 text-sm'>
-                        <div className='flex items-center justify-between text-neutral-700'>
-                            <span>{t('subtotal')}</span>
-                            <span>{formatCurrency(subtotal, currency)}</span>
-                        </div>
-                        <div className='flex items-center justify-between text-neutral-700'>
-                            <span>{t('shipping')}</span>
-                            <span>{formatCurrency(shippingCost, currency)}</span>
-                        </div>
-                        {vatAmount > 0 ? (
-                            <div className='flex items-center justify-between text-neutral-700'>
-                                <span>{t('vat')}</span>
-                                <span>{formatCurrency(vatAmount, currency)}</span>
-                            </div>
-                        ) : null}
-                        {discountAmount > 0 ? (
-                            <div className='flex items-center justify-between text-emerald-700'>
-                                <span>{t('discount')}</span>
-                                <span>-{formatCurrency(discountAmount, currency)}</span>
-                            </div>
-                        ) : null}
-                        <div className='flex items-center justify-between border-t border-neutral-200 pt-2 text-base font-semibold text-neutral-900'>
-                            <span>{t('total')}</span>
-                            <span>{formatCurrency(total, currency)}</span>
-                        </div>
-                    </div>
-
-                    <p className='mt-8 text-xs text-neutral-500'>
-                        {t('invoiceDisclaimer')}
-                    </p>
-                </section>
-            </div>
-        </main>
+        <InvoicePageClient
+            order={normalizedOrder}
+            invoiceTranslations={translations}
+            invoiceTranslationsMap={invoiceTranslationsMap}
+            invoiceLocale={locale}
+            availableInvoiceLanguages={availableInvoiceLanguages}
+            initialSiteSettings={settings?.siteSettings || {}}
+            initialStoreSettings={settings?.storeSettings || {}}
+        />
     );
 };
 

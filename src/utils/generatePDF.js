@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import QRCode from 'qrcode';
 import { getCountryName } from '@/lib/i18n.js';
 
-export const generatePDF = async (order, settingsInput = null, locale = 'pt') => {
+export const generatePDF = async (order, settingsInput = null, locale = 'pt', options = {}) => {
     // Load translations from JSON file directly (client-safe)
     const translations = await import(`@/locale/messages/${locale}/Invoice.json`).then((mod) => mod.default.Invoice);
 
@@ -91,18 +91,34 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt') =>
     const shippingAddress = parseJSON(order.shippingAddress || order.shipping_address, customer);
     const items = parseJSON(order.items, []);
 
+    const isAbsoluteUrl = (value = '') => /^https?:\/\//i.test(String(value || '').trim());
+
+    const buildImageCandidates = (src) => {
+        const cleaned = String(src || '').trim();
+        if (!cleaned) return [];
+
+        if (isAbsoluteUrl(cleaned)) {
+            if (typeof window !== 'undefined') {
+                return [`/api/assets/proxy-image?url=${encodeURIComponent(cleaned)}`];
+            }
+
+            return [cleaned];
+        }
+
+        return Array.from(
+            new Set([
+                cleaned,
+                cleaned.startsWith('/') ? cleaned : `/${cleaned}`,
+                cleaned.startsWith('/public/') ? cleaned.replace('/public/', '/') : cleaned,
+                cleaned.startsWith('public/') ? `/${cleaned.replace('public/', '')}` : cleaned
+            ])
+        );
+    };
+
     const loadImageAsDataUrl = async (src) => {
         try {
             if (!src) return null;
-            const cleaned = String(src).trim();
-            const candidates = Array.from(
-                new Set([
-                    cleaned,
-                    cleaned.startsWith('/') ? cleaned : `/${cleaned}`,
-                    cleaned.startsWith('/public/') ? cleaned.replace('/public/', '/') : cleaned,
-                    cleaned.startsWith('public/') ? `/${cleaned.replace('public/', '')}` : cleaned
-                ])
-            );
+            const candidates = buildImageCandidates(src);
 
             for (const candidate of candidates) {
                 const response = await fetch(candidate);
@@ -154,19 +170,41 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt') =>
 
     // Helper function to format payment method
     const formatPaymentMethod = (method) => {
-        const methodKey = method || 'none';
-        return t(`paymentMethods.${methodKey}`) || method || t('paymentMethods.none');
+        const methodKey = String(method || 'none').trim().toLowerCase();
+        const paymentMethodAliases = {
+            stripe: 'stripe',
+            card: 'card',
+            credit_card: 'credit_card',
+            debit_card: 'debit_card',
+            bank_transfer: 'bank_transfer',
+            pay_on_delivery: 'pay_on_delivery',
+            paypal: 'paypal',
+            cash: 'cash',
+            crypto: 'crypto',
+            sumup: 'sumup',
+            eupago: 'eupago',
+            eupago_mb: 'eupago_mb',
+            eupago_mbway: 'eupago_mbway',
+            mb: 'multibanco',
+            multibanco: 'multibanco',
+            mbway: 'mbway',
+            none: 'none'
+        };
+
+        const normalizedMethodKey = paymentMethodAliases[methodKey] || methodKey;
+
+        return t(`paymentMethods.${normalizedMethodKey}`) || t(`paymentMethods.${methodKey}`) || method || t('paymentMethods.none');
     };
 
     // Helper function to format order status
     const formatOrderStatus = (status) => {
         const statusMap = {
-            pending: 'Pendente',
-            paid: 'Pago',
-            failed: 'Cancelado',
-            cancelled: 'Cancelado'
+            pending: t('statusLabels.pending'),
+            paid: t('statusLabels.paid'),
+            failed: t('statusLabels.failed'),
+            cancelled: t('statusLabels.cancelled')
         };
-        return statusMap[status] || status || 'Pendente';
+        return statusMap[status] || status || t('statusLabels.pending');
     };
 
     const line = {
@@ -237,14 +275,15 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt') =>
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(...line.medium);
-    doc.text(`${t('orderId')}: ${orderId || 'N/A'}`, marginX, yPos + 5);
+    doc.text(`${orderId || 'N/A'}`, marginX, yPos + 5);
 
     const logoResult = await loadImageAsDataUrl(settings.logoPath);
     let brandY = yPos;
     if (logoResult?.dataUrl) {
-        const logoWidth = 28;
         const logoHeight = 14;
-        doc.addImage(logoResult.dataUrl, logoResult.format, rightEdge - logoWidth, brandY - 4, logoWidth, logoHeight);
+        const imageProperties = doc.getImageProperties(logoResult.dataUrl);
+        const logoWidth = imageProperties?.width && imageProperties?.height ? (imageProperties.width / imageProperties.height) * logoHeight : 14;
+        doc.addImage(logoResult.dataUrl, logoResult.format, rightEdge - logoWidth, brandY - 8, logoWidth, logoHeight);
         brandY += 12;
     }
 
@@ -558,7 +597,27 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt') =>
     }
 
     const fileName = `invoice-${orderId}-${formatDate(order.createdAt || order.created_at || order.orderDate).replace(/\//g, '-')}.pdf`;
+    const action = typeof options === 'string' ? options : options.action || 'download';
+
+    if (action === 'blob') {
+        return {
+            fileName,
+            blob: doc.output('blob')
+        };
+    }
+
+    if (action === 'blob-url') {
+        const blob = doc.output('blob');
+        return {
+            fileName,
+            blob,
+            url: URL.createObjectURL(blob)
+        };
+    }
+
     doc.save(fileName);
 
-    return fileName;
+    return {
+        fileName
+    };
 };

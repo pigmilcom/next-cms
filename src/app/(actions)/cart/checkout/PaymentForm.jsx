@@ -750,7 +750,7 @@ const PaymentForm = ({
                 selectedQuantity: item.selectedQuantity || 0,
                 unit: item.selectedUnit || '',
                 image: item.image || '',
-                type: 'catalog'
+                type: item.type || 'catalog'
             }));
 
             // Calculate pricing with applied coupon discount and VAT
@@ -1538,7 +1538,7 @@ const PaymentForm = ({
                                                         )}
 
                                                         {/* Stripe Card Payment */}
-                                                        {method.value === 'card' && hasStripe && (
+                                                        {method.value === 'stripe' && hasStripe && (
                                                             <div>
                                                                 <p className="mb-4 text-muted-foreground text-sm">
                                                                     {t('cardPaymentDescription')}
@@ -1547,7 +1547,7 @@ const PaymentForm = ({
                                                             </div>
                                                         )}
 
-                                                        {method.value === 'card' && !hasStripe && (
+                                                        {method.value === 'stripe' && !hasStripe && (
                                                             <div>
                                                                 <p className="text-muted-foreground text-sm">
                                                                     {t('cardPaymentSetup')}
@@ -1558,10 +1558,10 @@ const PaymentForm = ({
                                                         {/* Bank Transfer */}
                                                         {method.value === 'bank_transfer' && (
                                                             <div>
-                                                                {storeSettings?.paymentMethods?.bankTransferDetails && (
+                                                                {storeSettings?.paymentMethods?.bankTransfer && (
                                                                     <div className="mb-3 space-y-2">
-                                                                        {storeSettings.paymentMethods
-                                                                            .bankTransferDetails.bankName && (
+                                                                        {storeSettings.paymentMethods.bankTransfer
+                                                                            .bankName && (
                                                                             <div className="flex justify-between">
                                                                                 <span className="font-medium">
                                                                                     {t('bankName')}:
@@ -1569,14 +1569,13 @@ const PaymentForm = ({
                                                                                 <span>
                                                                                     {
                                                                                         storeSettings.paymentMethods
-                                                                                            .bankTransferDetails
-                                                                                            .bankName
+                                                                                            .bankTransfer.bankName
                                                                                     }
                                                                                 </span>
                                                                             </div>
                                                                         )}
-                                                                        {storeSettings.paymentMethods
-                                                                            .bankTransferDetails.accountHolder && (
+                                                                        {storeSettings.paymentMethods.bankTransfer
+                                                                            .accountHolder && (
                                                                             <div className="flex justify-between">
                                                                                 <span className="font-medium">
                                                                                     {t('accountHolder')}:
@@ -1584,14 +1583,12 @@ const PaymentForm = ({
                                                                                 <span>
                                                                                     {
                                                                                         storeSettings.paymentMethods
-                                                                                            .bankTransferDetails
-                                                                                            .accountHolder
+                                                                                            .bankTransfer.accountHolder
                                                                                     }
                                                                                 </span>
                                                                             </div>
                                                                         )}
-                                                                        {storeSettings.paymentMethods
-                                                                            .bankTransferDetails.iban && (
+                                                                        {storeSettings.paymentMethods.bankTransfer.iban && (
                                                                             <div className="flex justify-between">
                                                                                 <span className="font-medium">
                                                                                     IBAN:
@@ -1599,13 +1596,12 @@ const PaymentForm = ({
                                                                                 <span className="font-mono text-sm">
                                                                                     {
                                                                                         storeSettings.paymentMethods
-                                                                                            .bankTransferDetails.iban
+                                                                                            .bankTransfer.iban
                                                                                     }
                                                                                 </span>
                                                                             </div>
                                                                         )}
-                                                                        {storeSettings.paymentMethods
-                                                                            .bankTransferDetails.bic && (
+                                                                        {storeSettings.paymentMethods.bankTransfer.bic && (
                                                                             <div className="flex justify-between">
                                                                                 <span className="font-medium">
                                                                                     BIC:
@@ -1613,20 +1609,18 @@ const PaymentForm = ({
                                                                                 <span className="font-mono text-sm">
                                                                                     {
                                                                                         storeSettings.paymentMethods
-                                                                                            .bankTransferDetails.bic
+                                                                                            .bankTransfer.bic
                                                                                     }
                                                                                 </span>
                                                                             </div>
                                                                         )}
-                                                                        {storeSettings.paymentMethods
-                                                                            .bankTransferDetails
-                                                                            .additionalInstructions && (
+                                                                        {storeSettings.paymentMethods.bankTransfer
+                                                                            .instructions && (
                                                                             <div className="mt-3 border-t pt-2">
                                                                                 <p className="text-muted-foreground text-xs">
                                                                                     {
                                                                                         storeSettings.paymentMethods
-                                                                                            .bankTransferDetails
-                                                                                            .additionalInstructions
+                                                                                            .bankTransfer.instructions
                                                                                     }
                                                                                 </p>
                                                                             </div>
@@ -1671,14 +1665,14 @@ const PaymentForm = ({
                                     isProcessing ||
                                     !selectedPaymentMethod ||
                                     (turnstileKey && !isTurnstileVerified) ||
-                                    (selectedPaymentMethod === 'card' && (!stripe || !elements))
+                                    (selectedPaymentMethod === 'stripe' && (!stripe || !elements))
                                 }>
                                 {isProcessing ? (
                                     <div className="flex items-center justify-center space-x-2">
                                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
                                         <span>{t('processing')}</span>
                                     </div>
-                                ) : selectedPaymentMethod === 'card' ? (
+                                ) : selectedPaymentMethod === 'stripe' ? (
                                     <div className="flex items-center justify-center gap-2">
                                         <span>{t('payAmount', { amount: cartTotal })}</span>
                                     </div>
