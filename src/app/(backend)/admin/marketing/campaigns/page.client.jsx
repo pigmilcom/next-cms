@@ -49,17 +49,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { formatAvailableLanguages } from '@/lib/i18n';
 import { sendNewsletterCampaign, sendNewsletterTestEmail } from '@/lib/server/email';
-import { createCampaign, deleteCampaign, getTemplatesByType, updateCampaign } from '@/lib/server/newsletter';
+import { createCampaign, deleteCampaign, updateCampaign } from '@/lib/server/newsletter';
 import { sendSMSCampaign, sendTestSMS } from '@/lib/server/sms';
 
 export default function CampaignsClient({ initialData }) {
-    // Get settings from LayoutProvider context
     const { siteSettings } = useAdminSettings();
 
     // Language configuration
-    const availableLanguages = siteSettings?.languages || ['en'];
-    const defaultLanguage = siteSettings?.language || 'en';
+    const availableLanguages = initialData.availableLanguages?.length ? initialData.availableLanguages : ['en'];
+    const preferredLanguage = siteSettings?.language || 'en';
+    const defaultLanguage = availableLanguages.includes(preferredLanguage) ? preferredLanguage : availableLanguages[0] || 'en';
     const [selectedLanguage, setSelectedLanguage] = useState(defaultLanguage);
+    const allTemplates = initialData.templates || [];
 
     // Helper function to extract multi-language content
     const getMLContent = (content, locale = selectedLanguage) => {
@@ -136,6 +137,22 @@ export default function CampaignsClient({ initialData }) {
     const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
     const [isRefreshingData, setIsRefreshingData] = useState(false);
     const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+
+    const normalizeLocalizedValue = (value) => {
+        if (typeof value === 'object' && value !== null) {
+            return value;
+        }
+
+        if (typeof value === 'string' && value.trim()) {
+            return { [selectedLanguage]: value };
+        }
+
+        return {};
+    };
+
+    const getTemplateId = (template) => template?.id || template?._id || template?.key || '';
+
+    const filterTemplatesByType = (type) => allTemplates.filter((template) => template?.type === type);
 
     // Helper to get languages with content for a campaign
     const getCampaignLanguages = (campaign) => {
@@ -337,41 +354,36 @@ export default function CampaignsClient({ initialData }) {
     // Load templates on mount for default campaign type
     useEffect(() => {
         loadTemplates(newCampaign.type);
-    }, []);
+    }, [newCampaign.type]);
 
     // Load available templates when campaign type changes
-    const loadTemplates = async (type) => {
-        try {
-            const result = await getTemplatesByType(type);
-            if (result.success) {
-                setAvailableTemplates(result.data || []);
-            }
-        } catch (error) {
-            console.error('Failed to load templates:', error);
-        }
+    const loadTemplates = (type) => {
+        setAvailableTemplates(filterTemplatesByType(type));
     };
 
     // Handle template selection in campaign creation
     const handleTemplateSelection = (templateId) => {
         setSelectedTemplate(templateId);
+
         if (templateId !== 'custom') {
-            const template = availableTemplates.find((t) => t.id === templateId);
+            const template = availableTemplates.find((item) => getTemplateId(item) === templateId);
             if (template) {
-                // Preserve ML object structure from template
                 setNewCampaign((prev) => ({
                     ...prev,
-                    content: template.content || {},
-                    message: template.message || {},
-                    subject: typeof template.name === 'string' ? { [selectedLanguage]: template.name } : prev.subject
+                    type: template.type || prev.type,
+                    subject: normalizeLocalizedValue(template.subject || template.name || ''),
+                    content: normalizeLocalizedValue(template.type === 'email' ? template.content : ''),
+                    message: normalizeLocalizedValue(template.type === 'sms' ? template.message : ''),
+                    previewText: normalizeLocalizedValue(template.previewText || '')
                 }));
             }
         } else {
-            // Reset to blank when selecting custom
             setNewCampaign((prev) => ({
                 ...prev,
+                subject: {},
                 content: {},
                 message: {},
-                subject: {}
+                previewText: {}
             }));
         }
     };
@@ -463,7 +475,7 @@ export default function CampaignsClient({ initialData }) {
                 content: mlContent,
                 message: mlMessage,
                 previewText: mlPreviewText,
-                locale: defaultLanguage
+                locale: selectedLanguage
             };
 
             const result = await createCampaign(campaignData);
@@ -504,6 +516,8 @@ export default function CampaignsClient({ initialData }) {
         if (!campaign) return;
 
         const isSMSCampaign = campaign.type === 'sms';
+        const manualSmsRecipients = sendConfig.manualRecipients.filter((recipient) => recipient.phone);
+        const manualEmailRecipients = sendConfig.manualRecipients.filter((recipient) => recipient.email);
 
         const recipients = sendConfig.selectAll
             ? subscribers.filter((s) => {
@@ -514,9 +528,7 @@ export default function CampaignsClient({ initialData }) {
 
         if (
             recipients.length === 0 &&
-            (isSMSCampaign
-                ? sendConfig.manualRecipients.filter((r) => r.phone).length === 0
-                : sendConfig.manualRecipients.length === 0)
+            (isSMSCampaign ? manualSmsRecipients.length === 0 : manualEmailRecipients.length === 0)
         ) {
             toast.error(`Please select at least one recipient${isSMSCampaign ? ' with a phone number' : ''}`);
             return;
@@ -525,12 +537,8 @@ export default function CampaignsClient({ initialData }) {
         try {
             setIsSendingCampaign(true);
             const result = isSMSCampaign
-                ? await sendSMSCampaign(
-                      campaign,
-                      recipients,
-                      sendConfig.manualRecipients.filter((r) => r.phone)
-                  )
-                : await sendNewsletterCampaign(campaign, recipients, sendConfig.manualRecipients);
+                ? await sendSMSCampaign(campaign, recipients, manualSmsRecipients)
+                : await sendNewsletterCampaign(campaign, recipients, manualEmailRecipients);
 
             if (result.success) {
                 toast.success(`Campaign sent! ${result.data.sent} successful, ${result.data.failed} failed`);
@@ -1153,228 +1161,6 @@ export default function CampaignsClient({ initialData }) {
                     </DialogContent>
                 </Dialog>
 
-                {/* Create Campaign Dialog */}
-                <Dialog
-                    open={isCreatingCampaign}
-                    onOpenChange={(open) => {
-                        if (open) {
-                            loadTemplates(newCampaign.type);
-                        } else {
-                            setIsCreatingCampaign(false);
-                            setSelectedTemplate('custom');
-                            setAvailableTemplates([]);
-                        }
-                    }}>
-                    <DialogTrigger asChild>
-                        <Button style={{display: 'none'}}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Campaign
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                                <div className="sm:max-w-1/2">
-                                    <DialogTitle>Create Campaign</DialogTitle>
-                                    <DialogDescription>Create a new email or SMS campaign</DialogDescription>
-                                </div>
-                                {availableLanguages.length > 1 && (
-                                    <div className="flex items-center gap-2 sm:absolute sm:top-5 sm:right-16">
-                                        <Languages className="h-4 w-4 text-muted-foreground" />
-                                        <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
-                                            <SelectTrigger className="w-35">
-                                                <SelectValue placeholder="Language" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {availableLanguages.map((lang) => (
-                                                    <SelectItem key={lang} value={lang}>
-                                                        {languageLabels[lang] || lang.toUpperCase()}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                            </div>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="campaign-type">Campaign Type</Label>
-                                <Select
-                                    value={newCampaign.type}
-                                    onValueChange={(value) => {
-                                        setNewCampaign((prev) => ({ ...prev, type: value }));
-                                        loadTemplates(value);
-                                    }}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="email">
-                                            <div className="flex items-center gap-2">
-                                                <Mail className="h-4 w-4" />
-                                                Email Campaign
-                                            </div>
-                                        </SelectItem>
-                                        <SelectItem value="sms">
-                                            <div className="flex items-center gap-2">
-                                                <MessageSquare className="h-4 w-4" />
-                                                SMS Campaign
-                                            </div>
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="campaign-template">Use Template (Optional)</Label>
-                                <Select value={selectedTemplate} onValueChange={handleTemplateSelection}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a template" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="custom">
-                                            <div className="flex items-center gap-2">
-                                                <span>âœï¸</span>
-                                                Custom / Blank
-                                            </div>
-                                        </SelectItem>
-                                        {availableTemplates.map((template) => (
-                                            <SelectItem key={template.id} value={template.id}>
-                                                <div className="flex items-center gap-2">
-                                                    <span>{template.thumbnail || 'ðŸ“§'}</span>
-                                                    {template.name}
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="campaign-subject">
-                                    {newCampaign.type === 'sms' ? 'Campaign Name' : 'Subject'}{' '}
-                                    {availableLanguages.length > 1 && `(${languageLabels[selectedLanguage]})`}
-                                </Label>
-                                <Input
-                                    id="campaign-subject"
-                                    value={newCampaign.subject[selectedLanguage] || ''}
-                                    onChange={(e) =>
-                                        setNewCampaign((prev) => ({
-                                            ...prev,
-                                            subject: { ...prev.subject, [selectedLanguage]: e.target.value }
-                                        }))
-                                    }
-                                    placeholder={
-                                        newCampaign.type === 'sms' ? 'Campaign name...' : 'Email subject line...'
-                                    }
-                                />
-                            </div>
-
-                            {/* Preview text for email only */}
-                            {newCampaign.type === 'email' && (
-                                <div className="flex flex-col gap-1">
-                                    <Label htmlFor="campaign-preview-text">
-                                        Preview Text{' '}
-                                        {availableLanguages.length > 1 && `(${languageLabels[selectedLanguage]})`}
-                                    </Label>
-                                    <Input
-                                        id="campaign-preview-text"
-                                        value={newCampaign.previewText[selectedLanguage] || ''}
-                                        onChange={(e) =>
-                                            setNewCampaign((prev) => ({
-                                                ...prev,
-                                                previewText: {
-                                                    ...prev.previewText,
-                                                    [selectedLanguage]: e.target.value
-                                                }
-                                            }))
-                                        }
-                                        placeholder="Preview text that appears in email clients..."
-                                    />
-                                </div>
-                            )}
-
-                            {/* Content / Message */}
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="campaign-content">
-                                    {newCampaign.type === 'sms' ? 'Message' : 'Content'}{' '}
-                                    {availableLanguages.length > 1 && `(${languageLabels[selectedLanguage]})`}
-                                </Label>
-                                {newCampaign.type === 'sms' ? (
-                                    <>
-                                        <div className="flex items-center justify-end">
-                                            <GenerateAI
-                                                lang={selectedLanguage}
-                                                instructions="Write a concise promotional SMS campaign message under 160 characters. Keep it clear, engaging, and include a simple call to action. Return plain text only."
-                                                placeholder="e.g., New arrivals now live. Shop today and save 10% with code NEW10"
-                                                allowCode={false}
-                                                onGenerated={(generatedContent) =>
-                                                    setNewCampaign((prev) => ({
-                                                        ...prev,
-                                                        message: {
-                                                            ...prev.message,
-                                                            [selectedLanguage]: generatedContent.slice(0, 160)
-                                                        }
-                                                    }))
-                                                }
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-xs"
-                                                title="Generate"
-                                            />
-                                        </div>
-                                        <Textarea
-                                            id="campaign-content"
-                                            value={newCampaign.message[selectedLanguage] || ''}
-                                            onChange={(e) =>
-                                                setNewCampaign((prev) => ({
-                                                    ...prev,
-                                                    message: {
-                                                        ...prev.message,
-                                                        [selectedLanguage]: e.target.value
-                                                    }
-                                                }))
-                                            }
-                                            placeholder="SMS message content..."
-                                            rows={3}
-                                            maxLength={160}
-                                        />
-                                        <p className="text-sm text-muted-foreground">
-                                            {(newCampaign.message[selectedLanguage] || '').length} / 160 characters
-                                        </p>
-                                    </>
-                                ) : (
-                                    <RichTextEditor
-                                        value={newCampaign.content[selectedLanguage] || ''}
-                                        onChange={(content) =>
-                                            setNewCampaign((prev) => ({
-                                                ...prev,
-                                                content: { ...prev.content, [selectedLanguage]: content }
-                                            }))
-                                        }
-                                        placeholder="Email content..."
-                                    />
-                                )}
-                            </div>
-                            {!isSubmittingCampaign && newCampaign.type && (
-                                <div className="text-sm text-muted-foreground">
-                                    <p>
-                                        {newCampaign.type === 'sms'
-                                            ? 'ðŸ“± SMS campaigns will be sent via SMS to subscribers with phone numbers'
-                                            : 'ðŸ“§ Email campaigns will be sent via email to all subscribers'}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                        <DialogFooter className="relative z-50">
-                            <Button onClick={handleCreateCampaign} disabled={isSubmittingCampaign}>
-                                {isSubmittingCampaign ? 'Creating...' : 'Create Campaign'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
                 {/* Send Campaign Dialog */}
                 <Dialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
                     <DialogContent className="max-w-2xl">
@@ -1459,9 +1245,13 @@ export default function CampaignsClient({ initialData }) {
                                                 <div key={index} className="flex gap-2">
                                                     <Input
                                                         placeholder={sendCampaign.type === 'sms' ? 'Phone' : 'Email'}
-                                                        value={recipient.contact}
+                                                        value={sendCampaign.type === 'sms' ? recipient.phone || '' : recipient.email || ''}
                                                         onChange={(e) =>
-                                                            updateManualRecipient(index, 'contact', e.target.value)
+                                                            updateManualRecipient(
+                                                                index,
+                                                                sendCampaign.type === 'sms' ? 'phone' : 'email',
+                                                                e.target.value
+                                                            )
                                                         }
                                                         className="flex-1"
                                                     />
@@ -1738,7 +1528,6 @@ export default function CampaignsClient({ initialData }) {
                         } else {
                             setIsCreatingCampaign(false);
                             setSelectedTemplate('custom');
-                            setAvailableTemplates([]);
                         }
                     }}>
                     <DialogTrigger asChild>
@@ -1780,6 +1569,7 @@ export default function CampaignsClient({ initialData }) {
                                     value={newCampaign.type}
                                     onValueChange={(value) => {
                                         setNewCampaign((prev) => ({ ...prev, type: value }));
+                                        setSelectedTemplate('custom');
                                         loadTemplates(value);
                                     }}>
                                     <SelectTrigger>
@@ -1816,7 +1606,7 @@ export default function CampaignsClient({ initialData }) {
                                             </div>
                                         </SelectItem>
                                         {availableTemplates.map((template) => (
-                                            <SelectItem key={template.id} value={template.id}>
+                                            <SelectItem key={getTemplateId(template)} value={getTemplateId(template)}>
                                                 <div className="flex items-center gap-2">
                                                     <span>{template.thumbnail || '📧'}</span>
                                                     {template.name}

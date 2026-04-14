@@ -516,7 +516,7 @@
                 },
                 "createOrder": {
                     "title": "Criar nova encomenda",
-                    "description": "Cria uma nova encomenda manualmente e envia opcionalmente um email ao cliente.",
+                    "description": "Cria uma nova encomenda manualmente.",
                     "selectCustomer": "Selecionar cliente existente ou criar novo",
                     "createNewCustomer": "Criar novo cliente",
                     "unnamedCustomer": "Cliente sem nome",
@@ -543,6 +543,11 @@
                     "title": "Editar estado da encomenda",
                     "description": "Esta encomenda já está {status}. Tens a certeza que queres modificar o estado de uma encomenda {status}?",
                     "confirmText": "Continuar"
+                },
+                "invoiceEmail": {
+                    "title": "Enviar Email da Fatura",
+                    "description": "Tens a certeza de que queres enviar o email da fatura da encomenda #{orderId}?",
+                    "confirmText": "Enviar Email"
                 }
             },
             "confirmStatus": {

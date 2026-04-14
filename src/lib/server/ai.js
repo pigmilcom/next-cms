@@ -208,6 +208,38 @@ export const getAllAIModels = async (params = {}) => {
 };
 
 /**
+ * Get enabled text-generation AI models.
+ * Models without an explicit modelType are treated as text models for compatibility.
+ * @param {Object} params - Query parameters (enabledOnly filter, etc.)
+ * @returns {Promise<Object>} Text AI models data
+ */
+export const getAvailableTextAIModels = async (params = {}) => {
+    try {
+        const result = await getAllAIModels(params);
+
+        if (!result.success) {
+            return result;
+        }
+
+        const textModels = (result.data || []).filter(
+            (model) => model && (model.modelType === 'text' || !model.modelType)
+        );
+
+        return {
+            success: true,
+            data: textModels
+        };
+    } catch (error) {
+        console.error('Error fetching text AI models:', error);
+        return {
+            success: false,
+            data: [],
+            error: error.message || 'Failed to fetch text AI models'
+        };
+    }
+};
+
+/**
  * Get AI model by ID
  * @param {string} modelId - ID of the model to get
  * @returns {Promise<Object>} AI model data

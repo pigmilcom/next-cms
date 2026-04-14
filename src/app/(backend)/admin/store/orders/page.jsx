@@ -20,7 +20,7 @@ import {
     Send,
     SlidersHorizontal,
     Trash2,
-    Truck,
+    Languages,
     User,
     X
 } from 'lucide-react';
@@ -47,7 +47,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createUser, getAllUsers, updateUser } from '@/lib/server/users';
 import { calculateOrderPoints } from '@/lib/server/club';
-import { sendInvoiceEmail, sendOrderConfirmationEmail, sendOrderUpdateEmail } from '@/lib/server/email';
+import { sendInvoiceEmail, sendOrderUpdateEmail } from '@/lib/server/email';
 import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
 import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
 import { getCatalog } from '@/lib/server/store';
@@ -100,7 +100,6 @@ const initialFormData = {
     paymentMethod: '',
     deliveryNotes: '',
     shippingNotes: '', // Admin-only shipping notes
-    sendEmail: true,
     appointmentId: null,
     isServiceAppointment: false
 };
@@ -291,6 +290,7 @@ export default function OrdersPage() {
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [isPrintingInvoice, setIsPrintingInvoice] = useState(false);
     const [isSendingInvoiceEmail, setIsSendingInvoiceEmail] = useState(false);
+    const [invoiceEmailConfirmOpen, setInvoiceEmailConfirmOpen] = useState(false);
 
     useEffect(() => {
         const loadInvoiceLanguages = async () => {
@@ -923,11 +923,6 @@ export default function OrdersPage() {
                 throw new Error(response.error || t('toasts.createOrderFailed'));
             }
 
-            // If email notification is enabled, send confirmation
-            if (formData.sendEmail) {
-                const emailLocale = siteSettings?.language || siteSettings?.adminLanguage || 'en';
-                await sendOrderConfirmationEmail(response.data, emailLocale);
-            }
             toast.success(t('toasts.orderCreated'));
             resetCreateOrderDialog();
             await fetchCustomers(true);
@@ -1174,11 +1169,24 @@ export default function OrdersPage() {
             }
 
             toast.success(t('toasts.invoiceEmailSent'));
+            return true;
         } catch (error) {
             console.error('Error sending invoice email:', error);
             toast.error(error?.message || t('toasts.prepareEmailFailed'));
+            return false;
         } finally {
             setIsSendingInvoiceEmail(false);
+        }
+    };
+
+    const confirmInvoiceEmailSend = async () => {
+        if (!selectedOrderForInvoice) {
+            return;
+        }
+
+        const sent = await handleEmailInvoice(selectedOrderForInvoice, invoiceLanguage);
+        if (sent) {
+            setInvoiceEmailConfirmOpen(false);
         }
     };
 
@@ -4501,19 +4509,6 @@ export default function OrdersPage() {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="sendEmail"
-                                checked={formData.sendEmail}
-                                onCheckedChange={(checked) => setFormData({ ...formData, sendEmail: checked })}
-                            />
-                            <label
-                                htmlFor="sendEmail"
-                                className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                {t('create.sendConfirmationEmail')}
-                            </label>
-                        </div>
-
                         <div className="flex flex-col justify-end gap-3 sm:flex-row">
                             <Button
                                 variant="outline"
@@ -4661,7 +4656,7 @@ export default function OrdersPage() {
                             <div className="rounded-lg border border-border bg-card/60 p-3">
                                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                     <Label htmlFor="invoice-language" className="text-sm font-medium">
-                                        PDF / Print language
+                                       <Languages size={16} /> PDF / Print Language
                                     </Label>
                                     <Select value={invoiceLanguage} onValueChange={setInvoiceLanguage}>
                                         <SelectTrigger id="invoice-language" className="w-full sm:w-48">
@@ -4670,7 +4665,7 @@ export default function OrdersPage() {
                                         <SelectContent>
                                             {availableInvoiceLanguages.map((lang) => (
                                                 <SelectItem key={lang.code} value={lang.code}>
-                                                    {lang.flag} {lang.name}
+                                                    {lang.name}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -4935,7 +4930,7 @@ export default function OrdersPage() {
 
                                 <Button
                                     variant="outline"
-                                    onClick={() => handleEmailInvoice(selectedOrderForInvoice, invoiceLanguage)}
+                                    onClick={() => setInvoiceEmailConfirmOpen(true)}
                                     disabled={isSendingInvoiceEmail}
                                     className="w-full">
                                     {isSendingInvoiceEmail ? (
@@ -4989,6 +4984,15 @@ export default function OrdersPage() {
             </Dialog>
 
             {/* Delete Order Confirmation Dialog */}
+            <ConfirmationDialog
+                open={invoiceEmailConfirmOpen}
+                onOpenChange={setInvoiceEmailConfirmOpen}
+                title={t('confirm.invoiceEmail.title')}
+                description={t('confirm.invoiceEmail.description', { orderId: selectedOrderForInvoice?.id || '' })}
+                confirmText={t('confirm.invoiceEmail.confirmText')}
+                onConfirm={confirmInvoiceEmailSend}
+            />
+
             <ConfirmationDialog
                 open={deleteConfirmOpen}
                 onOpenChange={setDeleteConfirmOpen}

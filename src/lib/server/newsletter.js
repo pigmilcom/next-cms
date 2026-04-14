@@ -1034,7 +1034,8 @@ export async function getTemplatesByType(type = 'email') {
             } else if (typeof result.data === 'object') {
                 templates = Object.entries(result.data).map(([key, template]) => ({
                     key,
-                    ...template
+                    ...template,
+                    id: template.id || template._id || key
                 }));
             }
         }

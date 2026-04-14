@@ -527,7 +527,7 @@
                 },
                 "createOrder": {
                     "title": "Create New Order",
-                    "description": "Create a new order manually and optionally send an email notification to the customer.",
+                    "description": "Create a new order manually.",
                     "selectCustomer": "Select existing customer or create new",
                     "createNewCustomer": "Create New Customer",
                     "unnamedCustomer": "Unnamed Customer",
@@ -554,6 +554,11 @@
                     "title": "Edit Order Status",
                     "description": "This order is already {status}. Are you sure you want to modify the status of a {status} order?",
                     "confirmText": "Continue"
+                },
+                "invoiceEmail": {
+                    "title": "Send Invoice Email",
+                    "description": "Are you sure you want to send the invoice email for order #{orderId}?",
+                    "confirmText": "Send Email"
                 }
             },
             "confirmStatus": {

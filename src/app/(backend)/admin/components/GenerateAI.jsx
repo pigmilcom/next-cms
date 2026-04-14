@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAdminSettings } from '../context/LayoutProvider';
-import { getAISettings, getAllAIModels, executeAIModel } from '@/lib/server/ai';
+import { getAISettings, getAvailableTextAIModels, executeAIModel } from '@/lib/server/ai';
 import { formatAvailableLanguages } from '@/lib/i18n';
 
 // Server actions to wrap AI functions
@@ -41,15 +41,15 @@ async function loadAISettingsAction() {
     }
 }
 
-async function loadAIModelsAction(params = {}) { 
+async function loadTextAIModelsAction(params = {}) { 
     try {
-        const result = await getAllAIModels(params);
+        const result = await getAvailableTextAIModels(params);
         return result;
     } catch (error) {
-        console.error('Error in loadAIModelsAction:', error);
+        console.error('Error in loadTextAIModelsAction:', error);
         return {
             success: false,
-            error: error.message || 'Failed to load AI models',
+            error: error.message || 'Failed to load text AI models',
             data: []
         };
     }
@@ -86,6 +86,7 @@ const GenerateAI = ({
     lang = '',
     placeholder = '',
     model = '',
+    showModels = false,
     allowCode = false,
     onGenerated,
     className = '',
@@ -167,13 +168,14 @@ const GenerateAI = ({
                 }
 
                 // Use server action for models
-                const modelsResult = await loadAIModelsAction({ enabledOnly: true });
+                const modelsResult = await loadTextAIModelsAction({ enabledOnly: true });
 
                 if (modelsResult.success && modelsResult.data) {
                     const models = modelsResult.data;
                     setAiModels(models || []);
                     if (models?.length > 0) {
-                        setSelectedAIModel(models[0].id);
+                        const preferredModel = models.find((item) => item.id === model) || models[0];
+                        setSelectedAIModel(preferredModel?.id || '');
                     }
                 }
             } catch (error) {
@@ -328,38 +330,39 @@ const GenerateAI = ({
                         </div>
                     )}
 
-                    {/* AI Model Selector */}
-                    <div>
-                        <Label htmlFor="model-select">AI Model</Label>
-                        <Select value={selectedAIModel} onValueChange={setSelectedAIModel}>
-                            <SelectTrigger id="model-select" >
-                                <SelectValue placeholder="Select AI model" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {aiModels.map((model) => (
-                                    <SelectItem key={model.id} value={model.id}>
-                                        <div className="relative w-full flex flex-col items-start">
-                                            <div className="w-full inline-flex gap-2 items-center justify-start">
-                                                <span>{model.name}</span>
-                                                <span>
-                                                    {model.modelType && 
-                                                    <Badge size="sm" className="text-[0.65rem] uppercase font-semibold">
-                                                        {model.modelType}
-                                                    </Badge>
-                                                    }
-                                                </span>
+                    {showModels && aiModels.length > 0 ? (
+                        <div>
+                            <Label htmlFor="model-select">AI Model</Label>
+                            <Select value={selectedAIModel} onValueChange={setSelectedAIModel}>
+                                <SelectTrigger id="model-select">
+                                    <SelectValue placeholder="Select AI model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {aiModels.map((modelItem) => (
+                                        <SelectItem key={modelItem.id} value={modelItem.id}>
+                                            <div className="relative w-full flex flex-col items-start">
+                                                <div className="w-full inline-flex gap-2 items-center justify-start">
+                                                    <span>{modelItem.name}</span>
+                                                    <span>
+                                                        {modelItem.modelType ? (
+                                                            <Badge size="sm" className="text-[0.65rem] uppercase font-semibold">
+                                                                {modelItem.modelType}
+                                                            </Badge>
+                                                        ) : null}
+                                                    </span>
+                                                </div>
+                                                {modelItem.description ? (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {modelItem.description}
+                                                    </span>
+                                                ) : null}
                                             </div>
-                                            {model.description && (
-                                                <span className="text-xs text-muted-foreground">
-                                                    {model.description}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ) : null}
 
                     {/* Prompt Input */}
                     <div>

@@ -87,6 +87,40 @@ export const getAllAvailableLanguages = async () => {
 };
 
 /**
+ * Get merged available languages across frontend and backend contexts.
+ * Removes duplicates and falls back to English when none are available.
+ * @returns {Promise<Object>} Merged languages result
+ */
+export const getMergedAvailableLanguages = async () => {
+    try {
+        const result = await getAllAvailableLanguages();
+
+        if (!result.success || !result.data) {
+            return {
+                success: true,
+                data: ['en']
+            };
+        }
+
+        const frontendLanguages = result.data.frontend || [];
+        const backendLanguages = result.data.backend || [];
+        const mergedLanguages = [...new Set([...frontendLanguages, ...backendLanguages])].filter(Boolean);
+
+        return {
+            success: true,
+            data: mergedLanguages.length > 0 ? mergedLanguages : ['en']
+        };
+    } catch (error) {
+        console.error('Failed to get merged available languages:', error);
+        return {
+            success: false,
+            error: error.message || 'Failed to get merged available languages',
+            data: ['en']
+        };
+    }
+};
+
+/**
  * Get languages that can be used for invoices.
  * Returns backend/frontend language sets and the shared set where Invoice.json exists.
  * @returns {Promise<Object>} Invoice languages result
@@ -174,7 +208,7 @@ export const languageExists = async (languageCode, context = 'frontend') => {
  */
 export const getDefaultLanguage = async (context = 'frontend') => {
     try {
-        const result = await getAvailableLanguages(context);
+        const result = await getAvailableLanguages({ frontend: context === 'frontend' });
 
         if (result.success && result.data.length > 0) {
             // Prefer 'en' if it exists, otherwise use first available

@@ -516,7 +516,7 @@
                 },
                 "createOrder": {
                     "title": "Créer une nouvelle commande",
-                    "description": "Créez une commande manuellement et envoyez éventuellement une notification email au client.",
+                    "description": "Créez une nouvelle commande manuellement.",
                     "selectCustomer": "Sélectionner un client existant ou en créer un nouveau",
                     "createNewCustomer": "Créer un nouveau client",
                     "unnamedCustomer": "Client sans nom",
@@ -543,6 +543,11 @@
                     "title": "Modifier le statut de la commande",
                     "description": "Cette commande est déjà {status}. Voulez-vous vraiment modifier le statut d'une commande {status} ?",
                     "confirmText": "Continuer"
+                },
+                "invoiceEmail": {
+                    "title": "Envoyer l'Email de Facture",
+                    "description": "Êtes-vous sûr de vouloir envoyer l'email de facture pour la commande #{orderId} ?",
+                    "confirmText": "Envoyer l'Email"
                 }
             },
             "confirmStatus": {

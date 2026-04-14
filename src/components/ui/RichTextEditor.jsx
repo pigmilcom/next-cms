@@ -71,7 +71,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { Textarea } from '@/components/ui/textarea';
-import { executeAIModelAndWait, getAISettings, getAllAIModels } from '@/lib/server/ai';
+import { executeAIModelAndWait, getAISettings, getAvailableTextAIModels } from '@/lib/server/ai';
 
 // Dynamically import CodeMirror to avoid SSR issues
 const CodeMirror = dynamic(() => import('@uiw/react-codemirror').then((mod) => mod.default), {
@@ -102,7 +102,8 @@ const RichTextEditor = ({
     customInstructions = '',
     language = null,
     availableLanguages: availableLanguagesProp = null,
-    customOnly = false
+    customOnly = false,
+    showModels = false
 }) => {
     const [linkUrl, setLinkUrl] = useState('');
     const [showLinkInput, setShowLinkInput] = useState(false);
@@ -278,12 +279,10 @@ const RichTextEditor = ({
                 }
 
                 // Load available text models
-                const modelsResult = await getAllAIModels({ enabledOnly: true });
+                const modelsResult = await getAvailableTextAIModels({ enabledOnly: true });
                 if (modelsResult.success && modelsResult.data) {
-                    // Filter for text models only
-                    const textModels = modelsResult.data.filter((model) => model.modelType === 'text' || !model.modelType);
+                    const textModels = modelsResult.data || [];
                     setAiModels(textModels);
-                    // Set first model as default
                     if (textModels.length > 0) {
                         setSelectedAIModel(textModels[0].id);
                     }
@@ -1256,7 +1255,7 @@ const RichTextEditor = ({
 
                     <div className="grid gap-4 py-4">
                         {/* Model Selector */}
-                        {aiModels.length > 1 && (
+                        {showModels && aiModels.length > 0 && (
                             <div className="grid gap-2">
                                 <Label htmlFor="ai-model">AI Model</Label>
                                 <select
