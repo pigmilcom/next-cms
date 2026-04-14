@@ -28,14 +28,18 @@ const CheckoutSuccessPageClient = ({
     eupagoMethod,
     eupagoReference,
     eupagoEntity,
-    eupagoAmount
+    eupagoAmount,
+    initialSiteSettings,
+    initialStoreSettings
 }) => {
     const t = useTranslations('Checkout');
     const locale = useLocale();
     const router = useRouter();
     const { emptyCart } = useCart();
-    const { storeSettings } = useSettings();
+    const { siteSettings: contextSiteSettings, storeSettings: contextStoreSettings } = useSettings();
     const { theme, resolvedTheme } = useTheme();
+    const siteSettings = contextSiteSettings || initialSiteSettings || {};
+    const storeSettings = contextStoreSettings || initialStoreSettings || {};
 
     // Order details from server component
     const [orderDetails, setOrderDetails] = useState(initialOrderDetails);
@@ -359,7 +363,7 @@ const CheckoutSuccessPageClient = ({
         router.push('/account');
     };
 
-    const downloadReceipt = () => {
+    const downloadReceipt = async () => {
         if (!orderDetails) return;
 
         // Check if payment is pending
@@ -370,9 +374,12 @@ const CheckoutSuccessPageClient = ({
             return;
         }
 
-        // Pass order object directly to generatePDF like admin orders page does
-        // The order object already has the correct structure from the database
-        generatePDF(orderDetails, storeSettings, locale);
+        try {
+            await generatePDF(orderDetails, { siteSettings, storeSettings }, locale);
+        } catch (error) {
+            console.error('Receipt PDF generation error:', error);
+            toast.error(t('downloadReceiptError') || 'Failed to generate receipt PDF.');
+        }
     };
 
     const handleShare = async (paymentType) => {
@@ -1006,16 +1013,16 @@ const CheckoutSuccessPageClient = ({
                         </motion.div>
                     )}
 
-                {/* Back to Shop Link */}
+                {/* Back to Home Link */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.8 }}
                     className="mt-8 text-center">
                     <Button variant="ghost" asChild className="hover:bg-muted/50 transition-colors">
-                        <Link href="/shop">
+                        <Link href="/">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            {t('backToShop')}
+                            {t('backtoHome')}
                         </Link>
                     </Button>
                 </motion.div>
