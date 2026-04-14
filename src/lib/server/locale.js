@@ -141,7 +141,10 @@ export const getAvailableInvoiceLanguages = async () => {
         });
 
         const sharedInvoiceLanguages = backendWithInvoice.filter((lang) => frontendLanguages.includes(lang));
-        const available = sharedInvoiceLanguages.length > 0 ? sharedInvoiceLanguages : backendWithInvoice;
+        const mergedInvoiceLanguages = [...new Set([...frontendLanguages, ...backendWithInvoice])].filter((lang) =>
+            backendWithInvoice.includes(lang)
+        );
+        const available = mergedInvoiceLanguages.length > 0 ? mergedInvoiceLanguages : backendWithInvoice;
 
         return {
             success: true,
@@ -149,7 +152,8 @@ export const getAvailableInvoiceLanguages = async () => {
             frontend: frontendLanguages,
             backend: backendLanguages,
             backendWithInvoice,
-            shared: sharedInvoiceLanguages
+            shared: sharedInvoiceLanguages,
+            merged: mergedInvoiceLanguages
         };
     } catch (error) {
         console.error('Failed to get available invoice languages:', error);
@@ -160,7 +164,8 @@ export const getAvailableInvoiceLanguages = async () => {
             frontend: [],
             backend: [],
             backendWithInvoice: [],
-            shared: []
+            shared: [],
+            merged: []
         };
     }
 };

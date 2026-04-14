@@ -55,6 +55,12 @@
         "mbwayLocalNumberHint": "Introduce tu número de 9 dígitos",
         "mbwayIntlNumberHint": "Introduce el número sin prefijo internacional",
         "multibancoReferencePrompt": "Después de continuar, recibirás la entidad y la referencia para pagar con Multibanco.",
+        "bankTransferDetails": "Datos de la Transferencia Bancaria",
+        "bankName": "Banco",
+        "accountHolder": "Titular de la Cuenta",
+        "transferReference": "Referencia de la Transferencia",
+        "transferAmount": "Importe a Transferir",
+        "bankTransferNote": "Usa tu número de pedido como referencia de la transferencia al completar el pago.",
         "invoiceDisclaimer": "Esta factura se ha generado electrónicamente y es válida sin firma.",
         "scanToViewInvoice": "Escanea para ver la factura",
         "statusLabels": {
@@ -71,7 +77,7 @@
             "pay_on_delivery": "Paga cuando se entregue tu pedido."
         },
         "paymentMethodInstructions": {
-            "bank_transfer": "Después de continuar, verás las instrucciones de transferencia en la página de estado del pedido.",
+            "bank_transfer": "Usa los datos que aparecen abajo para completar la transferencia bancaria de este pedido pendiente.",
             "pay_on_delivery": "El pedido seguirá pendiente hasta que pagues en la entrega."
         },
         "paymentErrors": {

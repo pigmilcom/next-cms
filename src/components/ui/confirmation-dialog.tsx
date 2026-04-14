@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 import {
     AlertDialog,
@@ -16,12 +17,13 @@ import {
 interface ConfirmationDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onConfirm: () => void;
+    onConfirm: () => void | Promise<void>;
     title: string;
     description: string;
     confirmText?: string;
     cancelText?: string;
     requireConfirmText?: string; // if provided, user must type this text to enable confirm
+    loading?: boolean;
 }
 
 export function ConfirmationDialog({
@@ -32,21 +34,31 @@ export function ConfirmationDialog({
     description,
     confirmText = 'Confirm',
     cancelText = 'Cancel',
-    requireConfirmText
+    requireConfirmText,
+    loading = false
 }: ConfirmationDialogProps) {
     const [typed, setTyped] = useState('');
+    const [isConfirming, setIsConfirming] = useState(false);
     const matchesRequired = requireConfirmText ? typed.trim().toLowerCase() === requireConfirmText.toLowerCase() : true;
+    const isBusy = loading || isConfirming;
 
     useEffect(() => {
         if (!open) {
             setTyped('');
+            setIsConfirming(false);
         }
     }, [open]);
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!matchesRequired) return;
-        onConfirm();
+        setIsConfirming(true);
+        try {
+            await onConfirm();
+        } finally {
+            setIsConfirming(false);
+        }
     };
+
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
@@ -71,11 +83,15 @@ export function ConfirmationDialog({
                 )}
 
                 <AlertDialogFooter>
-                    <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+                    <AlertDialogCancel disabled={isBusy}>{cancelText}</AlertDialogCancel>
                     <AlertDialogAction
-                        onClick={handleConfirm}
-                        disabled={!matchesRequired}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            void handleConfirm();
+                        }}
+                        disabled={!matchesRequired || isBusy}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                         {confirmText}
                     </AlertDialogAction>
                 </AlertDialogFooter>

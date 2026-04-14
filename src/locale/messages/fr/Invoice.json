@@ -55,6 +55,12 @@
         "mbwayLocalNumberHint": "Saisissez votre numéro à 9 chiffres",
         "mbwayIntlNumberHint": "Saisissez le numéro sans indicatif pays",
         "multibancoReferencePrompt": "Après avoir continué, vous recevrez l'entité et la référence pour payer via Multibanco.",
+        "bankTransferDetails": "Détails du Virement Bancaire",
+        "bankName": "Banque",
+        "accountHolder": "Titulaire du Compte",
+        "transferReference": "Référence du Virement",
+        "transferAmount": "Montant à Virer",
+        "bankTransferNote": "Utilisez votre numéro de commande comme référence du virement pour finaliser le paiement.",
         "invoiceDisclaimer": "Cette facture a été générée électroniquement et est valable sans signature.",
         "scanToViewInvoice": "Scannez pour voir la facture",
         "statusLabels": {
@@ -71,7 +77,7 @@
             "pay_on_delivery": "Payez lors de la livraison de votre commande."
         },
         "paymentMethodInstructions": {
-            "bank_transfer": "Après avoir continué, les instructions de virement bancaire seront affichées sur la page d'état de la commande.",
+            "bank_transfer": "Utilisez les informations ci-dessous pour finaliser le virement bancaire de cette commande en attente.",
             "pay_on_delivery": "La commande restera en attente jusqu'au paiement à la livraison."
         },
         "paymentErrors": {

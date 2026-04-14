@@ -55,6 +55,27 @@ const buildCatalogLookup = (catalogItems = []) => {
     return lookup;
 };
 
+const normalizeInvoiceItemType = (value) => {
+    const normalized = String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[_-]+/g, ' ');
+
+    if (['physical', 'product', 'physical product'].includes(normalized)) {
+        return 'physical';
+    }
+
+    if (['service', 'booking'].includes(normalized)) {
+        return 'service';
+    }
+
+    if (['digital', 'download', 'digital product'].includes(normalized)) {
+        return 'digital';
+    }
+
+    return normalized || 'catalog';
+};
+
 const normalizeOrderForInvoice = (orderData, catalogLookup) => {
     const customer = parseJSON(orderData.customer, {});
     const shippingAddress = parseJSON(orderData.shippingAddress || orderData.shipping_address, customer);
@@ -80,7 +101,7 @@ const normalizeOrderForInvoice = (orderData, catalogLookup) => {
             ...item,
             id: item.id || item.productId || item.slug || '',
             productId: item.productId || item.id || '',
-            type: item.type || catalogItem?.type || 'catalog',
+            type: normalizeInvoiceItemType(item.type || catalogItem?.type || 'catalog'),
             image: item.image || catalogItem?.image || catalogItem?.cover || '',
             appointment,
             deliveryMethod: item.deliveryMethod || orderData.deliveryMethod || item.shippingMethod || item.method || null

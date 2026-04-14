@@ -55,6 +55,12 @@
         "mbwayLocalNumberHint": "Enter your 9-digit mobile number",
         "mbwayIntlNumberHint": "Enter your mobile number without country code",
         "multibancoReferencePrompt": "After continuing, you will get entity and reference details for Multibanco.",
+        "bankTransferDetails": "Bank Transfer Details",
+        "bankName": "Bank Name",
+        "accountHolder": "Account Holder",
+        "transferReference": "Transfer Reference",
+        "transferAmount": "Amount to Transfer",
+        "bankTransferNote": "Use your order number as the transfer reference when completing the payment.",
         "invoiceDisclaimer": "This invoice was generated electronically and is valid without a signature.",
         "scanToViewInvoice": "Scan to view invoice",
         "statusLabels": {
@@ -71,7 +77,7 @@
             "pay_on_delivery": "Pay when your order is delivered."
         },
         "paymentMethodInstructions": {
-            "bank_transfer": "After continuing, bank transfer instructions will be shown on the order status page.",
+            "bank_transfer": "Use the bank transfer details below to complete this pending order.",
             "pay_on_delivery": "Your order will remain pending until you pay on delivery."
         },
         "paymentErrors": {

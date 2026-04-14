@@ -299,7 +299,7 @@ export default function OrdersPage() {
                 const rawLanguages =
                     result?.success && Array.isArray(result.data) && result.data.length > 0
                         ? result.data
-                        : ['pt', 'en', 'es', 'fr'];
+                        : ['en'];
 
                 const formatted = formatAvailableLanguages(
                     rawLanguages,
@@ -308,7 +308,7 @@ export default function OrdersPage() {
                 setAvailableInvoiceLanguages(formatted);
                 setInvoiceLanguage((prev) => (rawLanguages.includes(prev) ? prev : rawLanguages[0]));
             } catch (_error) {
-                const fallbackCodes = ['pt', 'en', 'es', 'fr'];
+                const fallbackCodes = ['en'];
                 const fallback = formatAvailableLanguages(fallbackCodes);
                 setAvailableInvoiceLanguages(fallback);
                 setInvoiceLanguage((prev) => (fallbackCodes.includes(prev) ? prev : fallbackCodes[0]));
@@ -1192,7 +1192,7 @@ export default function OrdersPage() {
 
     const openInvoiceDialog = (order) => {
         setSelectedOrderForInvoice(order);
-        const preferred = siteSettings?.adminLanguage || siteSettings?.language || 'pt';
+        const preferred = siteSettings?.adminLanguage || siteSettings?.language || 'en';
         const availableCodes = availableInvoiceLanguages.map((item) => item.code);
         setInvoiceLanguage(availableCodes.includes(preferred) ? preferred : availableCodes[0] || preferred);
         setIsInvoiceDialogOpen(true);
@@ -4990,6 +4990,7 @@ export default function OrdersPage() {
                 title={t('confirm.invoiceEmail.title')}
                 description={t('confirm.invoiceEmail.description', { orderId: selectedOrderForInvoice?.id || '' })}
                 confirmText={t('confirm.invoiceEmail.confirmText')}
+                loading={isSendingInvoiceEmail}
                 onConfirm={confirmInvoiceEmailSend}
             />
 

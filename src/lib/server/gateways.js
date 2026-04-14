@@ -17,6 +17,89 @@ const { loadCacheData, saveCacheData } = await initCache('payments');
 // Cache management functions
 const { createWithCacheClear, updateWithCacheClear, deleteWithCacheClear } = await cacheFunctions();
 
+const buildPaidOrderUpdate = (orderData = {}, overrides = {}) => {
+    const timestamp = new Date().toISOString();
+
+    return {
+        ...orderData,
+        paymentStatus: 'paid',
+        status:
+            orderData?.status && String(orderData.status).toLowerCase() !== 'pending'
+                ? orderData.status
+                : 'processing',
+        paidAt: orderData?.paidAt || timestamp,
+        updatedAt: timestamp,
+        ...overrides
+    };
+};
+
+async function sendPaidOrderNotificationsForOrder(orderData, locale) {
+    try {
+        const { sendPaidOrderNotifications } = await import('./email.js');
+        await sendPaidOrderNotifications(orderData, locale);
+    } catch (emailError) {
+        console.warn('Failed to send paid order notifications:', emailError);
+    }
+}
+
+export async function confirmOrderPayment(orderId, paymentData = {}, locale = null) {
+    try {
+        if (!orderId) {
+            return {
+                success: false,
+                error: 'Order ID is required'
+            };
+        }
+
+        const orderData = await getAllOrders({ orderId, limit: 1 });
+        if (!orderData.success || !orderData.data || orderData.data.length === 0) {
+            return {
+                success: false,
+                error: 'Order not found'
+            };
+        }
+
+        const existingOrder = orderData.data[0];
+        const orderKey = existingOrder?.key || orderId;
+        const updatedOrder = buildPaidOrderUpdate(existingOrder, paymentData);
+
+        const updateResult = await updateWithCacheClear(orderKey, updatedOrder, 'orders', [
+            'store',
+            'orders',
+            'users',
+            'newsletter',
+            'club',
+            'web_stats'
+        ]);
+
+        if (!updateResult?.success) {
+            return {
+                success: false,
+                error: updateResult?.error || 'Failed to update order payment'
+            };
+        }
+
+        const confirmedOrder = {
+            ...existingOrder,
+            ...updatedOrder,
+            ...(updateResult.data || {})
+        };
+
+        await sendPaidOrderNotificationsForOrder(confirmedOrder, locale);
+
+        return {
+            success: true,
+            data: confirmedOrder
+        };
+    } catch (error) {
+        console.error('Error confirming order payment:', error);
+        return {
+            success: false,
+            error: error.message || 'Failed to confirm order payment'
+        };
+    }
+}
+
 // ============================================================================
 // STRIPE PAYMENT GATEWAY
 // ============================================================================
@@ -634,14 +717,10 @@ export async function updateEuPagoOrderStatus(orderId, paymentData) {
         const orderKey = existingOrder?.key || null;
 
         // Update order with payment confirmation
-        const updatedOrder = {
-            ...existingOrder,
-            paymentStatus: 'paid',
-            paidAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+        const updatedOrder = buildPaidOrderUpdate(existingOrder, {
             eupagoPaymentData: paymentData,
             eupagoTransactionFee: paymentData?.transactionFee || null
-        };
+        });
         if (orderKey) {
             // Clear store, orders, and users cache instances
             await updateWithCacheClear(orderKey, updatedOrder, 'orders', [
@@ -654,18 +733,7 @@ export async function updateEuPagoOrderStatus(orderId, paymentData) {
         ]);
         }
 
-        // Send payment confirmation email
-        try {
-            const { sendOrderConfirmationEmail, sendOrderAdminConfirmationEmail } = await import('./email.js');
-
-            // Send confirmation email to customer
-            await sendOrderConfirmationEmail(updatedOrder);
-
-            // Send admin notification for paid order (function handles admin email check internally)
-            await sendOrderAdminConfirmationEmail(updatedOrder);
-        } catch (emailError) {
-            console.warn('Failed to send payment confirmation emails:', emailError);
-        }
+        await sendPaidOrderNotificationsForOrder(updatedOrder);
 
         return {
             success: true,
@@ -855,7 +923,15 @@ export async function checkEuPagoPendingPayments() {
  */
 export async function createEuPagoReference(paymentData) {
     try {
-        const { orderId, amount, method = 'mb', mobile = null } = paymentData;
+        const {
+            orderId,
+            amount,
+            method = 'mb',
+            mobile = null,
+            countryCode = '+351',
+            customerEmail = null,
+            customerName = null
+        } = paymentData;
 
         if (!orderId || !amount || amount <= 0) {
             return {
@@ -875,7 +951,10 @@ export async function createEuPagoReference(paymentData) {
             orderId,
             amount,
             method,
-            mobile
+            mobile,
+            countryCode,
+            customerEmail,
+            customerName
         });
     } catch (error) {
         console.error('EuPago Create Reference Error:', error.message);

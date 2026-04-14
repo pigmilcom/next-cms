@@ -2,7 +2,7 @@
 
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { AlertCircle, CheckCircle2, CreditCard, Download, Loader2, MapPinned, Package, Printer, ShieldCheck } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CreditCard, Download, Loader2, MapPinned, Package, Printer, ShieldCheck, Landmark, Truck, WalletMinimal } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -15,7 +15,7 @@ import { ThemeSwitchButton } from '@/components/ui/theme-mode';
 import { useTheme } from '@/context/providers';
 import { useSettings } from '@/context/providers';
 import { formatAvailableLanguages, getCountryName } from '@/lib/i18n.js';
-import { createEuPagoReference, createStripePaymentIntent } from '@/lib/server/gateways.js';
+import { confirmOrderPayment, createEuPagoReference, createStripePaymentIntent } from '@/lib/server/gateways.js';
 import { updateOrder } from '@/lib/server/orders.js';
 import { generatePDF } from '@/utils/generatePDF.js';
 import { printInvoicePdf } from '@/utils/printInvoicePdf.js';
@@ -80,6 +80,15 @@ const buildOrderAccessToken = (orderId) => ({
 const getShippingMethodCost = (method) =>
     parseFloat(method?.fixed_rate || method?.base_price || method?.basePrice || method?.cost || 0) || 0;
 
+const isPhysicalOrderItem = (item) => {
+    const normalizedType = String(item?.type || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[_-]+/g, ' ');
+
+    return ['physical', 'product', 'physical product'].includes(normalizedType);
+};
+
 const InvoicePageContent = ({
     order,
     invoiceTranslations,
@@ -105,7 +114,9 @@ const InvoicePageContent = ({
 
     const [currentOrder, setCurrentOrder] = useState(order);
     const [selectedInvoiceLanguage, setSelectedInvoiceLanguage] = useState(invoiceLocale || 'en');
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(order.paymentMethod || '');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
+        order.paymentMethod && order.paymentMethod !== 'pending' ? order.paymentMethod : ''
+    );
     const [selectedShippingMethod, setSelectedShippingMethod] = useState(null);
     const [mbwayMobile, setMbwayMobile] = useState(order.eupagoMobile || order.customer?.phone || '');
     const [mbwayCountryCode, setMbwayCountryCode] = useState(`+${order.shippingAddress?.countryIso || order.customer?.countryIso || '351'}`);
@@ -137,18 +148,19 @@ const InvoicePageContent = ({
     };
 
     const currentCurrency = currentOrder.currency || normalizedSettings.currency || 'EUR';
-    const currentShippingCost = selectedShippingMethod
-        ? getShippingMethodCost(selectedShippingMethod)
-        : parseFloat(currentOrder.shippingCost || currentOrder.shipping?.cost || currentOrder.shipping || 0) || 0;
-    const originalShippingCost = parseFloat(currentOrder.shippingCost || currentOrder.shipping?.cost || currentOrder.shipping || 0) || 0;
+    const hasPhysicalItems = currentOrder.items.some(isPhysicalOrderItem);
+    const currentShippingCost = hasPhysicalItems
+        ? selectedShippingMethod
+            ? getShippingMethodCost(selectedShippingMethod)
+            : parseFloat(currentOrder.shippingCost || currentOrder.shipping?.cost || currentOrder.shipping || 0) || 0
+        : 0;
+    const originalShippingCost = hasPhysicalItems
+        ? parseFloat(currentOrder.shippingCost || currentOrder.shipping?.cost || currentOrder.shipping || 0) || 0
+        : 0;
     const effectiveTotal = Math.max(
         0,
         (parseFloat(currentOrder.finalTotal || currentOrder.total || currentOrder.amount || 0) || 0) - originalShippingCost + currentShippingCost
     );
-    const hasPhysicalItems =
-        currentOrder.items.some((item) => item.type === 'physical') ||
-        Boolean(currentOrder.shipping?.method || currentOrder.shipping?.carrier) ||
-        (parseFloat(currentOrder.shippingCost || 0) || 0) > 0;
     const selectedCountry =
         currentOrder.shippingAddress?.countryIso ||
         (String(currentOrder.shippingAddress?.country || '').length === 2 ? currentOrder.shippingAddress?.country : '') ||
@@ -160,6 +172,8 @@ const InvoicePageContent = ({
 
     const currentPaymentMethod = currentOrder.paymentMethod || 'pending';
     const paymentStatus = formatOrderStatus(currentOrder.paymentStatus || 'pending', t);
+    const bankTransferSettings = storeSettings?.paymentMethods?.bankTransfer || {};
+    const hidePaymentSubmitButton = selectedPaymentMethod === 'bank_transfer';
     const customer = currentOrder.customer || {};
     const shippingAddress = currentOrder.shippingAddress || currentOrder.shipping_address || customer;
     const customerBusinessName =
@@ -183,7 +197,8 @@ const InvoicePageContent = ({
         if (stripeReady && storeSettings?.paymentMethods?.stripe?.enabled) {
             methods.push({
                 value: 'stripe',
-                label: `💳 ${t('paymentMethods.stripe')}`,
+                icon: <CreditCard className="h-4 w-4" />,
+                label: t('paymentMethods.stripe'),
                 description: t('paymentMethodDescriptions.stripe')
             });
         }
@@ -194,8 +209,8 @@ const InvoicePageContent = ({
             if (supportedMethods.includes('mb')) {
                 methods.push({
                     value: 'eupago_mb',
-                    img_dark: '/images/multibanco_dark.webp',
-                    img_light: '/images/multibanco.webp',
+                    img_dark: '/vendors/multibanco_dark.webp',
+                    img_light: '/vendors/multibanco.webp',
                     label: t('paymentMethods.eupago_mb'),
                     description: t('paymentMethodDescriptions.eupago_mb')
                 });
@@ -204,8 +219,8 @@ const InvoicePageContent = ({
             if (supportedMethods.includes('mbway')) {
                 methods.push({
                     value: 'eupago_mbway',
-                    img_dark: '/images/mbway_dark.webp',
-                    img_light: '/images/mbway.webp',
+                    img_dark: '/vendors/mbway_dark.webp',
+                    img_light: '/vendors/mbway.webp',
                     label: t('paymentMethods.eupago_mbway'),
                     description: t('paymentMethodDescriptions.eupago_mbway')
                 });
@@ -215,7 +230,8 @@ const InvoicePageContent = ({
         if (storeSettings?.paymentMethods?.bankTransfer?.enabled) {
             methods.push({
                 value: 'bank_transfer',
-                label: `🏦 ${t('paymentMethods.bank_transfer')}`,
+                icon: <Landmark className="h-4 w-4" />,
+                label: t('paymentMethods.bank_transfer'),
                 description: t('paymentMethodDescriptions.bank_transfer')
             });
         }
@@ -223,7 +239,8 @@ const InvoicePageContent = ({
         if (storeSettings?.paymentMethods?.payOnDelivery?.enabled === true) {
             methods.push({
                 value: 'pay_on_delivery',
-                label: `📦 ${t('paymentMethods.pay_on_delivery')}`,
+                icon: <Truck className="h-4 w-4" />,
+                label: t('paymentMethods.pay_on_delivery'),
                 description: t('paymentMethodDescriptions.pay_on_delivery')
             });
         }
@@ -260,20 +277,30 @@ const InvoicePageContent = ({
 
     useEffect(() => {
         if (!availablePaymentMethods.length) {
+            setSelectedPaymentMethod('');
             return;
         }
 
-        const methodExists = availablePaymentMethods.some((method) => method.value === currentPaymentMethod);
+        const selectedMethodExists = availablePaymentMethods.some((method) => method.value === selectedPaymentMethod);
+        if (selectedMethodExists) {
+            return;
+        }
 
-        if (methodExists) {
+        const currentMethodExists = availablePaymentMethods.some((method) => method.value === currentPaymentMethod);
+
+        if (currentMethodExists) {
             setSelectedPaymentMethod(currentPaymentMethod);
             return;
         }
 
-        if (!selectedPaymentMethod) {
-            setSelectedPaymentMethod(availablePaymentMethods[0].value);
-        }
+        setSelectedPaymentMethod('');
     }, [currentPaymentMethod, selectedPaymentMethod, availablePaymentMethods]);
+
+    useEffect(() => {
+        if (!hasPhysicalItems && selectedShippingMethod) {
+            setSelectedShippingMethod(null);
+        }
+    }, [hasPhysicalItems, selectedShippingMethod]);
 
     useEffect(() => {
         const availableCodes = (availableInvoiceLanguages || []).map((language) => String(language || '').trim()).filter(Boolean);
@@ -378,13 +405,25 @@ const InvoicePageContent = ({
         router.push(`/cart/checkout/success?${params.toString()}`);
     };
 
-    const buildShippingPayload = () => ({
-        method: selectedShippingMethod?.name || currentOrder.shipping?.method || 'Standard',
-        carrier: selectedShippingMethod?.carrier_name || currentOrder.shipping?.carrier || 'Standard',
-        cost: currentShippingCost,
-        deliveryTime: selectedShippingMethod?.delivery_time || currentOrder.shipping?.deliveryTime || '5-7 days',
-        trackingNumber: currentOrder.shipping?.trackingNumber || null
-    });
+    const buildShippingPayload = () => {
+        if (!hasPhysicalItems) {
+            return {
+                method: '',
+                carrier: '',
+                cost: 0,
+                deliveryTime: '',
+                trackingNumber: null
+            };
+        }
+
+        return {
+            method: selectedShippingMethod?.name || currentOrder.shipping?.method || 'Standard',
+            carrier: selectedShippingMethod?.carrier_name || currentOrder.shipping?.carrier || 'Standard',
+            cost: currentShippingCost,
+            deliveryTime: selectedShippingMethod?.delivery_time || currentOrder.shipping?.deliveryTime || '5-7 days',
+            trackingNumber: currentOrder.shipping?.trackingNumber || null
+        };
+    };
 
     const getExpiryTime = (method) => {
         const currentTime = new Date();
@@ -429,6 +468,11 @@ const InvoicePageContent = ({
     };
 
     const handleShippingMethodsLoaded = (methods) => {
+        if (!hasPhysicalItems) {
+            setSelectedShippingMethod(null);
+            return;
+        }
+
         if (!Array.isArray(methods) || methods.length === 0) {
             setSelectedShippingMethod(null);
             return;
@@ -503,17 +547,19 @@ const InvoicePageContent = ({
                 const updatePayload = buildOrderUpdatePayload({
                     paymentMethod: 'stripe',
                     paymentStatus: 'paid',
+                    status: currentOrder.status && currentOrder.status !== 'pending' ? currentOrder.status : 'processing',
+                    paidAt: new Date().toISOString(),
                     paymentIntentId: paymentIntent.id
                 });
 
-                const updateResult = await updateOrder(currentOrder.id, updatePayload);
+                const updateResult = await confirmOrderPayment(currentOrder.id, updatePayload, selectedInvoiceLanguage);
                 if (!updateResult?.success) {
                     throw new Error(updateResult?.error || t('paymentErrors.updateOrder'));
                 }
 
                 setCurrentOrder((prev) => ({
                     ...prev,
-                    ...updatePayload
+                    ...(updateResult.data || updatePayload)
                 }));
 
                 navigateToStatusPage({ paymentMethod: 'stripe' });
@@ -680,7 +726,7 @@ const InvoicePageContent = ({
                             </div>
 
                             {hasPhysicalItems ? (
-                                <div className="rounded-xl border border-border bg-card p-4 text-card-foreground sm:p-5">
+                                <div className="relative">
                                     <div className="mb-4 flex items-center gap-2 text-card-foreground">
                                         <MapPinned className="h-5 w-5" />
                                         <h2 className="font-semibold text-lg">{t('shippingMethod')}</h2>
@@ -696,9 +742,8 @@ const InvoicePageContent = ({
                                 </div>
                             ) : null}
 
-                            <div className="rounded-xl border border-border bg-card p-4 text-card-foreground sm:p-5">
-                                <div className="mb-4 flex items-center gap-2 text-card-foreground">
-                                    <CreditCard className="h-5 w-5" />
+                            <div className="relative">
+                                <div className="mb-4 flex items-center gap-2 text-card-foreground"> 
                                     <h2 className="font-semibold text-lg">{t('paymentMethod')}</h2>
                                 </div>
 
@@ -737,7 +782,12 @@ const InvoicePageContent = ({
                                                                 className="h-8 w-auto object-contain"
                                                             />
                                                         ) : (
-                                                            <div className="font-medium text-base text-card-foreground">{method.label}</div>
+                                                            <div className="flex items-center gap-2 font-medium text-base text-card-foreground">
+                                                                {method.icon ? (
+                                                                    <span className="text-muted-foreground">{method.icon}</span>
+                                                                ) : null}
+                                                                <span>{method.label}</span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                     <div className="text-muted-foreground text-sm">{method.description}</div>
@@ -793,9 +843,52 @@ const InvoicePageContent = ({
                                                     ) : null}
 
                                                     {method.value === 'bank_transfer' ? (
-                                                        <p className="text-muted-foreground text-sm">
-                                                            {t('paymentMethodInstructions.bank_transfer')}
-                                                        </p>
+                                                        <div className="space-y-3">
+                                                            <p className="text-muted-foreground text-sm">
+                                                                {t('paymentMethodInstructions.bank_transfer')}
+                                                            </p>
+                                                            <div className="space-y-2 rounded-lg border border-border bg-accent/20 p-3 text-sm text-card-foreground">
+                                                                <p className="font-medium text-card-foreground">{t('bankTransferDetails')}</p>
+                                                                {bankTransferSettings.bankName ? (
+                                                                    <div className="flex items-center justify-between gap-3">
+                                                                        <span className="font-medium text-muted-foreground">{t('bankName')}</span>
+                                                                        <span className="text-right">{bankTransferSettings.bankName}</span>
+                                                                    </div>
+                                                                ) : null}
+                                                                {bankTransferSettings.accountHolder ? (
+                                                                    <div className="flex items-center justify-between gap-3">
+                                                                        <span className="font-medium text-muted-foreground">{t('accountHolder')}</span>
+                                                                        <span className="text-right">{bankTransferSettings.accountHolder}</span>
+                                                                    </div>
+                                                                ) : null}
+                                                                {bankTransferSettings.iban ? (
+                                                                    <div className="flex items-center justify-between gap-3">
+                                                                        <span className="font-medium text-muted-foreground">IBAN</span>
+                                                                        <span className="break-all text-right font-mono text-xs sm:text-sm">{bankTransferSettings.iban}</span>
+                                                                    </div>
+                                                                ) : null}
+                                                                {bankTransferSettings.bic ? (
+                                                                    <div className="flex items-center justify-between gap-3">
+                                                                        <span className="font-medium text-muted-foreground">BIC</span>
+                                                                        <span className="break-all text-right font-mono text-xs sm:text-sm">{bankTransferSettings.bic}</span>
+                                                                    </div>
+                                                                ) : null}
+                                                                <div className="flex items-center justify-between gap-3 border-t border-border pt-2">
+                                                                    <span className="font-medium text-muted-foreground">{t('transferAmount')}</span>
+                                                                    <span className="text-right font-semibold">{formatCurrency(effectiveTotal, currentCurrency)}</span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    <span className="font-medium text-muted-foreground">{t('transferReference')}</span>
+                                                                    <span className="break-all text-right font-mono text-xs sm:text-sm">{currentOrder.id}</span>
+                                                                </div>
+                                                                {bankTransferSettings.instructions ? (
+                                                                    <div className="border-t border-border pt-2 text-muted-foreground text-xs sm:text-sm">
+                                                                        {bankTransferSettings.instructions}
+                                                                    </div>
+                                                                ) : null}
+                                                            </div>
+                                                            <p className="text-muted-foreground text-xs">{t('bankTransferNote')}</p>
+                                                        </div>
                                                     ) : null}
 
                                                     {method.value === 'pay_on_delivery' ? (
@@ -823,23 +916,25 @@ const InvoicePageContent = ({
                                             <div className="mt-1">{t('shippingMethod')}: {selectedShippingMethod.name}</div>
                                         ) : null}
                                     </div>
-                                    <Button
-                                        type="button"
-                                        onClick={handlePendingPayment}
-                                        disabled={
-                                            isProcessing ||
-                                            !selectedPaymentMethod ||
-                                            (selectedPaymentMethod === 'stripe' && (!stripe || !elements))
-                                        }>
-                                        {isProcessing ? (
-                                            <span className="flex items-center gap-2">
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                {t('processing')}
-                                            </span>
-                                        ) : (
-                                            t('continuePayment')
-                                        )}
-                                    </Button>
+                                    {!hidePaymentSubmitButton ? (
+                                        <Button
+                                            type="button"
+                                            onClick={handlePendingPayment}
+                                            disabled={
+                                                isProcessing ||
+                                                !selectedPaymentMethod ||
+                                                (selectedPaymentMethod === 'stripe' && (!stripe || !elements))
+                                            }>
+                                            {isProcessing ? (
+                                                <span className="flex items-center gap-2">
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                    {t('processing')}
+                                                </span>
+                                            ) : (
+                                                t('continuePayment')
+                                            )}
+                                        </Button>
+                                    ) : null}
                                 </div>
                             </div>
                         </CardContent>

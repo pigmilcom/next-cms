@@ -1192,6 +1192,36 @@ export async function sendOrderStatusUpdateEmail(orderData, locale) {
     }
 }
 
+export async function sendPaidOrderNotifications(orderData, locale) {
+    try {
+        const normalizedOrderData = {
+            ...orderData,
+            status:
+                orderData?.status && String(orderData.status).toLowerCase() !== 'pending'
+                    ? orderData.status
+                    : 'processing',
+            paymentStatus: 'paid',
+            paidAt: orderData?.paidAt || new Date().toISOString(),
+            updatedAt: orderData?.updatedAt || new Date().toISOString()
+        };
+
+        const customerResult = await sendOrderStatusUpdateEmail(normalizedOrderData, locale);
+        const adminResult = await sendOrderAdminConfirmationEmail(normalizedOrderData, locale);
+
+        return {
+            success: Boolean(customerResult?.success) || Boolean(adminResult?.success),
+            customer: customerResult,
+            admin: adminResult
+        };
+    } catch (error) {
+        console.error('Error sending paid order notifications:', error);
+        return {
+            success: false,
+            error: error.message || 'Failed to send paid order notifications'
+        };
+    }
+}
+
 /**
  * Send newsletter campaign to multiple subscribers
  * IMPORTANT: Sends individual emails to each recipient to protect privacy.
@@ -1639,7 +1669,7 @@ export async function sendOrderConfirmedEmail(to, orderData) {
         customerName: orderData.customerName || orderData.customer?.firstName || 'Customer',
         orderId: orderData.orderId || orderData.id,
         orderDate: orderData.orderDate || orderData.createdAt || new Date().toISOString(),
-        status: 'confirmed',
+        status: orderData.status || 'processing',
         shippingAddress: orderData.shippingAddress || orderData.shipping_address || {},
         items: orderData.items || [],
         subtotal: orderData.subtotal || 0,

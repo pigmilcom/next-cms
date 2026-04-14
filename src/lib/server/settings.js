@@ -317,11 +317,11 @@ export const getStoreSettings = async (params = {}, includeAdminData = false) =>
                 paymentMethods: {
                     bankTransfer: {
                         enabled: paymentMethods.bankTransfer?.enabled || false,
-                        bankName: '[PROTECTED]',
-                        accountHolder: '[PROTECTED]',
-                        iban: '[PROTECTED]',
-                        bic: '[PROTECTED]',
-                        instructions: '[PROTECTED]'
+                        bankName: paymentMethods.bankTransfer?.bankName || '',
+                        accountHolder: paymentMethods.bankTransfer?.accountHolder || '',
+                        iban: paymentMethods.bankTransfer?.iban || '',
+                        bic: paymentMethods.bankTransfer?.bic || '',
+                        instructions: paymentMethods.bankTransfer?.instructions || ''
                     },
                     payOnDelivery: normalizePayOnDelivery(paymentMethods.payOnDelivery),
                     euPago: {
