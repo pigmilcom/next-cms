@@ -695,7 +695,7 @@ export default function SubscribersPageClient({ initialSubscribers = [], initial
                                     setSourceFilter(value);
                                     setCurrentPage(1);
                                 }}>
-                                    <SelectTrigger className="w-[140px]">
+                                    <SelectTrigger className="w-35">
                                         <SelectValue placeholder="Source" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -713,7 +713,7 @@ export default function SubscribersPageClient({ initialSubscribers = [], initial
                                     setPreferenceFilter(value);
                                     setCurrentPage(1);
                                 }}>
-                                    <SelectTrigger className="w-[140px]">
+                                    <SelectTrigger className="w-35">
                                         <SelectValue placeholder="Preference" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -791,7 +791,7 @@ export default function SubscribersPageClient({ initialSubscribers = [], initial
 
             {/* Add Subscriber Dialog */}
             <Dialog open={isAddingSubscriber} onOpenChange={setIsAddingSubscriber}>
-                <DialogContent className="sm:max-w-[400px]">
+                <DialogContent className="sm:max-w-100">
                     <DialogHeader>
                         <DialogTitle>Add New Subscriber</DialogTitle>
                         <DialogDescription>Manually add a new subscriber to your newsletter.</DialogDescription>

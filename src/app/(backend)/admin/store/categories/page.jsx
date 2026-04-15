@@ -596,7 +596,7 @@ export default function CategoriesPage() {
                             <div className="flex flex-wrap gap-2 animate-in slide-in-from-top-2 duration-200">
                                 {/* Status Filter */}
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="w-[140px]">
+                                    <SelectTrigger className="w-35">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -608,7 +608,7 @@ export default function CategoriesPage() {
 
                                 {/* Parent Filter */}
                                 <Select value={parentFilter} onValueChange={setParentFilter}>
-                                    <SelectTrigger className="w-[140px]">
+                                    <SelectTrigger className="w-35">
                                         <SelectValue placeholder="Parent" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -710,7 +710,7 @@ export default function CategoriesPage() {
                                 <div className="flex items-center gap-2 sm:absolute sm:top-5 sm:right-16">
                                     <Languages className="h-4 w-4 text-muted-foreground" />
                                     <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
-                                        <SelectTrigger className="w-[140px]">
+                                        <SelectTrigger className="w-35">
                                             <SelectValue placeholder="Language" />
                                         </SelectTrigger>
                                         <SelectContent>
