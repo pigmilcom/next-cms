@@ -1,4 +1,4 @@
-'use client';
+// @/app/(backend)/admin/page.jsx
 
 import Overview from './overview/page';
 
