@@ -787,9 +787,10 @@ class PostgresDBService {
             let s3SecretKey = process.env.S3_SECRET_KEY;
             let s3Bucket = process.env.S3_BUCKET;
             let s3PublicUrl = process.env.S3_PUBLIC_URL;
-            let s3Region = process.env.S3_REGION || 'auto';
+            // Keep region undefined initially so DB value can be used as fallback
+            let s3Region = process.env.S3_REGION || null;
 
-            // If env vars are not available, try to get from settings
+            // If any required env var is missing, try to load from admin siteSettings (DB)
             if (!s3Endpoint || !s3AccessKey || !s3SecretKey || !s3Bucket) {
                 try {
                     const { getSettings } = await import('@/lib/server/settings.js');
@@ -802,12 +803,15 @@ class PostgresDBService {
                         s3SecretKey = s3SecretKey || s3Settings.secretKey;
                         s3Bucket = s3Bucket || s3Settings.bucket;
                         s3PublicUrl = s3PublicUrl || s3Settings.publicUrl;
-                        s3Region = s3Region || s3Settings.region || 'auto';
+                        s3Region = s3Region || s3Settings.region || null;
                     }
                 } catch (error) {
                     console.error('Failed to load S3 settings from database:', error);
                 }
             }
+
+            // Final default for region
+            s3Region = s3Region || 'auto';
 
             if (!s3Endpoint || !s3AccessKey || !s3SecretKey || !s3Bucket) {
                 throw new Error(

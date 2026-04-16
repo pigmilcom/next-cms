@@ -68,7 +68,7 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
                 onScroll={handleScroll}
                 // Make the tab list responsive: limit to container width and allow horizontal scroll
                 className={cn(
-                    'scrollbar-thin flex flex-nowrap h-auto w-full max-w-full items-center justify-start gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-card p-[3px] text-muted-foreground border border-border',
+                    'scrollbar-thin flex flex-nowrap h-auto w-full max-w-full items-center justify-start gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-card p-0.75text-muted-foreground border border-border',
                     className
                 )}
                 // Enable smooth touch scrolling on iOS
@@ -94,7 +94,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
         <TabsPrimitive.Trigger
             data-slot="tabs-trigger"
             className={cn(
-                "inline-flex flex-col h-full min-w-[100px] flex-none items-center justify-center gap-1 whitespace-nowrap rounded-md border-none px-3 py-2 font-medium text-foreground text-sm transition-shadow focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-foreground dark:data-[state=active]:text-background [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+                "inline-flex flex-col h-full min-w-25 flex-none items-center justify-center gap-1 whitespace-nowrap rounded-md border-none px-3 py-2 font-medium text-foreground text-sm transition-shadow focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-secondary data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-foreground dark:data-[state=active]:text-background [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
                 className
             )}
             {...props}
@@ -104,7 +104,7 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
 
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
     return (
-        <TabsPrimitive.Content data-slot="tabs-content" className={cn('flex-1 outline-none', className)} {...props} />
+        <TabsPrimitive.Content data-slot="tabs-content" className={cn('flex-1 outline-none mt-3', className)} {...props} />
     );
 }
 
