@@ -1,7 +1,17 @@
 // @/app/(actions)/account/layout.jsx (Access Control Layout for Account Pages)
 
+import { LayoutProvider } from '@/app/(frontend)/context/LayoutProvider';
 import { auth } from '@/auth';
 import AccessDenied from './AccessDenied';
+import { generatePageMetadata } from '@/utils/metadata.js';
+
+// Generate metadata
+export async function generateMetadata() {
+    return generatePageMetadata({
+        title: 'My Account',
+        description: 'Manage your account settings and preferences'
+    });
+}
 
 export default async function AccountLayout({ children }) {
     // Session is already validated in auth.js - checks user exists in database
@@ -12,5 +22,9 @@ export default async function AccountLayout({ children }) {
         return <AccessDenied />;
     }
 
-    return <>{children}</>;
+    return (
+        <LayoutProvider>
+            {children}
+        </LayoutProvider>
+    );
 }
