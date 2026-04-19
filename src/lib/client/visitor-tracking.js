@@ -59,8 +59,8 @@ const utils = {
             orientation: window.screen.orientation
                 ? window.screen.orientation.type
                 : window.screen.width > window.screen.height
-                  ? 'landscape'
-                  : 'portrait',
+                    ? 'landscape'
+                    : 'portrait',
             pixelRatio: window.devicePixelRatio || 1
         };
     },
@@ -357,11 +357,9 @@ class VisitorTracker {
                 if (typeof window.onVisitorTrackingFlush === 'function') {
                     window.onVisitorTrackingFlush(result);
                 }
-            } else {
-                console.error('Failed to flush tracking queue:', result.error);
             }
         } catch (error) {
-            console.error('Error flushing tracking queue:', error);
+            console.warn('Error flushing tracking queue:', error);
         } finally {
             this.isFlushing = false;
         }
@@ -386,7 +384,7 @@ class VisitorTracker {
                 console.warn('[Visitor Tracking] Unload flush failed, will retry on next visit:', error);
             });
         } catch (error) {
-            console.error('Error in sync flush:', error);
+            console.warn('Error in sync flush:', error);
         }
     }
 
