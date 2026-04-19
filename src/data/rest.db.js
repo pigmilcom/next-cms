@@ -9,11 +9,11 @@ import PostgresService from './db/postgres.db.js';
 // import MySQLService from './db/mysql.db.js';
 
 class DBService {
-    
+
     isBuildPhase() {
-    return process.env.NEXT_PHASE === 'phase-production-build';
+        return process.env.NEXT_PHASE === 'phase-production-build';
     }
-    
+
     constructor() {
         this.connected = false;
         // Database providers registry
@@ -32,7 +32,7 @@ class DBService {
                 this.provider = 'postgres';
                 // Check if PostgresService is a constructor or already an instance
                 this.service = typeof PostgresService === 'function' ? new PostgresService() : PostgresService;
-            } 
+            }
             /*
             else if (process.env.FIREBASE_DATABASE_URL) {
                 this.provider = 'firebase';
@@ -90,16 +90,16 @@ class DBService {
     // Unified methods - these will call the appropriate service
     async readByAll(key, value, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
-        } 
-        
+            await this.initConnection();
+        }
+
         try {
             if (typeof this.service.readByAll === 'function') {
                 const items = await this.service.readByAll(key, value, table);
@@ -116,14 +116,14 @@ class DBService {
 
     async readBy(key, value, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             if (typeof this.service.readBy === 'function') {
@@ -141,14 +141,14 @@ class DBService {
 
     async getItemKey(key, value, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             if (typeof this.service.getItemKey === 'function') {
@@ -165,14 +165,14 @@ class DBService {
 
     async read(id, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             const item = await this.service.read(id, table);
@@ -185,14 +185,14 @@ class DBService {
 
     async readAll(table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
-            console.error('Database service not initialized');
+            console.warn('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             const allItems = await this.service.readAll(table);
@@ -205,14 +205,14 @@ class DBService {
 
     async readAllRecords() {
         if (this.isBuildPhase()) {
-        return { success: true, data: [] };
+            return { success: true, data: [] };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             if (typeof this.service.readAllRecords === 'function') {
@@ -230,14 +230,14 @@ class DBService {
 
     async insertRecord(record) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             if (typeof this.service.insertRecord === 'function') {
@@ -255,14 +255,14 @@ class DBService {
 
     async create(data, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             const createdItem = await this.service.create(data, table);
@@ -275,14 +275,14 @@ class DBService {
 
     async update(id, updateData, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             const updatedItem = await this.service.update(id, updateData, table);
@@ -295,14 +295,14 @@ class DBService {
 
     async delete(id, table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             const deletedItem = await this.service.delete(id, table);
@@ -315,14 +315,14 @@ class DBService {
 
     async deleteAll(table) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             const deletedItems = await this.service.deleteAll(table);
@@ -335,14 +335,14 @@ class DBService {
 
     async deleteAllRecords() {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             if (typeof this.service.deleteAllRecords === 'function') {
@@ -360,14 +360,14 @@ class DBService {
 
     async upload(file, path) {
         if (this.isBuildPhase()) {
-        return { success: true, data: null };
+            return { success: true, data: null };
         }
         if (!this.service) {
             console.error('Database service not initialized');
             return { success: false, message: 'Database not configured' };
         }
         if (!this.connected) {
-        await this.initConnection();
+            await this.initConnection();
         }
         try {
             if (typeof this.service.upload === 'function') {
@@ -410,33 +410,33 @@ class DBService {
 
     // Health check method
     async healthCheck() {
-    if (this.isBuildPhase()) {
-        return { success: true, data: null };
-    }
-    if (!this.service) {
-        return {
-            provider: null,
-            status: 'not-configured',
-            timestamp: new Date().toISOString()
-        };
-    }
+        if (this.isBuildPhase()) {
+            return { success: true, data: null };
+        }
+        if (!this.service) {
+            return {
+                provider: null,
+                status: 'not-configured',
+                timestamp: new Date().toISOString()
+            };
+        }
 
-    try {
-        await this.initConnection();
+        try {
+            await this.initConnection();
 
-        return {
-            provider: this.provider,
-            status: 'connected',
-            timestamp: new Date().toISOString()
-        };
-    } catch (error) {
-        return {
-            provider: this.provider,
-            status: 'error',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        };
-    }
+            return {
+                provider: this.provider,
+                status: 'connected',
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            return {
+                provider: this.provider,
+                status: 'error',
+                error: error.message,
+                timestamp: new Date().toISOString()
+            };
+        }
     }
 
     // Enhanced Migration System
@@ -766,27 +766,27 @@ class DBService {
 
     // Initialize DB connection
     async initConnection() {
-    if (this.isBuildPhase()) {
-        console.log('⚠️ Skipping DB connection during build phase');
-        return false;
-    }
+        if (this.isBuildPhase()) {
+            console.log('⚠️ Skipping DB connection during build phase');
+            return false;
+        }
 
-    if (!this.service) {
-        throw new Error('No database service configured');
-    }
+        if (!this.service) {
+            throw new Error('No database service configured');
+        }
 
-    if (typeof this.service.connect !== 'function') {
-        return false;
-    }
+        if (typeof this.service.connect !== 'function') {
+            return false;
+        }
 
-    try {
-        await this.service.connect();
-        this.connected = true; 
-        return true;
-    } catch (error) {
-        this.connected = false;
-        throw error;
-    }
+        try {
+            await this.service.connect();
+            this.connected = true;
+            return true;
+        } catch (error) {
+            this.connected = false;
+            throw error;
+        }
     }
 }
 
