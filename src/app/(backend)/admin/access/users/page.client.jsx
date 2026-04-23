@@ -83,6 +83,7 @@ export default function UsersPageClient({ initialUsers = [], initialRoles = [] }
         pendingData: null
     });
     const [roleFilter, setRoleFilter] = useState('all');
+    const [showClientUsers, setShowClientUsers] = useState(false);
     const [userClubData, setUserClubData] = useState(null);
     const [userCoupons, setUserCoupons] = useState([]);
     const [loadingClubData, setLoadingClubData] = useState(false);
@@ -110,9 +111,8 @@ export default function UsersPageClient({ initialUsers = [], initialRoles = [] }
         try {
             const response = await getAllUsers({ limit: 0, options: { duration: 0 } });
             if (response.success) {
-                const filteredUsers = (response.data || []).filter((user) => user.role !== 'user');
-                setAllUsers(filteredUsers);
-                setUsers(filteredUsers);
+                setAllUsers(response.data || []);
+                setUsers(response.data || []);
             }
         } catch (error) {
             console.error('Error refreshing users:', error);
@@ -220,6 +220,11 @@ export default function UsersPageClient({ initialUsers = [], initialRoles = [] }
     // Custom filter function for AdminTable
     const filterUsersData = (users, search, sortConfig) => {
         let filteredUsers = [...users];
+
+        // Apply show client users filter
+        if (!showClientUsers) {
+            filteredUsers = filteredUsers.filter((user) => user.role !== 'user' && user.role !== 'client');
+        }
 
         // Apply role filter
         if (roleFilter !== 'all') {
@@ -674,6 +679,15 @@ export default function UsersPageClient({ initialUsers = [], initialRoles = [] }
                 }}
                 headerActions={
                     <>
+                        <Button
+                            variant={showClientUsers ? 'secondary' : 'outline'}
+                            onClick={() => setShowClientUsers(!showClientUsers)}
+                            className="gap-2">
+                            <Users className="h-4 w-4" />
+                            <span className="hidden xl:block">
+                                {showClientUsers ? 'Hide Client/Users' : 'Show Client/Users'}
+                            </span>
+                        </Button>
                         <Button
                             variant={isFiltersExpanded ? 'default' : 'outline'}
                             onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}

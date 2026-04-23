@@ -1,4 +1,4 @@
-﻿// @/app/(backend)/admin/access/users/page.jsx
+// @/app/(backend)/admin/access/users/page.jsx
 
 import { getAllRoles, getAllUsers } from '@/lib/server/users';
 import UsersPageClient from './page.client';
@@ -7,7 +7,7 @@ export default async function UsersPage() {
     const [usersResult, rolesResult] = await Promise.all([getAllUsers({ limit: 0 }), getAllRoles()]);
 
     const initialUsers = usersResult?.success
-        ? (usersResult.data || []).filter((u) => u.role !== 'user')
+        ? (usersResult.data || [])
         : [];
 
     const rolesArray = Array.isArray(rolesResult?.data) ? rolesResult.data : [];

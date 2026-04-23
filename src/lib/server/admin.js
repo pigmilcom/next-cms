@@ -159,15 +159,15 @@ export async function createCatalogItem(catalogData) {
         // Helper functions for processing
         const parseNumber = (n) => parseFloat(n || 0);
         const parseIntNumber = (n) => parseInt(n || 0, 10);
-        
+
         // Process discount calculations at creation time
         const originalPrice = parseNumber(catalogData.compareAtPrice || catalogData.price);
         const discountAmount = parseNumber(catalogData.discountAmount);
         const discountType = catalogData.discountType || 'none';
-        
+
         let finalPrice = originalPrice;
         let discountPercentage = 0;
-        
+
         if (discountAmount > 0 && discountType !== 'none') {
             if (discountType === 'percentage') {
                 discountPercentage = Math.floor(discountAmount);
@@ -193,14 +193,14 @@ export async function createCatalogItem(catalogData) {
 
         // Process type-specific fields and calculations at creation time
         let newCatalogItem;
-        
+
         if (catalogData.type === 'physical') {
             // Process quantity pricing for physical products
             const processedQuantityPricing = (catalogData.quantityPricing || []).map((tier) => {
                 const tierOriginalPrice = parseNumber(tier.compareAtPrice || tier.price);
                 let tierFinalPrice = tierOriginalPrice;
                 let tierDiscountPercentage = 0;
-                
+
                 if (discountAmount > 0 && discountType !== 'none') {
                     if (discountType === 'percentage') {
                         tierDiscountPercentage = Math.floor(discountAmount);
@@ -210,7 +210,7 @@ export async function createCatalogItem(catalogData) {
                         tierFinalPrice = Math.max(0, tierOriginalPrice - discountAmount);
                     }
                 }
-                
+
                 return {
                     ...tier,
                     compareAtPrice: parseFloat(tierOriginalPrice).toFixed(2),
@@ -220,7 +220,7 @@ export async function createCatalogItem(catalogData) {
                     discountType: discountType
                 };
             });
-            
+
             newCatalogItem = {
                 ...baseItem,
                 quantity: parseNumber(catalogData.quantity),
@@ -251,7 +251,7 @@ export async function createCatalogItem(catalogData) {
                 serviceIncludes: catalogData.serviceIncludes || '',
                 serviceNotes: catalogData.serviceNotes || '',
                 requiresAppointment: catalogData.requiresAppointment === true,
-                appointmentSettings: catalogData.requiresAppointment === true ? 
+                appointmentSettings: catalogData.requiresAppointment === true ?
                     (catalogData.appointmentSettings || {
                         allowOnlineBooking: true,
                         bufferTime: 15,
@@ -312,7 +312,7 @@ export async function updateCatalogItem(catalogId, catalogData) {
         }
         const allCatalog = catalogResponse.data || {};
         const catalogArray = Array.isArray(allCatalog) ? allCatalog : Object.values(allCatalog);
-        
+
         const existingSlug = catalogArray.find(
             (item) => item.slug === catalogData.slug && item.key !== catalogId && item.id !== catalogId
         );
@@ -327,15 +327,15 @@ export async function updateCatalogItem(catalogId, catalogData) {
         // Helper functions for processing
         const parseNumber = (n) => parseFloat(n || 0);
         const parseIntNumber = (n) => parseInt(n || 0, 10);
-        
+
         // Process discount calculations at update time
         const originalPrice = parseNumber(catalogData.compareAtPrice || catalogData.price);
         const discountAmount = parseNumber(catalogData.discountAmount);
         const discountType = catalogData.discountType || 'none';
-        
+
         let finalPrice = originalPrice;
         let discountPercentage = 0;
-        
+
         if (discountAmount > 0 && discountType !== 'none') {
             if (discountType === 'percentage') {
                 discountPercentage = Math.floor(discountAmount);
@@ -359,14 +359,14 @@ export async function updateCatalogItem(catalogId, catalogData) {
 
         // Process type-specific fields and calculations at update time
         let updatedData;
-        
+
         if (catalogData.type === 'physical') {
             // Process quantity pricing for physical products
             const processedQuantityPricing = (catalogData.quantityPricing || []).map((tier) => {
                 const tierOriginalPrice = parseNumber(tier.compareAtPrice || tier.price);
                 let tierFinalPrice = tierOriginalPrice;
                 let tierDiscountPercentage = 0;
-                
+
                 if (discountAmount > 0 && discountType !== 'none') {
                     if (discountType === 'percentage') {
                         tierDiscountPercentage = Math.floor(discountAmount);
@@ -376,7 +376,7 @@ export async function updateCatalogItem(catalogId, catalogData) {
                         tierFinalPrice = Math.max(0, tierOriginalPrice - discountAmount);
                     }
                 }
-                
+
                 return {
                     ...tier,
                     compareAtPrice: parseFloat(tierOriginalPrice).toFixed(2),
@@ -386,7 +386,7 @@ export async function updateCatalogItem(catalogId, catalogData) {
                     discountType: discountType
                 };
             });
-            
+
             updatedData = {
                 ...baseItem,
                 quantity: parseNumber(catalogData.quantity),
@@ -417,7 +417,7 @@ export async function updateCatalogItem(catalogId, catalogData) {
                 serviceIncludes: catalogData.serviceIncludes || '',
                 serviceNotes: catalogData.serviceNotes || '',
                 requiresAppointment: catalogData.requiresAppointment === true,
-                appointmentSettings: catalogData.requiresAppointment === true ? 
+                appointmentSettings: catalogData.requiresAppointment === true ?
                     (catalogData.appointmentSettings || {
                         allowOnlineBooking: true,
                         bufferTime: 15,
@@ -1579,14 +1579,14 @@ export async function updateSiteSettings(settingsData) {
 
         const envUrl = process.env.NEXTAUTH_URL || settingsData?.baseUrl || '';
         const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-        
-        let baseUrl = envUrl; 
+
+        let baseUrl = envUrl;
 
         // Fallback baseUrl if not in settingsData
         if (!baseUrl) {
             // Server-side: use environment variables
             const host =
-                process.env.NEXTAUTH_URL || 
+                process.env.NEXTAUTH_URL ||
                 (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
             baseUrl = host.startsWith('http') ? host : `${protocol}://${host}`;
         } else {
@@ -1612,7 +1612,7 @@ export async function updateSiteSettings(settingsData) {
         if (dbKey) {
             // Update existing record using the database key and clear 'settings' cache
             result = await updateWithCacheClear(dbKey, payload, 'site_settings', ['settings']);
-        }  
+        }
 
         if (!dbKey || !result?.success) {
             return {
@@ -1647,7 +1647,7 @@ export async function updateStoreSettings(settingsData) {
     try {
         let result;
         console.log('Updating store settings with data:', settingsData);
-        try { 
+        try {
             // Get the database key for store settings
             const { storeSettings } = await getSettings();
 
@@ -1665,7 +1665,7 @@ export async function updateStoreSettings(settingsData) {
                     error: 'No store settings data provided'
                 };
             }
-        } catch (checkError) { 
+        } catch (checkError) {
             console.error('Error checking existing store settings:', checkError);
             return {
                 success: false,
@@ -1935,7 +1935,7 @@ export async function createUser(userData) {
         // Check if user already exists
         const existingUserResult = await getUser({ email: userData.email });
 
-        if (existingUserResult?.success && existingUserResult?.data) {
+        if (existingUserResult?.success && existingUserResult?.data && existingUserResult.data?.id) {
             const existingUser = existingUserResult.data;
 
             // If user exists but is not a 'user' role, return error
@@ -2764,14 +2764,14 @@ export async function uploadFiles(files, path = 'uploads', options = {}) {
                 const uploadData = uploadResult.data;
 
                 const rawUrl =
-    uploadData.url ||
-    uploadData.publicUrl ||
-    uploadData.blobUrl ||
-    `/uploads/${uniqueFilename}`;
+                    uploadData.url ||
+                    uploadData.publicUrl ||
+                    uploadData.blobUrl ||
+                    `/uploads/${uniqueFilename}`;
 
-const finalUrl = rawUrl.startsWith('http')
-    ? rawUrl
-    : `https://${rawUrl.replace(/^\/+/, '')}`;
+                const finalUrl = rawUrl.startsWith('http')
+                    ? rawUrl
+                    : `https://${rawUrl.replace(/^\/+/, '')}`;
 
                 // Create response object with uploaded file info
                 uploadedFiles.push({
