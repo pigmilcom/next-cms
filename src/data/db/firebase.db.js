@@ -2,7 +2,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { equalTo, get, getDatabase, orderByChild, push, query, ref, remove, update } from 'firebase/database';
-import { getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
+import { deleteObject, getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
 
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
@@ -252,6 +252,109 @@ class FirebaseDBService {
             };
         } catch (error) {
             console.error('Error in upload:', error);
+            throw error;
+        }
+    }
+
+    // Delete file method - Supports S3/R2 Storage and Firebase Storage fallback
+    async deleteFile(filePath) {
+        try {
+            // First, try Firebase Storage if the URL indicates it's from Firebase
+            if (filePath.includes('firebasestorage.googleapis.com')) {
+                // We attempt to parse the path from the Firebase URL
+                // A typical firebase URL: https://firebasestorage.googleapis.com/v0/b/bucket-name/o/path%2Fto%2Ffile?alt=...
+                let cleanPath = filePath;
+                try {
+                    const url = new URL(filePath);
+                    const pathParts = url.pathname.split('/o/');
+                    if (pathParts.length > 1) {
+                        cleanPath = decodeURIComponent(pathParts[1].split('?')[0]);
+                    }
+                } catch (e) {
+                    // Ignore URL parsing errors and try with the raw string
+                }
+                const fileRef = storageRef(storage, cleanPath);
+                await deleteObject(fileRef);
+                return {
+                    success: true,
+                    path: cleanPath,
+                    provider: 'firebase_storage',
+                    deletedAt: new Date().toISOString()
+                };
+            }
+
+            // Otherwise, fallback to S3/R2 deletion logic (same as PostgresDBService)
+            let s3Endpoint = process.env.S3_ENDPOINT;
+            let s3AccessKey = process.env.S3_ACCESS_KEY;
+            let s3SecretKey = process.env.S3_SECRET_KEY;
+            let s3Bucket = process.env.S3_BUCKET;
+            let s3Region = process.env.S3_REGION || 'auto';
+
+            // If env vars are not available, try to get from settings
+            if (!s3Endpoint || !s3AccessKey || !s3SecretKey || !s3Bucket) {
+                try {
+                    const { getSettings } = await import('@/lib/server/settings.js');
+                    const settingsData = await getSettings();
+                    const s3Settings = settingsData?.adminSiteSettings?.s3;
+
+                    if (s3Settings) {
+                        s3Endpoint = s3Endpoint || s3Settings.endpoint;
+                        s3AccessKey = s3AccessKey || s3Settings.accessKey;
+                        s3SecretKey = s3SecretKey || s3Settings.secretKey;
+                        s3Bucket = s3Bucket || s3Settings.bucket;
+                        s3Region = s3Region || s3Settings.region || 'auto';
+                    }
+                } catch (error) {
+                    console.error('Failed to load S3 settings from database:', error);
+                }
+            }
+
+            if (!s3Endpoint || !s3AccessKey || !s3SecretKey || !s3Bucket) {
+                throw new Error(
+                    'S3 deletion requires S3_ENDPOINT, S3_ACCESS_KEY, S3_SECRET_KEY, and S3_BUCKET to be configured in environment variables or database settings.'
+                );
+            }
+
+            // Extract path from URL if full URL is provided
+            let cleanPath = filePath;
+            if (filePath.startsWith('http')) {
+                const url = new URL(filePath);
+                cleanPath = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
+                if (cleanPath.startsWith(`${s3Bucket}/`)) {
+                    cleanPath = cleanPath.replace(`${s3Bucket}/`, '');
+                }
+            } else {
+                cleanPath = filePath.startsWith('/') ? filePath.slice(1) : filePath;
+            }
+
+            // Initialize S3 client dynamically
+            const { S3Client, DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+            const s3Client = new S3Client({
+                endpoint: s3Endpoint,
+                region: s3Region,
+                credentials: {
+                    accessKeyId: s3AccessKey,
+                    secretAccessKey: s3SecretKey
+                }
+            });
+
+            // Delete from S3/R2
+            const command = new DeleteObjectCommand({
+                Bucket: s3Bucket,
+                Key: cleanPath
+            });
+
+            const response = await s3Client.send(command);
+
+            return {
+                success: true,
+                path: cleanPath,
+                provider: 's3',
+                deletedAt: new Date().toISOString(),
+                response: response
+            };
+        } catch (error) {
+            console.error('Error in deleteFile:', error);
             throw error;
         }
     }

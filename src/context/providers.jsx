@@ -30,7 +30,7 @@ const AuthContext = createContext({
     isAuthenticated: false,
     user: null,
     status: 'loading',
-    logout: () => {}
+    logout: () => { }
 });
 
 // Enhanced Auth Provider component
@@ -128,14 +128,14 @@ const VisitorTrackingInit = () => {
          * - Handles errors gracefully
          * - Can be disabled by setting window.__SKIP_DATA_FETCH__
          */
-        
+
         // Skip tracking on 404 pages or when explicitly disabled
         const skipDataFetch = typeof window !== 'undefined' && window.__SKIP_DATA_FETCH__;
         if (skipDataFetch) return;
 
         const initTracking = async () => {
             try {
-                await initializeVisitorTracking(); 
+                await initializeVisitorTracking();
             } catch (error) {
                 console.error('Failed to initialize visitor tracking:', error);
             }
@@ -143,7 +143,7 @@ const VisitorTrackingInit = () => {
 
         initTracking();
     }, []); // Empty deps - run only once on mount
-    
+
     return null; // This component doesn't render anything
 };
 
@@ -157,7 +157,7 @@ const ReferralHandler = () => {
         if (hasChecked) return;
 
         const referral = searchParams.get('ref');
-        
+
         if (referral) {
             setHasChecked(true);
             // Redirect to registration with referral code
@@ -178,14 +178,15 @@ const ConditionalThemeProvider = ({ children }) => {
     return (
         <ThemeProvider
             attribute="class"
-            enableSystem={true}
-            // defaultTheme="light"
-            // forcedTheme={isAdminRoute ? undefined : 'light'}
+            enableSystem={false}
+            defaultTheme="light"
+            forcedTheme={isAdminRoute ? undefined : 'light'}
         >
             {children}
         </ThemeProvider>
-    ) }
-    
+    )
+}
+
 
 export default function Providers({
     children,
@@ -210,15 +211,15 @@ export default function Providers({
 
     return (
         <ConditionalThemeProvider>
-        <Toaster position="top-center" /> 
-        <ConnectionMonitor />
-        <ErrorBoundary>
-            <SettingsContext.Provider value={settingsValue}>
-                <SessionProvider session={session}>
-                    <AuthProvider initialSession={session}>
-                        <ReferralHandler />
-                        <VisitorTrackingInit />
-                        <SafeCartProvider>
+            <Toaster position="top-center" />
+            <ConnectionMonitor />
+            <ErrorBoundary>
+                <SettingsContext.Provider value={settingsValue}>
+                    <SessionProvider session={session}>
+                        <AuthProvider initialSession={session}>
+                            <ReferralHandler />
+                            <VisitorTrackingInit />
+                            <SafeCartProvider>
                                 <LanguageProvider
                                     initialLanguage={initialLanguage}
                                     initialBackendLanguage={initialBackendLanguage}
@@ -227,12 +228,12 @@ export default function Providers({
                                     backendLanguages={availableBackendLanguages}>
                                     <ScrollToTop />
                                     {children}
-                                </LanguageProvider> 
-                        </SafeCartProvider>
-                    </AuthProvider>
-                </SessionProvider>
-            </SettingsContext.Provider>
-        </ErrorBoundary> 
+                                </LanguageProvider>
+                            </SafeCartProvider>
+                        </AuthProvider>
+                    </SessionProvider>
+                </SettingsContext.Provider>
+            </ErrorBoundary>
         </ConditionalThemeProvider>
     );
 }

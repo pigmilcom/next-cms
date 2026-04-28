@@ -126,7 +126,7 @@ export function LoginForm({
             <Card>
                 <CardContent>
                     <form onSubmit={handleLogin}>
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-6 px-2">
                             <div className="grid gap-3">
                                 <Label htmlFor="email">{t('email')}</Label>
                                 <Input

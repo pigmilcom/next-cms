@@ -811,6 +811,34 @@ const TicketsPageClient = ({ initialTickets, initialStats, filters }) => {
                                     <div className="whitespace-pre-wrap">{selectedTicket.description}</div>
                                 </div>
 
+                                {/* Attachments */}
+                                {selectedTicket.attachments && selectedTicket.attachments.length > 0 && (
+                                    <div>
+                                        <h4 className="font-semibold mb-2">Attachments</h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedTicket.attachments.map((file, idx) => (
+                                                <a 
+                                                    key={idx} 
+                                                    href={file.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                                                >
+                                                    <Download className="h-4 w-4 text-blue-500" />
+                                                    <div className="text-sm">
+                                                        <div className="font-medium truncate max-w-[200px]">{file.name}</div>
+                                                        {file.size && (
+                                                            <div className="text-xs text-muted-foreground">
+                                                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Order Data */}
                                 {selectedTicket.orderData && (
                                     <div>

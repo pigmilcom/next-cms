@@ -7,6 +7,7 @@ import { sendCustomerMessage, sendEmail } from '@/lib/server/email.js';
 import { sendPhoneVerification } from '@/lib/server/sms.js';
 import { cacheFunctions, initCache } from '@/lib/shared/cache.js';
 import { generateUID } from '@/lib/shared/helpers.js';
+import { uploadFiles } from '@/lib/server/admin.js';
 
 // Initialize cache for tickets operations
 const { loadCacheData, saveCacheData } = await initCache('tickets');
@@ -156,14 +157,13 @@ export async function getTicket(ticketId) {
  * @param {string} ticketData.type - Issue type (order-issue, payment-problem, delivery-delay, product-quality, other)
  * @param {string} ticketData.priority - Priority (low, medium, high, urgent)
  * @param {Object} ticketData.orderData - Related order data (optional)
+ * @param {Array|File} ticketData.files - Attachment files (optional)
  * @returns {Promise<Object>} Response with created ticket
  */
 export async function createTicket(ticketData) {
     try {
         const session = await auth();
-        if (!session?.user) {
-            return { success: false, error: 'Authentication required' };
-        }
+        // Authentication check removed to allow non-authenticated users (guests) to create tickets
 
         const {
             userId,
@@ -174,11 +174,21 @@ export async function createTicket(ticketData) {
             type = 'support',
             priority = 'medium',
             orderData = null,
-            notifications = {}
+            notifications = {},
+            files = null,
+            userPhone = ''
         } = ticketData;
 
         if (!subject || !description) {
             return { success: false, error: 'Subject and description are required' };
+        }
+
+        // Validate that we have at least a name and email to identify the user/guest
+        if (!userEmail && !session?.user?.email) {
+            return { success: false, error: 'Email is required to create a ticket' };
+        }
+        if (!userName && !session?.user?.name && !userId && !session?.user?.id) {
+            return { success: false, error: 'Name is required to create a ticket' };
         }
 
         // Generate ticket ID and number
@@ -188,15 +198,17 @@ export async function createTicket(ticketData) {
         const newTicket = {
             id: ticketId,
             ticketNumber,
-            userId: userId || session.user.id,
-            userEmail: userEmail || session.user.email,
-            userName: userName || session.user.name || 'User',
+            userId: userId || session?.user?.id || null,
+            userEmail: userEmail || session?.user?.email || null,
+            userName: userName || session?.user?.name || 'Guest',
             subject,
             description,
             type,
             priority,
             status: 'open',
             orderData,
+            attachments: [],
+            userPhone,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             replies: [],
@@ -204,6 +216,19 @@ export async function createTicket(ticketData) {
             resolvedAt: null,
             closedAt: null
         };
+
+        // Handle file uploads if provided
+        if (files) {
+            const uploadResult = await uploadFiles(files, 'tickets/attachments');
+            if (uploadResult.success && uploadResult.files?.length > 0) {
+                newTicket.attachments = uploadResult.files.map(f => ({
+                    name: f.name,
+                    url: f.url,
+                    type: f.type,
+                    size: f.size
+                }));
+            }
+        }
 
         // Create ticket with cache clearing
         const result = await createWithCacheClear(newTicket, 'tickets', ['tickets']);
@@ -217,7 +242,7 @@ export async function createTicket(ticketData) {
                     html: `
                         <h2>New Support Ticket Created</h2>
                         <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
-                        <p><strong>User:</strong> ${userName} (${userEmail})</p>
+                        <p><strong>User:</strong> ${newTicket.userName} (${newTicket.userEmail})</p>
                         <p><strong>Type:</strong> ${type}</p>
                         <p><strong>Priority:</strong> ${priority}</p>
                         <p><strong>Subject:</strong> ${subject}</p>
