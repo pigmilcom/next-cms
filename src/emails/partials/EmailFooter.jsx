@@ -20,7 +20,7 @@ import {
 // Social network icon mapping
 const getSocialIcon = (name) => {
     if (!name) return <FaGlobe />;
-    const lowerName = name.toLowerCase();
+    const lowerName = String(name).toLowerCase();
 
     if (lowerName.includes('facebook')) return <FaFacebook />;
     if (lowerName.includes('twitter') || lowerName === 'x') return <FaXTwitter />;

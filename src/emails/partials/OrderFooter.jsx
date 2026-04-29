@@ -4,7 +4,8 @@ import { emailStyles } from '../styles';
 
 // Social network emoji mapping (email-safe)
 const getSocialEmoji = (name) => {
-    const lowerName = name.toLowerCase();
+    if (!name) return '🌐';
+    const lowerName = String(name).toLowerCase();
 
     if (lowerName.includes('facebook')) return '📘';
     if (lowerName.includes('twitter') || lowerName === 'x') return '🐦';

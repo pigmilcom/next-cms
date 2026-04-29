@@ -479,7 +479,7 @@ export async function updateOrder(orderId, orderData) {
                     const couponResult = await incrementCouponUsage(
                         updatedOrder.couponCode,
                         orderId,
-                        updatedOrder.customer?.email.toLowerCase() || updatedOrder.cst_email.toLowerCase()
+                        updatedOrder.customer?.email?.toLowerCase() || updatedOrder.cst_email?.toLowerCase() || ''
                     );
                     if (!couponResult.success) {
                         console.log('Failed to increment coupon usage:', couponResult.error);
@@ -886,7 +886,7 @@ export async function autoCompleteDeliveredOrders() {
                     order.id,
                     'complete',
                     'system', // System user for auto-updates
-                    order.customer?.email.toLowerCase() || order.cst_email.toLowerCase()
+                    order.customer?.email?.toLowerCase() || order.cst_email?.toLowerCase() || ''
                 );
 
                 if (updateResult.success) {

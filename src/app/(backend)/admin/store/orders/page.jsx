@@ -224,7 +224,7 @@ export default function OrdersPage() {
 
         return {
             displayName: buildCustomerDisplayName(customerData),
-            email: customerData.email.trim().toLowerCase(),
+            email: (customerData.email || '').trim().toLowerCase(),
             phone: customerData.phone || '',
             country: customerData.country || existingCustomer?.country || '',
             countryIso: customerData.countryIso || existingCustomer?.countryIso || '',
@@ -698,7 +698,7 @@ export default function OrdersPage() {
         if (search) {
             const searchLower = search.toLowerCase();
             filtered = filtered.filter((order) => {
-                const orderId = order.id?.toString().toLowerCase() || '';
+                const orderId = order.id?.toString()?.toLowerCase() || '';
                 const customerName = `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`
                     .trim()
                     .toLowerCase();
@@ -791,7 +791,7 @@ export default function OrdersPage() {
             const creatingCustomerFromForm = isNewCustomer || (!selectedCustomerId && hasCustomerFormInput(formData.customer));
             const normalizedCustomer = {
                 ...formData.customer,
-                email: formData.customer.email.trim().toLowerCase(),
+                email: (formData.customer.email || '').trim().toLowerCase(),
                 firstName: formData.customer.firstName.trim(),
                 lastName: formData.customer.lastName.trim()
             };
@@ -874,7 +874,7 @@ export default function OrdersPage() {
             if (creatingCustomerFromForm) {
                 // Check if customer with this email already exists
                 const existingCustomer = customers.find(
-                    (c) => c.email?.toLowerCase() === orderData.customer.email.toLowerCase()
+                    (c) => c.email?.toLowerCase() === orderData.customer?.email?.toLowerCase()
                 );
                 const userPayload = buildUserPayloadFromOrderCustomer(orderData.customer, existingCustomer);
 
