@@ -40,13 +40,7 @@ export const loadTranslations = (namespace = '', system = false) => {
                 const systemPath = path.join(process.cwd(), 'src/locale/messages', locale, `${namespace}.json`);
 
                 if (fs.existsSync(systemPath)) {
-                    file = require(systemPath);
-                } else if (!system) {
-                    // Fallback to frontend locale path if it exists
-                    const frontendPath = path.join(process.cwd(), 'src/app/(frontend)/locale', locale, `${namespace}.json`);
-                    if (fs.existsSync(frontendPath)) {
-                        file = require(frontendPath);
-                    }
+                    file = JSON.parse(fs.readFileSync(systemPath, 'utf8'));
                 }
             } catch (_err) {
                 // Fallback to standard require if fs logic fails
