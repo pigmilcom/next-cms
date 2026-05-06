@@ -1,5 +1,12 @@
 // data/db/firebase.db.js
 
+/* 
+==========================
+firebase.db.js (alternative, using realtime db and app hosting)
+==========================
+*/
+
+/* 
 import { initializeApp } from 'firebase/app';
 import { equalTo, get, getDatabase, orderByChild, push, query, ref, remove, update } from 'firebase/database';
 import { deleteObject, getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'firebase/storage';
@@ -361,3 +368,5 @@ class FirebaseDBService {
 }
 
 export default new FirebaseDBService();
+
+*/
