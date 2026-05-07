@@ -1,0 +1,24 @@
+{
+    "Preview": {
+        "title": "Pré-visualização da Campanha",
+        "noSubject": "Sem Assunto",
+        "createdAt": "Criada a",
+        "sentAt": "Enviada a",
+        "recipients": "Destinatários",
+        "emailContent": "Conteúdo do Email",
+        "emailContentDescription": "Esta é uma pré-visualização de como o email aparecerá no navegador",
+        "from": "De",
+        "subject": "Assunto",
+        "previewText": "Pré-visualização",
+        "noContent": "Sem conteúdo disponível para esta língua",
+        "allRightsReserved": "Todos os direitos reservados.",
+        "needHelp": "Precisa de ajuda?",
+        "note": "Nota",
+        "noteText": "Esta é uma pré-visualização do conteúdo da campanha. O design final pode variar dependendo do cliente de email do destinatário.",
+        "back": "Voltar",
+        "statusSent": "Enviada",
+        "statusDraft": "Rascunho",
+        "statusScheduled": "Agendada",
+        "language": "Idioma"
+    }
+}

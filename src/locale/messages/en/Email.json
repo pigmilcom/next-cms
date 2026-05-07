@@ -261,6 +261,7 @@
             "subject": "News from {companyName}",
             "unsubscribe": "Unsubscribe",
             "viewOnline": "View online",
+            "viewOnlinePrompt": "Having trouble viewing this email?",
             "footerText": "You're receiving this email because you subscribed to the {companyName} newsletter."
         },
         "customerMessage": {

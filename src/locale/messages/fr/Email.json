@@ -261,6 +261,7 @@
             "subject": "Nouveautés de {companyName}",
             "unsubscribe": "Se désabonner",
             "viewOnline": "Voir en ligne",
+            "viewOnlinePrompt": "Problème pour afficher cet email ?",
             "footerText": "Vous recevez cet email car vous êtes abonné à la newsletter de {companyName}."
         },
         "customerMessage": {

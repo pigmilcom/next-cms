@@ -1,0 +1,24 @@
+{
+    "Preview": {
+        "title": "Campaign Preview",
+        "noSubject": "No Subject",
+        "createdAt": "Created",
+        "sentAt": "Sent on",
+        "recipients": "Recipients",
+        "emailContent": "Email Content",
+        "emailContentDescription": "This is a preview of how the email will appear in the browser",
+        "from": "From",
+        "subject": "Subject",
+        "previewText": "Preview",
+        "noContent": "No content available for this language",
+        "allRightsReserved": "All rights reserved.",
+        "needHelp": "Need help?",
+        "note": "Note",
+        "noteText": "This is a preview of the campaign content. The final design may vary depending on the recipient's email client.",
+        "back": "Back",
+        "statusSent": "Sent",
+        "statusDraft": "Draft",
+        "statusScheduled": "Scheduled",
+        "language": "Language"
+    }
+}

@@ -261,6 +261,7 @@
             "subject": "Novidades de {companyName}",
             "unsubscribe": "Cancelar subscrição",
             "viewOnline": "Ver online",
+            "viewOnlinePrompt": "Problemas a visualizar este email?",
             "footerText": "Estás a receber este e-mail porque subscreveste a newsletter de {companyName}."
         },
         "customerMessage": {

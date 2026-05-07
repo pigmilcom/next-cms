@@ -1,97 +1,111 @@
 // @/app/(actions)/preview/page.client.jsx (Client Component)
 'use client';
 
-import { ArrowLeft, Calendar, Eye, Globe, Mail, User } from 'lucide-react';
+import { ArrowLeft, Calendar, Mail, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { useSettings } from '@/context/providers';
+import { LanguageSelector } from '@/components/ui/language-selector';
+import { ThemeSwitchButton } from '@/components/ui/theme-mode';
+import { useSettings, useTheme } from '@/context/providers';
+import { formatAvailableLanguages } from '@/lib/i18n.js';
 
-const PreviewPageClient = ({ campaign }) => {
+const createTranslator = (translations) => (key) => {
+    const keys = String(key || '').split('.');
+    let value = translations;
+    for (const item of keys) {
+        value = value?.[item];
+        if (value === undefined) return key;
+    }
+    return value;
+};
+
+const PreviewPageClient = ({ campaign, translationsMap = {}, locale = 'en' }) => {
     const router = useRouter();
     const { siteSettings } = useSettings();
+    const { resolvedTheme } = useTheme();
 
-    // Language configuration
-    const availableLanguages = siteSettings?.languages || ['en', 'pt', 'es', 'fr'];
-    const defaultLanguage = siteSettings?.language || 'pt';
-    const [selectedLanguage, setSelectedLanguage] = useState(defaultLanguage);
+    const [selectedLanguage, setSelectedLanguage] = useState(locale);
 
-    // Language labels mapping
-    const languageLabels = {
-        en: 'English',
-        es: 'Español',
-        fr: 'Français',
-        pt: 'Português'
+    const activeTranslations = translationsMap?.[selectedLanguage] || translationsMap?.en || {};
+    const t = createTranslator(activeTranslations);
+
+    // Language options for LanguageSelector (UI translation language)
+    const availableSiteLanguages = siteSettings?.languages || Object.keys(translationsMap).filter(Boolean) || ['en'];
+    const languageOptions = formatAvailableLanguages(availableSiteLanguages, selectedLanguage);
+
+    const handleLanguageChange = (lang) => {
+        setSelectedLanguage(lang);
+        if (typeof document !== 'undefined') {
+            document.documentElement.lang = lang;
+        }
     };
 
-    // Helper to extract ML content - supports both string and object formats
-    const getMLContent = (content, locale = selectedLanguage) => {
+    // Campaign content language configuration
+    const campaignDefaultLanguage = siteSettings?.language || locale;
+    const [selectedCampaignLanguage, setSelectedCampaignLanguage] = useState(campaignDefaultLanguage);
+
+    const getMLContent = (content, lang = selectedCampaignLanguage) => {
         if (typeof content === 'object' && content !== null) {
-            // ML object: { en: "...", es: "...", pt: "..." }
-            return content[locale] || content[defaultLanguage] || content[Object.keys(content)[0]] || '';
+            return content[lang] || content[campaignDefaultLanguage] || content[Object.keys(content)[0]] || '';
         }
-        // Legacy: string content
         return content || '';
     };
 
-    // Helper to get available languages for this campaign
     const getCampaignLanguages = () => {
-        const languages = [];
+        const langs = [];
         const content = campaign.content;
-
         if (typeof content === 'object' && content !== null) {
-            // Check each available language for non-empty content
-            availableLanguages.forEach((lang) => {
+            availableSiteLanguages.forEach((lang) => {
                 const langContent = content[lang];
-                if (langContent && langContent.trim() !== '') {
-                    languages.push(lang);
-                }
+                if (langContent && langContent.trim() !== '') langs.push(lang);
             });
         } else if (content && content.trim() !== '') {
-            // Legacy: string content - assume default language
-            languages.push(defaultLanguage);
+            langs.push(campaignDefaultLanguage);
         }
-
-        return languages;
+        return langs;
     };
 
     const campaignLanguages = getCampaignLanguages();
 
-    // Set initial language to first available in campaign
     useEffect(() => {
-        if (campaignLanguages.length > 0 && !campaignLanguages.includes(selectedLanguage)) {
-            setSelectedLanguage(campaignLanguages[0]);
+        if (campaignLanguages.length > 0 && !campaignLanguages.includes(selectedCampaignLanguage)) {
+            setSelectedCampaignLanguage(campaignLanguages[0]);
         }
     }, []);
 
-    // Get campaign content for selected language
     const subject = getMLContent(campaign.subject);
     const previewText = getMLContent(campaign.previewText);
     const content = getMLContent(campaign.content);
 
-    // Status badge color
+    const campaignLanguageOptions = formatAvailableLanguages(
+        campaignLanguages.length > 0 ? campaignLanguages : [campaignDefaultLanguage],
+        selectedCampaignLanguage
+    );
+
     const getStatusColor = (status) => {
         switch (status) {
-            case 'sent':
-                return 'bg-green-100 text-green-800';
-            case 'draft':
-                return 'bg-gray-100 text-gray-800';
-            case 'scheduled':
-                return 'bg-blue-100 text-blue-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
+            case 'sent': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+            case 'draft': return 'bg-muted text-muted-foreground';
+            case 'scheduled': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+            default: return 'bg-muted text-muted-foreground';
         }
     };
 
-    // Format date
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'sent': return t('statusSent');
+            case 'draft': return t('statusDraft');
+            case 'scheduled': return t('statusScheduled');
+            default: return status;
+        }
+    };
+
     const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-PT', {
+        if (!dateString) return '—';
+        return new Date(dateString).toLocaleDateString(selectedLanguage, {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -101,85 +115,81 @@ const PreviewPageClient = ({ campaign }) => {
     };
 
     return (
-        <div className="min-h-screen">
-            {/* Header Bar */}
-            <div className="sticky top-10 z-10 border-b">
-                <div className="container mx-auto px-4 py-4 bg-background">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center justify-start gap-4">
-                            <Button variant="ghost" size="sm" onClick={() => router.push('/')}>
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                            </Button>
-                            <div className="flex items-center gap-2">
-                                <h1 className="text-lg font-semibold">Pré-visualização da Campanha</h1>
-                            </div>
-                        </div>
-
-                        {/* Language Selector */}
+        <main className="min-h-screen bg-background px-3 py-4 text-foreground sm:px-4 sm:py-8">
+            <div className="mx-auto w-full max-w-5xl space-y-6">
+                {/* Header */}
+                <div className="flex gap-4 items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Button variant="ghost" size="sm" onClick={() => router.push('/')} className="shrink-0">
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <a href={siteSettings?.baseUrl || '/'} className="flex items-center gap-3">
+                            <img
+                                src={siteSettings?.siteLogo || '/images/logo.webp'}
+                                alt={siteSettings?.siteName || ''}
+                                className="h-10 w-10 object-cover"
+                            />
+                        </a>
+                        <span className="hidden sm:inline-flex w-fit rounded-md bg-foreground px-3 py-1.5 font-medium text-background sm:px-4 sm:py-2 sm:text-sm">
+                            {t('title')}
+                        </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
                         {campaignLanguages.length > 1 && (
-                            <div className="flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-muted-foreground" />
-                                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                                    <SelectTrigger className="w-35">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {campaignLanguages.map((lang) => (
-                                            <SelectItem key={lang} value={lang}>
-                                                {languageLabels[lang] || lang.toUpperCase()}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <LanguageSelector
+                                languages={campaignLanguageOptions}
+                                value={selectedCampaignLanguage}
+                                onChange={setSelectedCampaignLanguage}
+                            />
                         )}
+                        <LanguageSelector
+                            languages={languageOptions}
+                            value={selectedLanguage}
+                            onChange={handleLanguageChange}
+                        />
+                        <ThemeSwitchButton className="border border-border bg-card text-card-foreground hover:bg-accent" />
                     </div>
                 </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="container mx-auto px-4 py-8 max-w-5xl">
                 {/* Campaign Info Card */}
-                <Card className="mb-6">
+                <Card>
                     <CardHeader>
                         <div className="flex items-start justify-between">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Mail className="h-5 w-5 text-muted-foreground" />
-                                    <CardTitle className="text-2xl">{subject || 'Sem Assunto'}</CardTitle>
+                                    <CardTitle className="text-2xl">{subject || t('noSubject')}</CardTitle>
                                 </div>
                                 {previewText && <CardDescription className="text-base">{previewText}</CardDescription>}
                             </div>
                             <Badge className={getStatusColor(campaign.status)}>
-                                {campaign.status === 'sent' && 'Enviada'}
-                                {campaign.status === 'draft' && 'Rascunho'}
-                                {campaign.status === 'scheduled' && 'Agendada'}
+                                {getStatusLabel(campaign.status)}
                             </Badge>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <div>
-                                    <p className="text-muted-foreground">Data de Criação</p>
+                                    <p className="text-muted-foreground">{t('createdAt')}</p>
                                     <p className="font-medium">{formatDate(campaign.createdAt)}</p>
                                 </div>
                             </div>
                             {campaign.sentAt && (
                                 <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-muted-foreground" />
+                                    <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
                                     <div>
-                                        <p className="text-muted-foreground">Data de Envio</p>
+                                        <p className="text-muted-foreground">{t('sentAt')}</p>
                                         <p className="font-medium">{formatDate(campaign.sentAt)}</p>
                                     </div>
                                 </div>
                             )}
                             {campaign.recipientCount && (
                                 <div className="flex items-center gap-2">
-                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    <User className="h-4 w-4 text-muted-foreground shrink-0" />
                                     <div>
-                                        <p className="text-muted-foreground">Destinatários</p>
+                                        <p className="text-muted-foreground">{t('recipients')}</p>
                                         <p className="font-medium">{campaign.recipientCount}</p>
                                     </div>
                                 </div>
@@ -191,10 +201,8 @@ const PreviewPageClient = ({ campaign }) => {
                 {/* Email Preview Card */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Conteúdo do Email</CardTitle>
-                        <CardDescription>
-                            Esta é uma pré-visualização de como o email aparecerá no navegador
-                        </CardDescription>
+                        <CardTitle>{t('emailContent')}</CardTitle>
+                        <CardDescription>{t('emailContentDescription')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {/* Email Container */}
@@ -203,19 +211,19 @@ const PreviewPageClient = ({ campaign }) => {
                             <div className="bg-white border-b px-6 py-4">
                                 <div className="space-y-2 text-sm">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-600">De:</span>
+                                        <span className="font-medium text-gray-600">{t('from')}:</span>
                                         <span className="text-gray-900">
                                             {siteSettings?.siteName || 'Your Company'}
                                             {siteSettings?.supportEmail && ` <${siteSettings.supportEmail}>`}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="font-medium text-gray-600">Assunto:</span>
-                                        <span className="text-gray-900">{subject || 'Sem Assunto'}</span>
+                                        <span className="font-medium text-gray-600">{t('subject')}:</span>
+                                        <span className="text-gray-900">{subject || t('noSubject')}</span>
                                     </div>
                                     {previewText && (
                                         <div className="flex items-start gap-2">
-                                            <span className="font-medium text-gray-600">Pré-visualização:</span>
+                                            <span className="font-medium text-gray-600">{t('previewText')}:</span>
                                             <span className="text-gray-600">{previewText}</span>
                                         </div>
                                     )}
@@ -232,20 +240,19 @@ const PreviewPageClient = ({ campaign }) => {
                                 ) : (
                                     <div className="text-center py-12 text-muted-foreground">
                                         <Mail className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                                        <p>Sem conteúdo disponível para esta língua</p>
+                                        <p>{t('noContent')}</p>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Email Footer (simulating email template footer) */}
+                            {/* Email Footer */}
                             <div className="bg-white border-t px-6 py-4 text-center text-xs text-gray-500">
                                 <p>
-                                    © {new Date().getFullYear()} {siteSettings?.siteName || 'Your Company'}. Todos os
-                                    direitos reservados.
+                                    © {new Date().getFullYear()} {siteSettings?.siteName || 'Your Company'}. {t('allRightsReserved')}
                                 </p>
                                 {siteSettings?.supportEmail && (
                                     <p className="mt-1">
-                                        Precisa de ajuda?{' '}
+                                        {t('needHelp')}{' '}
                                         <a
                                             href={`mailto:${siteSettings.supportEmail}`}
                                             className="text-blue-600 hover:underline">
@@ -259,15 +266,15 @@ const PreviewPageClient = ({ campaign }) => {
                         {/* Info Note */}
                         <div className="mt-6 border rounded-lg p-4">
                             <p className="text-sm text-muted-foreground">
-                                <strong>Nota:</strong> Esta é uma pré-visualização do conteúdo da campanha. O design
-                                final pode variar dependendo do cliente de email do destinatário.
+                                <strong>{t('note')}:</strong> {t('noteText')}
                             </p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </main>
     );
 };
 
 export default PreviewPageClient;
+

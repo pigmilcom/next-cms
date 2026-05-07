@@ -1,8 +1,19 @@
 // @/app/(actions)/preview/page.jsx (Server Component)
 
 import { notFound } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { getCampaign } from '@/lib/server/newsletter';
 import PreviewPageClient from './page.client';
+
+const PREVIEW_LOCALES = ['en', 'pt', 'es', 'fr'];
+
+const loadPreviewTranslations = async (language) => {
+    try {
+        return await import(`@/locale/messages/${language}/Preview.json`).then((mod) => mod.default.Preview);
+    } catch {
+        return null;
+    }
+};
 
 // Metadata for preview page
 export const metadata = {
@@ -40,7 +51,13 @@ const PreviewPage = async ({ searchParams }) => {
     }
 
     // Fetch campaign data
-    const campaignResult = await getCampaign(campaignId);
+    const [campaignResult, locale, translationEntries] = await Promise.all([
+        getCampaign(campaignId),
+        getLocale(),
+        Promise.all(PREVIEW_LOCALES.map(async (lang) => [lang, await loadPreviewTranslations(lang)]))
+    ]);
+
+    const translationsMap = Object.fromEntries(translationEntries.filter(([, t]) => Boolean(t)));
 
     if (!campaignResult?.success || !campaignResult.data) {
         notFound();
@@ -53,7 +70,7 @@ const PreviewPage = async ({ searchParams }) => {
         notFound();
     }
 
-    return <PreviewPageClient campaign={campaign} />;
+    return <PreviewPageClient campaign={campaign} translationsMap={translationsMap} locale={locale} />;
 };
 
 export default PreviewPage;

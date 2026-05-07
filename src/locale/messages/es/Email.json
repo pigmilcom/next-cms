@@ -258,10 +258,11 @@
             "loginButton": "Iniciar Sessão na Sua Conta"
         },
         "newsletter": {
-            "subject": "Novidades de {companyName}",
-            "unsubscribe": "Cancelar subscrição",
+            "subject": "Novedades de {companyName}",
+            "unsubscribe": "Cancelar suscripción",
             "viewOnline": "Ver online",
-            "footerText": "Está a receber este e-mail porque subscreveu a newsletter de {companyName}."
+            "viewOnlinePrompt": "¿Problemas para visualizar este email?",
+            "footerText": "Está recibiendo este email porque se suscribió a la newsletter de {companyName}."
         },
         "customerMessage": {
             "subject": "Mensagem de {companyName}",

@@ -1,8 +1,19 @@
 // @/app/(actions)/unsubscribe/page.jsx (Server Component)
 
 import { notFound } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { getSubscriber, updateSubscriberPreferences } from '@/lib/server/newsletter';
 import UnsubscribePageClient from './page.client';
+
+const UNSUBSCRIBE_LOCALES = ['en', 'pt', 'es', 'fr'];
+
+const loadUnsubscribeTranslations = async (language) => {
+    try {
+        return await import(`@/locale/messages/${language}/Unsubscribe.json`).then((mod) => mod.default.Unsubscribe);
+    } catch {
+        return null;
+    }
+};
 
 // Metadata for unsubscribe page
 export const metadata = {
@@ -40,8 +51,14 @@ const UnsubscribePage = async ({ searchParams }) => {
         notFound();
     }
 
-    // Fetch subscriber data
-    const subscriberResult = await getSubscriber(identifier, type);
+    // Fetch subscriber data + locale + translations in parallel
+    const [subscriberResult, locale, translationEntries] = await Promise.all([
+        getSubscriber(identifier, type),
+        getLocale(),
+        Promise.all(UNSUBSCRIBE_LOCALES.map(async (lang) => [lang, await loadUnsubscribeTranslations(lang)]))
+    ]);
+
+    const translationsMap = Object.fromEntries(translationEntries.filter(([, t]) => Boolean(t)));
 
     if (!subscriberResult?.success || !subscriberResult.data) {
         notFound();
@@ -61,6 +78,8 @@ const UnsubscribePage = async ({ searchParams }) => {
             identifier={identifier}
             type={type}
             updatePreferencesAction={updatePreferencesAction}
+            translationsMap={translationsMap}
+            locale={locale}
         />
     );
 };

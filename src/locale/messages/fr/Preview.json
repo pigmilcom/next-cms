@@ -1,0 +1,24 @@
+{
+    "Preview": {
+        "title": "Aperçu de la Campagne",
+        "noSubject": "Sans Objet",
+        "createdAt": "Créée le",
+        "sentAt": "Envoyée le",
+        "recipients": "Destinataires",
+        "emailContent": "Contenu de l'Email",
+        "emailContentDescription": "Voici un aperçu de la façon dont l'email apparaîtra dans le navigateur",
+        "from": "De",
+        "subject": "Objet",
+        "previewText": "Aperçu",
+        "noContent": "Aucun contenu disponible pour cette langue",
+        "allRightsReserved": "Tous droits réservés.",
+        "needHelp": "Besoin d'aide ?",
+        "note": "Remarque",
+        "noteText": "Il s'agit d'un aperçu du contenu de la campagne. Le design final peut varier selon le client de messagerie du destinataire.",
+        "back": "Retour",
+        "statusSent": "Envoyée",
+        "statusDraft": "Brouillon",
+        "statusScheduled": "Planifiée",
+        "language": "Langue"
+    }
+}

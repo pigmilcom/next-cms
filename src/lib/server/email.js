@@ -1271,6 +1271,10 @@ export async function sendNewsletterCampaign(campaign, subscribers, manualRecipi
         const campaignContent = getMLContent(campaign.content, campaignLocale);
         const campaignPreview = getMLContent(campaign.previewText, campaignLocale) || campaignSubject;
 
+        // Load translations for the campaign locale (used for injected preview/unsubscribe links)
+        const emailTranslations = await loadEmailTranslations(campaignLocale);
+        const newsletterT = emailTranslations?.newsletter || {};
+
         // Check if campaign has raw HTML content
         // or needs React Email rendering (from NewsletterTemplate component)
         const hasRawHtmlContent =
@@ -1298,17 +1302,20 @@ export async function sendNewsletterCampaign(campaign, subscribers, manualRecipi
                     html = addTrackingToLinks(html, campaign.id, 'email');
 
                     // Add preview link at the top if not already present
-                    if (!html.includes('preview?id=') && !html.includes('Ver no navegador')) {
+                    if (!html.includes('preview?id=')) {
+                        const viewOnlineText = newsletterT.viewOnline || 'View online';
+                        const viewOnlinePrompt = newsletterT.viewOnlinePrompt || 'Having trouble viewing this email?';
                         const previewHtml = `<div style="text-align: center; padding: 10px; font-size: 12px; color: #666;">
-                            Problemas para visualizar? <a href="${previewLink}" style="color: #3b82f6;">Ver no navegador</a>
+                            ${viewOnlinePrompt} <a href="${previewLink}" style="color: #3b82f6;">${viewOnlineText}</a>
                         </div>`;
                         html = previewHtml + html;
                     }
 
                     // Add unsubscribe link at the bottom if not already present
-                    if (!html.includes('unsubscribe?id=') && !html.includes('Cancelar subscrição')) {
+                    if (!html.includes('unsubscribe?id=')) {
+                        const unsubscribeText = newsletterT.unsubscribe || 'Unsubscribe';
                         const unsubscribeHtml = `<div style="text-align: center; padding: 10px; font-size: 12px; color: #999;">
-                            <a href="${unsubscribeLink}" style="color: #666;">Cancelar subscrição</a>
+                            <a href="${unsubscribeLink}" style="color: #666;">${unsubscribeText}</a>
                         </div>`;
                         html = html + unsubscribeHtml;
                     }
