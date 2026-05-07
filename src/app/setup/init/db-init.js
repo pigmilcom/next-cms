@@ -27,7 +27,7 @@ const getDefaultSiteSettings = () => ({
     siteLogo: '',
     socialNetworks: [],
     workingHours: [],
-    allowRegistration: false,
+    allowRegistration: true,
     enableFrontend: false,
     smsEnabled: false,
     twilioAccountSid: '',
