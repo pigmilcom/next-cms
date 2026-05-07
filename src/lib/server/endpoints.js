@@ -391,38 +391,48 @@ export async function updateAPISettings(settingsData) {
  * @returns {Promise<Object>} Collections data
  */
 export async function getDatabaseCollections(params = {}) {
+    // Full known collections list — mirrors knownCollections in database.js
+    const ALL_KNOWN_COLLECTIONS = [
+        'users', 'roles', 'site_settings', 'store_settings', 'catalog',
+        'categories', 'collections', 'attributes', 'orders', 'customers',
+        'coupons', 'reviews', 'testimonials', 'blocks', 'appointments',
+        'newsletter_campaigns', 'newsletter_subscribers', 'newsletter_templates',
+        'tasks', 'agenda_items', 'schedule_items', 'api_keys', 'api_endpoints',
+        'api_settings', 'notifications', 'favorites', 'backups', 'db_activities'
+    ];
+
     try {
-        // Use getDatabaseInfo from database.js to get collections
         const dbInfo = await getDatabaseInfo(params);
-        
-        if (!dbInfo.success || !dbInfo.data) {
-            return {
-                success: false,
-                error: 'Failed to fetch database collections',
-                data: []
-            };
+
+        if (dbInfo.success && dbInfo.data?.collections?.length > 0) {
+            // Enrich with document counts from DB; append any extras not in known list
+            const dbCollections = dbInfo.data.collections;
+            const dbNames = new Set(dbCollections.map((c) => c.name));
+
+            // Start from the full known list (preserves order and includes empty collections)
+            const known = ALL_KNOWN_COLLECTIONS.map((name) => {
+                const dbCol = dbCollections.find((c) => c.name === name);
+                return { name, documentCount: dbCol?.documentCount ?? 0, size: dbCol?.size ?? '0 Bytes', lastModified: dbCol?.lastModified ?? null };
+            });
+
+            // Append any DB collections not in the known list
+            const extras = dbCollections
+                .filter((c) => !ALL_KNOWN_COLLECTIONS.includes(c.name))
+                .map((c) => ({ name: c.name, documentCount: c.documentCount, size: c.size, lastModified: c.lastModified }));
+
+            return { success: true, data: [...known, ...extras] };
         }
 
-        const collections = dbInfo.data.collections || [];
-        
-        // Format collections for endpoint use
-        const formattedCollections = collections.map(col => ({
-            name: col.name,
-            documentCount: col.documentCount,
-            size: col.size,
-            lastModified: col.lastModified
-        }));
-
+        // Fallback: return all known collections without DB counts
         return {
             success: true,
-            data: formattedCollections
+            data: ALL_KNOWN_COLLECTIONS.map((name) => ({ name, documentCount: 0, size: '0 Bytes', lastModified: null }))
         };
     } catch (error) {
         console.error('Error fetching database collections:', error);
         return {
-            success: false,
-            error: error.message || 'Failed to fetch database collections',
-            data: []
+            success: true,
+            data: ALL_KNOWN_COLLECTIONS.map((name) => ({ name, documentCount: 0, size: '0 Bytes', lastModified: null }))
         };
     }
 }

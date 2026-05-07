@@ -27,7 +27,7 @@ const apiKeySchema = z.object({
     expiresAt: z.string().optional()
 });
 
-// System collections always available (even before DB loads)
+// All known system collections (mirrors knownCollections in database.js)
 const SYSTEM_COLLECTIONS = [
     { name: 'users', label: 'Users' },
     { name: 'roles', label: 'Roles' },
@@ -36,13 +36,20 @@ const SYSTEM_COLLECTIONS = [
     { name: 'catalog', label: 'Catalog / Products' },
     { name: 'categories', label: 'Categories' },
     { name: 'collections', label: 'Collections' },
+    { name: 'attributes', label: 'Attributes' },
     { name: 'orders', label: 'Orders' },
     { name: 'customers', label: 'Customers' },
     { name: 'coupons', label: 'Coupons' },
     { name: 'reviews', label: 'Reviews' },
+    { name: 'testimonials', label: 'Testimonials' },
     { name: 'blocks', label: 'Blocks' },
-    { name: 'newsletter_subscribers', label: 'Newsletter Subscribers' },
+    { name: 'appointments', label: 'Appointments' },
     { name: 'newsletter_campaigns', label: 'Newsletter Campaigns' },
+    { name: 'newsletter_subscribers', label: 'Newsletter Subscribers' },
+    { name: 'newsletter_templates', label: 'Newsletter Templates' },
+    { name: 'tasks', label: 'Tasks' },
+    { name: 'agenda_items', label: 'Agenda Items' },
+    { name: 'schedule_items', label: 'Schedule Items' },
     { name: 'notifications', label: 'Notifications' },
     { name: 'favorites', label: 'Favorites' }
 ];
@@ -58,16 +65,14 @@ export default function NewKeyPage() {
     useEffect(() => {
         getDatabaseCollections().then((res) => {
             if (res?.success && res.data?.length > 0) {
-                // Merge DB collections with system ones (deduplicate by name)
-                const dbNames = new Set(res.data.map((c) => c.name));
-                const merged = [
-                    ...SYSTEM_COLLECTIONS.filter((c) => dbNames.has(c.name)),
-                    ...res.data
-                        .filter((c) => !SYSTEM_COLLECTIONS.some((s) => s.name === c.name))
-                        .map((c) => ({ name: c.name, label: c.name }))
-                ];
-                setCollections(merged);
+                // Always keep all SYSTEM_COLLECTIONS; append any extra DB collections not already listed
+                const systemNames = new Set(SYSTEM_COLLECTIONS.map((c) => c.name));
+                const extras = res.data
+                    .filter((c) => !systemNames.has(c.name))
+                    .map((c) => ({ name: c.name, label: c.name }));
+                setCollections([...SYSTEM_COLLECTIONS, ...extras]);
             }
+            // If DB call fails or returns nothing, SYSTEM_COLLECTIONS is already the default state
         }).catch(() => {});
     }, []);
 
