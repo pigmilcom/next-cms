@@ -235,15 +235,16 @@ async function handlePublicGet(request, { params }) {
         }
         // Get items by key-value pair
         else if (key && value) {
-            result = await DBService.getItemsByKeyValue(key, value, slug);
-            if (!result || Object.keys(result).length === 0) {
+            const kvResult = await DBService.readByAll(key, value, slug);
+            if (!kvResult?.success || !kvResult?.data) {
                 return NextResponse.json({ error: 'No records found' }, { status: 404 });
             }
+            result = kvResult.data;
         }
         // Get all items
         else {
-            result = await DBService.readAll(slug);
-            if (!result) {
+            const allResult = await DBService.readAll(slug);
+            if (!allResult || allResult?.success === false) {
                 return NextResponse.json({
                     success: true,
                     data: [],
@@ -256,18 +257,15 @@ async function handlePublicGet(request, { params }) {
                     }
                 });
             }
+            result = allResult?.data ?? allResult;
         }
 
         // Convert result to array format for pagination and search
         let items = [];
         if (Array.isArray(result)) {
-            items = result;
-        } else if (typeof result === 'object' && result !== null) {
-            // Handle object format where keys are IDs and values are items
-            items = Object.entries(result).map(([id, item]) => ({
-                id,
-                ...item
-            }));
+            items = result.filter((item) => item && typeof item === 'object');
+        } else if (result && typeof result === 'object') {
+            items = Object.values(result).filter((item) => item && typeof item === 'object');
         }
 
         // Search functionality
@@ -532,7 +530,7 @@ export const PUT = withPublicAccess(handlePublicPut, {
 });
 
 export const DELETE = withPublicAccess(handlePublicDelete, {
-    requireApiKey: false,
+    requireApiKey: true,
     requireIpWhitelist: false,
     skipCsrfForApiKey: false,
     requiredPermission: true,
