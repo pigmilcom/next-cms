@@ -49,7 +49,7 @@ import { createUser, getAllUsers, updateUser } from '@/lib/server/users';
 import { calculateOrderPoints } from '@/lib/server/club';
 import { sendInvoiceEmail, sendOrderUpdateEmail } from '@/lib/server/email';
 import { checkEuPagoPendingPayments } from '@/lib/server/gateways';
-import { autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder } from '@/lib/server/orders';
+import { addPartialPayment, autoCompleteDeliveredOrders, createOrder, deleteOrder, getAllOrders, updateOrder, updatePartialPayment } from '@/lib/server/orders';
 import { getCatalog } from '@/lib/server/store';
 import { createAppointment, deleteAppointmentsByOrderId } from '@/lib/server/workspace';
 import { formatAvailableLanguages } from '@/lib/i18n.js';
@@ -129,6 +129,7 @@ const createInitialOrderCustomerData = () => ({
 const PAYMENT_METHOD_VALUES = [
     'none',
     'card',
+    'stripe',
     'bank_transfer',
     'pay_on_delivery',
     'cash',
@@ -291,6 +292,13 @@ export default function OrdersPage() {
     const [isPrintingInvoice, setIsPrintingInvoice] = useState(false);
     const [isSendingInvoiceEmail, setIsSendingInvoiceEmail] = useState(false);
     const [invoiceEmailConfirmOpen, setInvoiceEmailConfirmOpen] = useState(false);
+    const [isPartialPaymentOpen, setIsPartialPaymentOpen] = useState(false);
+    const [partialPaymentAmount, setPartialPaymentAmount] = useState('');
+    const [partialPaymentNote, setPartialPaymentNote] = useState('');
+    const [isCreatingPartialPayment, setIsCreatingPartialPayment] = useState(false);
+    const [editingPartialPaymentId, setEditingPartialPaymentId] = useState(null);
+    const [editPartialData, setEditPartialData] = useState({ paymentStatus: '', paymentMethod: '' });
+    const [isUpdatingPartialPayment, setIsUpdatingPartialPayment] = useState(false);
 
     useEffect(() => {
         const loadInvoiceLanguages = async () => {
@@ -1195,7 +1203,108 @@ export default function OrdersPage() {
         const preferred = siteSettings?.adminLanguage || siteSettings?.language || 'en';
         const availableCodes = availableInvoiceLanguages.map((item) => item.code);
         setInvoiceLanguage(availableCodes.includes(preferred) ? preferred : availableCodes[0] || preferred);
+        setIsPartialPaymentOpen(false);
+        setPartialPaymentAmount('');
+        setPartialPaymentNote('');
         setIsInvoiceDialogOpen(true);
+    };
+
+    const getPartialInvoiceUrl = (order, partialPaymentId, language = invoiceLanguage) => {
+        const baseUrl = siteSettings?.baseUrl || '';
+        const url = buildPublicInvoiceUrl(baseUrl, order.id, language);
+        if (!url) return '';
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}payment=${partialPaymentId}`;
+    };
+
+    const handleCreatePartialPayment = async () => {
+        if (!selectedOrderForInvoice || !partialPaymentAmount) return;
+        const amount = parseFloat(partialPaymentAmount);
+        if (!amount || amount <= 0) {
+            toast.error(t('invoice.partialAmount'));
+            return;
+        }
+
+        setIsCreatingPartialPayment(true);
+        try {
+            const result = await addPartialPayment(selectedOrderForInvoice.id, {
+                amount,
+                note: partialPaymentNote.trim() || ''
+            });
+
+            if (result?.success) {
+                toast.success(t('invoice.partialPaymentCreated') || 'Partial invoice created successfully');
+                const existingPartials = Array.isArray(selectedOrderForInvoice.partialPayments)
+                    ? selectedOrderForInvoice.partialPayments
+                    : [];
+                const updatedPartials = [...existingPartials, result.data];
+                const updatedOrder = {
+                    ...selectedOrderForInvoice,
+                    partialPayments: updatedPartials
+                };
+                setSelectedOrderForInvoice(updatedOrder);
+                updateOrderInState(selectedOrderForInvoice.id, { partialPayments: updatedPartials });
+                setPartialPaymentAmount('');
+                setPartialPaymentNote('');
+                setIsPartialPaymentOpen(false);
+            } else {
+                toast.error(result?.error || t('common.errorOccurred'));
+            }
+        } catch (error) {
+            console.error('Error creating partial payment:', error);
+            toast.error(t('common.errorOccurred'));
+        } finally {
+            setIsCreatingPartialPayment(false);
+        }
+    };
+
+    const handleUpdatePartialPayment = async () => {
+        if (!selectedOrderForInvoice || !editingPartialPaymentId) return;
+        setIsUpdatingPartialPayment(true);
+        try {
+            const updateData = {
+                paymentStatus: editPartialData.paymentStatus,
+                paymentMethod: editPartialData.paymentMethod
+            };
+            if (editPartialData.paymentStatus === 'paid') {
+                updateData.paidAt = new Date().toISOString();
+            }
+            const result = await updatePartialPayment(selectedOrderForInvoice.id, editingPartialPaymentId, updateData);
+            if (result?.success) {
+                toast.success(t('invoice.partialPaymentUpdated') || 'Partial payment updated');
+                const updatedPartials = (
+                    Array.isArray(selectedOrderForInvoice.partialPayments)
+                        ? selectedOrderForInvoice.partialPayments
+                        : []
+                ).map((p) => (p.id === editingPartialPaymentId ? { ...p, ...updateData } : p));
+                const totalPaid = updatedPartials
+                    .filter((p) => p.paymentStatus === 'paid')
+                    .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+                const orderTotal = parseFloat(
+                    selectedOrderForInvoice.finalTotal || selectedOrderForInvoice.total || 0
+                );
+                const newPaymentStatus =
+                    orderTotal > 0 && totalPaid >= orderTotal
+                        ? 'paid'
+                        : selectedOrderForInvoice.paymentStatus;
+                const updatedOrder = {
+                    ...selectedOrderForInvoice,
+                    partialPayments: updatedPartials,
+                    paymentStatus: newPaymentStatus
+                };
+                setSelectedOrderForInvoice(updatedOrder);
+                updateOrderInState(selectedOrderForInvoice.id, { partialPayments: updatedPartials, paymentStatus: newPaymentStatus });
+                setEditingPartialPaymentId(null);
+                setEditPartialData({ paymentStatus: '', paymentMethod: '' });
+            } else {
+                toast.error(result?.error || t('common.errorOccurred'));
+            }
+        } catch (error) {
+            console.error('Error updating partial payment:', error);
+            toast.error(t('common.errorOccurred'));
+        } finally {
+            setIsUpdatingPartialPayment(false);
+        }
     };
 
     const generateTrackingUrl = (trackingNumber) => {
@@ -1613,6 +1722,10 @@ export default function OrdersPage() {
                     paymentMethod: order.paymentMethod || ''
                 });
                 setSelectedOrder(order);
+                setSelectedOrderForInvoice(order);
+                setEditingPartialPaymentId(null);
+                setEditPartialData({ paymentStatus: '', paymentMethod: '' });
+                setIsPartialPaymentOpen(false);
                 setIsEditingPayment(true);
             }
         },
@@ -3716,8 +3829,19 @@ export default function OrdersPage() {
             </Dialog>
 
             {/* Edit Payment Dialog - Standalone */}
-            <Dialog open={isEditingPayment} onOpenChange={setIsEditingPayment}>
-                <DialogContent>
+            <Dialog
+                open={isEditingPayment}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setIsEditingPayment(false);
+                        setEditPaymentData({ paymentStatus: '', paymentMethod: '' });
+                        setSelectedOrderForInvoice(null);
+                        setEditingPartialPaymentId(null);
+                        setEditPartialData({ paymentStatus: '', paymentMethod: '' });
+                        setIsPartialPaymentOpen(false);
+                    }
+                }}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>{t('dialogs.editPayment.title')}</DialogTitle>
                         <DialogDescription>
@@ -3777,10 +3901,11 @@ export default function OrdersPage() {
                                 variant="outline"
                                 onClick={() => {
                                     setIsEditingPayment(false);
-                                    setEditPaymentData({
-                                        paymentStatus: '',
-                                        paymentMethod: ''
-                                    });
+                                    setEditPaymentData({ paymentStatus: '', paymentMethod: '' });
+                                    setSelectedOrderForInvoice(null);
+                                    setEditingPartialPaymentId(null);
+                                    setEditPartialData({ paymentStatus: '', paymentMethod: '' });
+                                    setIsPartialPaymentOpen(false);
                                 }}
                                 disabled={isUpdatingStatus}>
                                 {t('actions.cancel')}
@@ -3805,11 +3930,9 @@ export default function OrdersPage() {
                                         if (updateResponse.success) {
                                             toast.success(t('toasts.paymentInformationUpdated'));
                                             updateOrderInState(selectedOrder.id, updateData);
-                                            setIsEditingPayment(false);
-                                            setEditPaymentData({
-                                                paymentStatus: '',
-                                                paymentMethod: ''
-                                            });
+                                            // Sync selectedOrderForInvoice so partial payment handlers stay up-to-date
+                                            setSelectedOrderForInvoice((prev) => prev ? { ...prev, ...updateData } : prev);
+                                            setEditPaymentData({ paymentStatus: '', paymentMethod: '' });
                                         } else {
                                             toast.error(t('toasts.updatePaymentInformationFailed'));
                                         }
@@ -3833,6 +3956,194 @@ export default function OrdersPage() {
                                 )}
                             </Button>
                         </div>
+
+                        {/* Partial Payments Section */}
+                        {selectedOrderForInvoice ? (
+                            <div className="border-t pt-4">
+                                <div className="mb-3 flex items-center justify-between gap-2">
+                                    <h4 className="font-medium text-sm">{t('invoice.partialPayments') || 'Partial Payments'}</h4>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setIsPartialPaymentOpen((prev) => !prev)}>
+                                        <Plus className="mr-1 h-4 w-4" />
+                                        {t('invoice.addPartialPayment') || 'Add Partial'}
+                                    </Button>
+                                </div>
+
+                                {isPartialPaymentOpen && (
+                                    <div className="mb-4 rounded-lg border border-border bg-accent/30 p-3 space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">{t('invoice.partialAmount') || 'Amount'}</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="0.01"
+                                                    step="0.01"
+                                                    value={partialPaymentAmount}
+                                                    onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">{t('invoice.partialNote') || 'Note (optional)'}</Label>
+                                                <Input
+                                                    type="text"
+                                                    value={partialPaymentNote}
+                                                    onChange={(e) => setPartialPaymentNote(e.target.value)}
+                                                    placeholder={t('invoice.partialNote') || 'Note...'}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 justify-end">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setIsPartialPaymentOpen(false)}>
+                                                {t('actions.cancel')}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                onClick={handleCreatePartialPayment}
+                                                disabled={isCreatingPartialPayment || !partialPaymentAmount}>
+                                                {isCreatingPartialPayment ? (
+                                                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                                ) : null}
+                                                {t('invoice.createPartialInvoice') || 'Create'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(() => {
+                                    const partials = Array.isArray(selectedOrderForInvoice.partialPayments)
+                                        ? selectedOrderForInvoice.partialPayments
+                                        : [];
+                                    if (partials.length === 0) {
+                                        return (
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('invoice.noPartialPayments') || 'No partial payments yet'}
+                                            </p>
+                                        );
+                                    }
+                                    return (
+                                        <div className="space-y-2">
+                                            {partials.map((payment) => (
+                                                <div
+                                                    key={payment.id}
+                                                    className="rounded-md border border-border bg-card/60 text-xs">
+                                                    {editingPartialPaymentId === payment.id ? (
+                                                        <div className="space-y-2 p-3">
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                <div className="space-y-1">
+                                                                    <Label className="text-xs">
+                                                                        {t('details.payment.paymentStatus')}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={editPartialData.paymentStatus}
+                                                                        onValueChange={(val) =>
+                                                                            setEditPartialData((prev) => ({ ...prev, paymentStatus: val }))
+                                                                        }>
+                                                                        <SelectTrigger className="h-7 text-xs">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {PAYMENT_STATUS_VALUES.map((s) => (
+                                                                                <SelectItem key={s} value={s}>
+                                                                                    {t(`status.payment.${s}`)}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <Label className="text-xs">
+                                                                        {t('details.payment.paymentMethod')}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={editPartialData.paymentMethod}
+                                                                        onValueChange={(val) =>
+                                                                            setEditPartialData((prev) => ({ ...prev, paymentMethod: val }))
+                                                                        }>
+                                                                        <SelectTrigger className="h-7 text-xs">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {PAYMENT_METHOD_VALUES.map((m) => (
+                                                                                <SelectItem key={m} value={m}>
+                                                                                    {t(`status.method.${m}`)}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 px-2 text-xs"
+                                                                    onClick={() => {
+                                                                        setEditingPartialPaymentId(null);
+                                                                        setEditPartialData({ paymentStatus: '', paymentMethod: '' });
+                                                                    }}>
+                                                                    {t('actions.cancel') || 'Cancel'}
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="h-6 px-2 text-xs"
+                                                                    onClick={handleUpdatePartialPayment}
+                                                                    disabled={isUpdatingPartialPayment}>
+                                                                    {isUpdatingPartialPayment ? (
+                                                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                                                    ) : null}
+                                                                    {t('actions.save') || 'Save'}
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+                                                            <div className="flex flex-1 items-center gap-2">
+                                                                <span className="font-semibold">
+                                                                    {formatPrice(parseFloat(payment.amount || 0))}
+                                                                </span>
+                                                                {payment.note ? (
+                                                                    <span className="text-muted-foreground">— {payment.note}</span>
+                                                                ) : null}
+                                                                <Badge
+                                                                    variant={payment.paymentStatus === 'paid' ? 'default' : 'outline'}
+                                                                    className="text-xs">
+                                                                    {t(`status.payment.${payment.paymentStatus || 'pending'}`) || payment.paymentStatus || 'pending'}
+                                                                </Badge>
+                                                                {payment.paymentMethod ? (
+                                                                    <span className="text-muted-foreground">
+                                                                        {formatPaymentMethod(payment.paymentMethod)}
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-6 px-2 text-xs"
+                                                                onClick={() => {
+                                                                    setEditingPartialPaymentId(payment.id);
+                                                                    setEditPartialData({
+                                                                        paymentStatus: payment.paymentStatus || 'pending',
+                                                                        paymentMethod: payment.paymentMethod || 'none'
+                                                                    });
+                                                                }}>
+                                                                <Pencil className="mr-1 h-3 w-3" />
+                                                                {t('actions.edit') || 'Edit'}
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        ) : null}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -4892,6 +5203,24 @@ export default function OrdersPage() {
                                                 )}
                                             </div>
                                         </div>
+                                        {(() => {
+                                            const _invPartials = Array.isArray(selectedOrderForInvoice.partialPayments) ? selectedOrderForInvoice.partialPayments : [];
+                                            const _invTotalPaid = _invPartials.filter(p => p.paymentStatus === 'paid').reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+                                            if (_invTotalPaid <= 0) return null;
+                                            const _invBalanceDue = Math.max(0, parseFloat(selectedOrderForInvoice.finalTotal || selectedOrderForInvoice.total || 0) - _invTotalPaid);
+                                            return (
+                                                <>
+                                                    <div className="flex justify-between md:grid md:grid-cols-4 md:gap-2">
+                                                        <div className="md:col-span-3 md:text-right font-semibold text-emerald-700">{t('invoice.alreadyPaid') || 'Already Paid'}:</div>
+                                                        <div className="md:text-right font-semibold text-emerald-700">-{formatPrice(_invTotalPaid)}</div>
+                                                    </div>
+                                                    <div className="flex justify-between md:grid md:grid-cols-4 md:gap-2 border-t border-gray-200 pt-2">
+                                                        <div className="md:col-span-3 md:text-right font-bold text-lg">{t('invoice.balanceDue') || 'Balance Due'}:</div>
+                                                        <div className="md:text-right font-bold text-lg">{formatPrice(_invBalanceDue)}</div>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
                                 </div> 
                             </div>
@@ -4955,10 +5284,15 @@ export default function OrdersPage() {
                                     <div>
                                         <span className="text-gray-500">{t('invoice.totalAmount')}:</span>
                                         <p className="font-medium">
-                                            {formatPrice(
-                                                selectedOrderForInvoice.finalTotal || selectedOrderForInvoice.total
-                                            )}
+                                            {formatPrice(selectedOrderForInvoice.finalTotal || selectedOrderForInvoice.total)}
                                         </p>
+                                        {(() => {
+                                            const _p = Array.isArray(selectedOrderForInvoice.partialPayments) ? selectedOrderForInvoice.partialPayments : [];
+                                            const _paid = _p.filter(x => x.paymentStatus === 'paid').reduce((s, x) => s + parseFloat(x.amount || 0), 0);
+                                            if (_paid <= 0) return null;
+                                            const _due = Math.max(0, parseFloat(selectedOrderForInvoice.finalTotal || selectedOrderForInvoice.total || 0) - _paid);
+                                            return <p className="mt-1 text-sm text-muted-foreground">{t('invoice.balanceDue') || 'Balance Due'}: <span className="font-medium text-card-foreground">{formatPrice(_due)}</span></p>;
+                                        })()}
                                     </div>
                                     <div>
                                         <span className="text-gray-500">{t('invoice.orderDate')}:</span>
@@ -4978,6 +5312,58 @@ export default function OrdersPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Partial Payments — read-only list; management is in Edit Payment dialog */}
+                            {(() => {
+                                const _partials = Array.isArray(selectedOrderForInvoice.partialPayments)
+                                    ? selectedOrderForInvoice.partialPayments
+                                    : [];
+                                if (_partials.length === 0) return null;
+                                return (
+                                    <div className="border-t pt-4">
+                                        <h4 className="mb-3 font-medium text-sm">{t('invoice.partialPayments') || 'Partial Payments'}</h4>
+                                        <div className="space-y-2">
+                                            {_partials.map((payment) => (
+                                                <div
+                                                    key={payment.id}
+                                                    className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-2 text-xs">
+                                                    <div className="flex flex-1 items-center gap-2">
+                                                        <span className="font-semibold">{formatPrice(parseFloat(payment.amount || 0))}</span>
+                                                        {payment.note ? (
+                                                            <span className="text-muted-foreground">— {payment.note}</span>
+                                                        ) : null}
+                                                        <Badge
+                                                            variant={payment.paymentStatus === 'paid' ? 'default' : 'outline'}
+                                                            className="text-xs">
+                                                            {t(`status.payment.${payment.paymentStatus || 'pending'}`)}
+                                                        </Badge>
+                                                        {payment.paymentMethod ? (
+                                                            <span className="text-muted-foreground">
+                                                                {formatPaymentMethod(payment.paymentMethod)}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 px-2 text-xs"
+                                                        onClick={() => {
+                                                            const url = getPartialInvoiceUrl(selectedOrderForInvoice, payment.id);
+                                                            if (url) {
+                                                                navigator.clipboard.writeText(url).then(() => {
+                                                                    toast.success(t('invoice.copyPartialUrl') || 'Copied!');
+                                                                });
+                                                            }
+                                                        }}>
+                                                        <Copy className="mr-1 h-3 w-3" />
+                                                        {t('invoice.copyPartialUrl') || 'Copy URL'}
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     )}
                 </DialogContent>

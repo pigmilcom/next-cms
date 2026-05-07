@@ -421,7 +421,8 @@
                     "cash": "Efectivo",
                     "crypto": "Criptomoneda",
                     "eupago_mb": "Multibanco (EuPago)",
-                    "eupago_mbway": "MB WAY (EuPago)"
+                    "eupago_mbway": "MB WAY (EuPago)",
+                    "stripe": "Stripe (Tarjeta)"
                 }
             },
             "actions": {
@@ -450,7 +451,9 @@
                 "updateStatus": "Actualizar estado",
                 "updatePayment": "Actualizar pago",
                 "creating": "Creando...",
-                "createOrder": "Crear pedido"
+                "createOrder": "Crear pedido",
+                "save": "Guardar",
+                "edit": "Editar"
             },
             "errors": {
                 "connectionErrorTitle": "Error de conexión",
@@ -689,6 +692,8 @@
                 "shipping": "Envío",
                 "tax": "Impuesto",
                 "total": "Total",
+                "alreadyPaid": "Ya Pagado",
+                "balanceDue": "Saldo Pendiente",
                 "totalAmount": "Importe total",
                 "thankYou": "¡Gracias por tu compra!",
                 "yourBusiness": "tu confianza",
@@ -698,7 +703,17 @@
                 "emailInvoice": "Enviar factura por email",
                 "emailSubject": "Factura del pedido #{orderId}",
                 "emailBody": "Hola {customerName},\n\nAquí tienes los detalles de tu factura:\n\nPedido: #{orderId}\nTotal: {total}\nFecha: {date}\n\nGracias por tu compra.",
-                "generating": "Generando..."
+                "generating": "Generando...",
+                "partialPayments": "Pagos Parciales",
+                "createPartialInvoice": "Crear Factura Parcial",
+                "partialAmount": "Importe",
+                "partialNote": "Nota (opcional)",
+                "partialInvoiceUrl": "URL de Factura Parcial",
+                "copyPartialUrl": "Copiar URL Parcial",
+                "noPartialPayments": "Sin pagos parciales",
+                "addPartialPayment": "Crear Factura Parcial",
+                "partialPaymentCreated": "Factura parcial creada correctamente",
+                "partialPaymentUpdated": "Pago parcial actualizado con éxito"
             },
             "csv": {
                 "dialog": {

@@ -421,7 +421,8 @@
                     "cash": "Espèces",
                     "crypto": "Cryptomonnaie",
                     "eupago_mb": "Multibanco (EuPago)",
-                    "eupago_mbway": "MB WAY (EuPago)"
+                    "eupago_mbway": "MB WAY (EuPago)",
+                    "stripe": "Stripe (Carte)"
                 }
             },
             "actions": {
@@ -450,7 +451,9 @@
                 "updateStatus": "Mettre à jour le statut",
                 "updatePayment": "Mettre à jour le paiement",
                 "creating": "Création...",
-                "createOrder": "Créer la commande"
+                "createOrder": "Créer la commande",
+                "save": "Enregistrer",
+                "edit": "Modifier"
             },
             "errors": {
                 "connectionErrorTitle": "Erreur de connexion",
@@ -680,6 +683,8 @@
                 "shipping": "Livraison",
                 "tax": "Taxe",
                 "total": "Total",
+                "alreadyPaid": "Déjà Payé",
+                "balanceDue": "Solde Dû",
                 "totalAmount": "Montant total",
                 "thankYou": "Merci pour votre commande !",
                 "yourBusiness": "votre confiance",
@@ -689,7 +694,17 @@
                 "emailInvoice": "Envoyer la facture par email",
                 "emailSubject": "Facture pour la commande #{orderId}",
                 "emailBody": "Bonjour {customerName},\n\nVeuillez trouver ci-dessous les détails de votre facture :\n\nCommande : #{orderId}\nTotal : {total}\nDate : {date}\n\nMerci pour votre achat.",
-                "generating": "Génération..."
+                "generating": "Génération...",
+                "partialPayments": "Paiements Partiels",
+                "createPartialInvoice": "Créer une Facture Partielle",
+                "partialAmount": "Montant",
+                "partialNote": "Note (facultatif)",
+                "partialInvoiceUrl": "URL de Facture Partielle",
+                "copyPartialUrl": "Copier l'URL Partielle",
+                "noPartialPayments": "Aucun paiement partiel",
+                "addPartialPayment": "Créer une Facture Partielle",
+                "partialPaymentCreated": "Facture partielle créée avec succès",
+                "partialPaymentUpdated": "Paiement partiel mis à jour avec succès"
             },
             "csv": {
                 "dialog": {

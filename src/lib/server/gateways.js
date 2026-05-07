@@ -61,6 +61,40 @@ export async function confirmOrderPayment(orderId, paymentData = {}, locale = nu
 
         const existingOrder = orderData.data[0];
         const orderKey = existingOrder?.key || orderId;
+
+        // Handle partial payment confirmation
+        if (paymentData.partialPaymentId) {
+            const { updatePartialPayment } = await import('@/lib/server/orders.js');
+            const partialResult = await updatePartialPayment(orderId, paymentData.partialPaymentId, {
+                paymentStatus: 'paid',
+                paymentMethod: paymentData.paymentMethod || existingOrder.paymentMethod || '',
+                paidAt: new Date().toISOString(),
+                paymentIntentId: paymentData.paymentIntentId || '',
+                eupagoReference: paymentData.eupagoReference || '',
+                eupagoEntity: paymentData.eupagoEntity || '',
+                eupagoTransactionId: paymentData.eupagoTransactionId || '',
+                eupagoMethod: paymentData.eupagoMethod || ''
+            });
+
+            if (!partialResult?.success) {
+                return {
+                    success: false,
+                    error: partialResult?.error || 'Failed to confirm partial payment'
+                };
+            }
+
+            // Re-fetch the order to get the latest state (may have been auto-marked as paid)
+            const refreshed = await getAllOrders({ orderId, limit: 1 });
+            const refreshedOrder = refreshed.data?.[0] || { ...existingOrder, ...partialResult.data };
+
+            await sendPaidOrderNotificationsForOrder(refreshedOrder, locale);
+
+            return {
+                success: true,
+                data: refreshedOrder
+            };
+        }
+
         const updatedOrder = buildPaidOrderUpdate(existingOrder, paymentData);
 
         const updateResult = await updateWithCacheClear(orderKey, updatedOrder, 'orders', [

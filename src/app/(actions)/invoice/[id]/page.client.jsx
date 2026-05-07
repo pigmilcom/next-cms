@@ -100,7 +100,8 @@ const InvoicePageContent = ({
     stripeReady,
     stripeOptions,
     stripe,
-    elements
+    elements,
+    activePartialPaymentId
 }) => {
     const router = useRouter();
     const pathname = usePathname();
@@ -161,6 +162,27 @@ const InvoicePageContent = ({
         0,
         (parseFloat(currentOrder.finalTotal || currentOrder.total || currentOrder.amount || 0) || 0) - originalShippingCost + currentShippingCost
     );
+
+    // Partial payment logic
+    const partialPayments = Array.isArray(currentOrder.partialPayments) ? currentOrder.partialPayments : [];
+    const activePartialPayment = activePartialPaymentId
+        ? partialPayments.find((p) => p.id === activePartialPaymentId) || null
+        : null;
+    const totalPaidByPartials = partialPayments
+        .filter((p) => p.paymentStatus === 'paid')
+        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+    const remainingBalance = Math.max(0, effectiveTotal - totalPaidByPartials);
+    // Auto-detect first pending partial even without ?payment=ID in URL
+    const firstPendingPartial = partialPayments.find((p) => p.paymentStatus === 'pending') || null;
+    // URL-specified partial takes priority; otherwise fall back to first pending
+    const effectivePartialPayment = activePartialPayment ?? firstPendingPartial;
+    // The amount the customer actually needs to pay in this session
+    const paymentAmount = effectivePartialPayment
+        ? parseFloat(effectivePartialPayment.amount || 0)
+        : totalPaidByPartials > 0 ? remainingBalance : effectiveTotal;
+    const isPartialInvoice = Boolean(activePartialPaymentId && activePartialPayment);
+    const isPartialAlreadyPaid = isPartialInvoice && activePartialPayment?.paymentStatus === 'paid';
+
     const selectedCountry =
         currentOrder.shippingAddress?.countryIso ||
         (String(currentOrder.shippingAddress?.country || '').length === 2 ? currentOrder.shippingAddress?.country : '') ||
@@ -331,10 +353,10 @@ const InvoicePageContent = ({
         }
 
         elements.update({
-            amount: Math.round(effectiveTotal * 100),
+            amount: Math.round(paymentAmount * 100),
             currency: currentCurrency.toLowerCase()
         });
-    }, [currentCurrency, effectiveTotal, elements, selectedPaymentMethod]);
+    }, [currentCurrency, paymentAmount, elements, selectedPaymentMethod]);
 
     const handlePrint = async () => {
         try {
@@ -497,6 +519,7 @@ const InvoicePageContent = ({
             }
 
             if (
+                !isPartialInvoice &&
                 hasPhysicalItems &&
                 !selectedShippingMethod &&
                 !currentOrder.shipping?.method &&
@@ -516,12 +539,13 @@ const InvoicePageContent = ({
                 }
 
                 const stripeResult = await createStripePaymentIntent({
-                    amount: Math.round(effectiveTotal * 100),
+                    amount: Math.round(paymentAmount * 100),
                     currency: currentCurrency,
                     email: currentOrder.email || currentOrder.customer?.email || '',
                     metadata: {
                         order_id: currentOrder.id,
-                        payment_context: 'invoice'
+                        payment_context: isPartialInvoice ? 'partial_invoice' : 'invoice',
+                        ...(isPartialInvoice && { partial_payment_id: activePartialPaymentId })
                     }
                 });
 
@@ -549,7 +573,8 @@ const InvoicePageContent = ({
                     paymentStatus: 'paid',
                     status: currentOrder.status && currentOrder.status !== 'pending' ? currentOrder.status : 'processing',
                     paidAt: new Date().toISOString(),
-                    paymentIntentId: paymentIntent.id
+                    paymentIntentId: paymentIntent.id,
+                    ...(isPartialInvoice && { partialPaymentId: activePartialPaymentId })
                 });
 
                 const updateResult = await confirmOrderPayment(currentOrder.id, updatePayload, selectedInvoiceLanguage);
@@ -569,7 +594,13 @@ const InvoicePageContent = ({
             if (selectedPaymentMethod.startsWith('eupago_')) {
                 const eupagoMethod = selectedPaymentMethod.replace('eupago_', '');
 
+                // For partial payments, check existing reference in the partial payment record
+                const existingPartialEupagoRef = isPartialInvoice
+                    ? activePartialPayment?.eupagoReference
+                    : null;
+
                 if (
+                    !isPartialInvoice &&
                     selectedPaymentMethod === currentPaymentMethod &&
                     currentOrder.eupagoReference &&
                     currentOrder.paymentStatus === 'pending'
@@ -579,7 +610,18 @@ const InvoicePageContent = ({
                         eupagoMethod,
                         reference: currentOrder.eupagoReference,
                         entity: currentOrder.eupagoEntity,
-                        amount: effectiveTotal
+                        amount: paymentAmount
+                    });
+                    return;
+                }
+
+                if (isPartialInvoice && existingPartialEupagoRef && activePartialPayment?.paymentStatus === 'pending') {
+                    navigateToStatusPage({
+                        paymentMethod: 'eupago',
+                        eupagoMethod,
+                        reference: existingPartialEupagoRef,
+                        entity: activePartialPayment?.eupagoEntity || '',
+                        amount: paymentAmount
                     });
                     return;
                 }
@@ -590,7 +632,7 @@ const InvoicePageContent = ({
 
                 const eupagoResult = await createEuPagoReference({
                     orderId: currentOrder.id,
-                    amount: effectiveTotal,
+                    amount: paymentAmount,
                     method: eupagoMethod,
                     mobile: eupagoMethod === 'mbway' ? mbwayMobile : null,
                     customerEmail: currentOrder.email || currentOrder.customer?.email || '',
@@ -601,15 +643,64 @@ const InvoicePageContent = ({
                     throw new Error(eupagoResult?.error || t('paymentErrors.eupagoReference'));
                 }
 
+                if (isPartialInvoice) {
+                    // Update partial payment record with eupago reference details
+                    const { updatePartialPayment } = await import('@/lib/server/orders.js');
+                    await updatePartialPayment(currentOrder.id, activePartialPaymentId, {
+                        paymentMethod: selectedPaymentMethod,
+                        eupagoReference: eupagoResult.reference || '',
+                        eupagoEntity: eupagoResult.entity || '',
+                        eupagoTransactionId: eupagoResult.transactionId || '',
+                        eupagoMethod,
+                        eupagoMobile: eupagoMethod === 'mbway' ? mbwayMobile : ''
+                    });
+                } else {
+                    const updatePayload = buildOrderUpdatePayload({
+                        paymentMethod: selectedPaymentMethod,
+                        paymentStatus: 'pending',
+                        eupagoReference: eupagoResult.reference || '',
+                        eupagoEntity: eupagoResult.entity || '',
+                        eupagoTransactionId: eupagoResult.transactionId || '',
+                        eupagoMethod,
+                        eupagoMobile: eupagoMethod === 'mbway' ? mbwayMobile : '',
+                        expiryTime: getExpiryTime(eupagoMethod)
+                    });
+
+                    const updateResult = await updateOrder(currentOrder.id, updatePayload);
+                    if (!updateResult?.success) {
+                        throw new Error(updateResult?.error || t('paymentErrors.updateOrder'));
+                    }
+
+                    setCurrentOrder((prev) => ({
+                        ...prev,
+                        ...updatePayload
+                    }));
+                }
+
+                navigateToStatusPage({
+                    paymentMethod: 'eupago',
+                    eupagoMethod,
+                    reference: eupagoResult.reference,
+                    entity: eupagoResult.entity || '',
+                    amount: eupagoResult.amount || paymentAmount
+                });
+                return;
+            }
+
+            if (
+                !isPartialInvoice &&
+                selectedPaymentMethod === currentPaymentMethod &&
+                currentOrder.paymentStatus === 'pending' &&
+                ['bank_transfer', 'pay_on_delivery'].includes(selectedPaymentMethod)
+            ) {
+                navigateToStatusPage({ paymentMethod: selectedPaymentMethod });
+                return;
+            }
+
+            if (!isPartialInvoice) {
                 const updatePayload = buildOrderUpdatePayload({
                     paymentMethod: selectedPaymentMethod,
-                    paymentStatus: 'pending',
-                    eupagoReference: eupagoResult.reference || '',
-                    eupagoEntity: eupagoResult.entity || '',
-                    eupagoTransactionId: eupagoResult.transactionId || '',
-                    eupagoMethod,
-                    eupagoMobile: eupagoMethod === 'mbway' ? mbwayMobile : '',
-                    expiryTime: getExpiryTime(eupagoMethod)
+                    paymentStatus: 'pending'
                 });
 
                 const updateResult = await updateOrder(currentOrder.id, updatePayload);
@@ -621,40 +712,7 @@ const InvoicePageContent = ({
                     ...prev,
                     ...updatePayload
                 }));
-
-                navigateToStatusPage({
-                    paymentMethod: 'eupago',
-                    eupagoMethod,
-                    reference: eupagoResult.reference,
-                    entity: eupagoResult.entity || '',
-                    amount: eupagoResult.amount || effectiveTotal
-                });
-                return;
             }
-
-            if (
-                selectedPaymentMethod === currentPaymentMethod &&
-                currentOrder.paymentStatus === 'pending' &&
-                ['bank_transfer', 'pay_on_delivery'].includes(selectedPaymentMethod)
-            ) {
-                navigateToStatusPage({ paymentMethod: selectedPaymentMethod });
-                return;
-            }
-
-            const updatePayload = buildOrderUpdatePayload({
-                paymentMethod: selectedPaymentMethod,
-                paymentStatus: 'pending'
-            });
-
-            const updateResult = await updateOrder(currentOrder.id, updatePayload);
-            if (!updateResult?.success) {
-                throw new Error(updateResult?.error || t('paymentErrors.updateOrder'));
-            }
-
-            setCurrentOrder((prev) => ({
-                ...prev,
-                ...updatePayload
-            }));
 
             navigateToStatusPage({ paymentMethod: selectedPaymentMethod });
         } catch (error) {
@@ -710,20 +768,50 @@ const InvoicePageContent = ({
                     </div> 
                 </div>
 
-                {currentOrder.paymentStatus === 'pending' && availablePaymentMethods.length > 0 ? (
+                {(currentOrder.paymentStatus === 'pending' || (isPartialInvoice && !isPartialAlreadyPaid) || firstPendingPartial) && availablePaymentMethods.length > 0 ? (
                     <Card className="border-amber-200 bg-amber-50/70 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30">
                         <CardHeader className="pb-4">
                             <CardTitle className="flex items-center gap-2 text-lg text-amber-950 dark:text-amber-100">
                                 <ShieldCheck className="h-5 w-5" />
-                                {t('completePendingPayment')}
+                                {effectivePartialPayment ? t('partialInvoice') || t('completePendingPayment') : t('completePendingPayment')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="rounded-lg border border-amber-200 bg-card/90 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:text-amber-100">
-                                {selectedPaymentMethod === currentPaymentMethod && currentOrder.paymentStatus === 'pending'
-                                    ? t('pendingPaymentCurrentMessage')
-                                    : t('pendingPaymentSelectMessage')}
-                            </div>
+                            {effectivePartialPayment ? (
+                                <div className="rounded-lg border border-amber-200 bg-card/90 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:text-amber-100">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="font-medium">{t('payNow') || 'Pay Now'}:</span>
+                                        <span className="font-bold">{formatCurrency(paymentAmount, currentCurrency)}</span>
+                                    </div>
+                                    {totalPaidByPartials > 0 ? (
+                                        <div className="mt-2 flex items-center justify-between gap-2">
+                                            <span>{t('alreadyPaid') || 'Already Paid'}:</span>
+                                            <span className="font-medium text-emerald-700 dark:text-emerald-400">-{formatCurrency(totalPaidByPartials, currentCurrency)}</span>
+                                        </div>
+                                    ) : null}
+                                    <div className="mt-2 flex items-center justify-between gap-2 border-t border-amber-200/60 pt-2 dark:border-amber-900/40">
+                                        <span>{t('total') || 'Total'}:</span>
+                                        <span className="font-medium">{formatCurrency(effectiveTotal, currentCurrency)}</span>
+                                    </div>
+                                </div>
+                            ) : totalPaidByPartials > 0 ? (
+                                <div className="rounded-lg border border-amber-200 bg-card/90 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:text-amber-100">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span>{t('alreadyPaid') || 'Already Paid'}:</span>
+                                        <span className="font-medium text-emerald-700 dark:text-emerald-400">{formatCurrency(totalPaidByPartials, currentCurrency)}</span>
+                                    </div>
+                                    <div className="mt-2 flex items-center justify-between gap-2">
+                                        <span>{t('balanceDue') || 'Balance Due'}:</span>
+                                        <span className="font-semibold">{formatCurrency(paymentAmount, currentCurrency)}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="rounded-lg border border-amber-200 bg-card/90 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:text-amber-100">
+                                    {selectedPaymentMethod === currentPaymentMethod && currentOrder.paymentStatus === 'pending'
+                                        ? t('pendingPaymentCurrentMessage')
+                                        : t('pendingPaymentSelectMessage')}
+                                </div>
+                            )}
 
                             {hasPhysicalItems ? (
                                 <div className="relative">
@@ -875,7 +963,7 @@ const InvoicePageContent = ({
                                                                 ) : null}
                                                                 <div className="flex items-center justify-between gap-3 border-t border-border pt-2">
                                                                     <span className="font-medium text-muted-foreground">{t('transferAmount')}</span>
-                                                                    <span className="text-right font-semibold">{formatCurrency(effectiveTotal, currentCurrency)}</span>
+                                                                    <span className="text-right font-semibold">{formatCurrency(paymentAmount, currentCurrency)}</span>
                                                                 </div>
                                                                 <div className="flex items-center justify-between gap-3">
                                                                     <span className="font-medium text-muted-foreground">{t('transferReference')}</span>
@@ -911,8 +999,29 @@ const InvoicePageContent = ({
 
                                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="text-sm text-muted-foreground">
-                                        <div>{t('total')}: <span className="font-semibold text-card-foreground">{formatCurrency(effectiveTotal, currentCurrency)}</span></div>
-                                        {hasPhysicalItems && selectedShippingMethod ? (
+                                        <div>
+                                            {t('total') || 'Total'}:{' '}
+                                            <span className="font-semibold text-card-foreground">{formatCurrency(effectiveTotal, currentCurrency)}</span>
+                                        </div>
+                                        {totalPaidByPartials > 0 ? (
+                                            <div className="mt-1">
+                                                {t('alreadyPaid') || 'Already Paid'}:{' '}
+                                                <span className="font-medium text-emerald-600 dark:text-emerald-400">-{formatCurrency(totalPaidByPartials, currentCurrency)}</span>
+                                            </div>
+                                        ) : null}
+                                        {partialPayments.length > 0 ? (
+                                            <div className="mt-1">
+                                                {t('amountDue') || 'Amount Due'}:{' '}
+                                                <span className="font-semibold text-card-foreground">{formatCurrency(remainingBalance, currentCurrency)}</span>
+                                            </div>
+                                        ) : null}
+                                        {effectivePartialPayment ? (
+                                            <div className="mt-1 border-t border-border pt-1">
+                                                {t('payNow') || 'Pay Now'}:{' '}
+                                                <span className="font-bold text-amber-700 dark:text-amber-400">{formatCurrency(paymentAmount, currentCurrency)}</span>
+                                            </div>
+                                        ) : null}
+                                        {!effectivePartialPayment && !totalPaidByPartials && hasPhysicalItems && selectedShippingMethod ? (
                                             <div className="mt-1">{t('shippingMethod')}: {selectedShippingMethod.name}</div>
                                         ) : null}
                                     </div>
@@ -939,11 +1048,18 @@ const InvoicePageContent = ({
                             </div>
                         </CardContent>
                     </Card>
-                ) : currentOrder.paymentStatus === 'pending' ? (
+                ) : (currentOrder.paymentStatus === 'pending' || (isPartialInvoice && !isPartialAlreadyPaid)) ? (
                     <Card className="border-dashed border-border bg-card/90 shadow-sm">
                         <CardContent className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
                             <AlertCircle className="h-5 w-5 shrink-0" />
                             <span>{t('noPaymentMethodsAvailable')}</span>
+                        </CardContent>
+                    </Card>
+                ) : isPartialAlreadyPaid ? (
+                    <Card className="border-emerald-200 bg-emerald-50/70 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/30">
+                        <CardContent className="flex items-center gap-3 p-5 text-sm text-emerald-900 dark:text-emerald-100">
+                            <CheckCircle2 className="h-5 w-5 shrink-0" />
+                            <span>{t('invoiceAlreadyPaid')}</span>
                         </CardContent>
                     </Card>
                 ) : (
@@ -1139,7 +1255,59 @@ const InvoicePageContent = ({
                             <span>{t('total')}</span>
                             <span>{formatCurrency(effectiveTotal, currentCurrency)}</span>
                         </div>
+                        {totalPaidByPartials > 0 ? (
+                            <>
+                                <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400">
+                                    <span>{t('alreadyPaid') || 'Already Paid'}</span>
+                                    <span>-{formatCurrency(totalPaidByPartials, currentCurrency)}</span>
+                                </div>
+                                <div className="flex items-center justify-between border-t border-border pt-2 font-semibold text-card-foreground">
+                                    <span>{t('amountDue') || 'Amount Due'}</span>
+                                    <span>{formatCurrency(remainingBalance, currentCurrency)}</span>
+                                </div>
+                            </>
+                        ) : null}
+                        {effectivePartialPayment ? (
+                            <div className="flex items-center justify-between border-t border-border pt-2 font-semibold text-amber-700 dark:text-amber-400">
+                                <span>{t('payNow') || 'Pay Now'}</span>
+                                <span>{formatCurrency(paymentAmount, currentCurrency)}</span>
+                            </div>
+                        ) : null}
                     </div>
+
+                    {partialPayments.length > 0 ? (
+                        <div className="mt-6 w-full rounded-lg border border-border bg-accent/10 p-4 sm:p-5">
+                            <p className="mb-3 text-sm font-medium text-card-foreground">{t('partialPayments') || 'Payment History'}</p>
+                            <div className="space-y-2">
+                                {partialPayments.map((payment) => (
+                                    <div
+                                        key={payment.id}
+                                        className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card/60 px-3 py-2 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            {payment.paymentStatus === 'paid' ? (
+                                                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                            ) : (
+                                                <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
+                                            )}
+                                            <span className="font-medium text-card-foreground">
+                                                {formatCurrency(parseFloat(payment.amount || 0), currentCurrency)}
+                                            </span>
+                                            {payment.note ? (
+                                                <span className="text-muted-foreground">— {payment.note}</span>
+                                            ) : null}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            {payment.paymentStatus === 'paid' && payment.paidAt ? (
+                                                <span>{t('paidOn') || 'Paid on'} {formatDate(payment.paidAt, selectedInvoiceLanguage)}</span>
+                                            ) : (
+                                                <span>{formatOrderStatus(payment.paymentStatus || 'pending', t)}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
 
                     <p className="mt-8 max-w-3xl text-xs leading-5 text-muted-foreground">{t('invoiceDisclaimer')}</p>
                 </section>

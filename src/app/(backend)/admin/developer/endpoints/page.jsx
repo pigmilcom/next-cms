@@ -170,15 +170,13 @@ export default function EndpointsPage() {
     };
 
     const filteredEndpoints = endpoints.filter((endpoint) => {
-        // Only show query public routes and upload routes
-        const isRelevantRoute =
-            endpoint.path.includes('/api/query/public/') ||
-            endpoint.path.includes('/api/upload') ||
-            endpoint.path.includes('/api/ai/');
-        const matchesSearch =
+        if (!searchTerm) return true;
+        return (
             endpoint.path.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            endpoint.description.toLowerCase().includes(searchTerm.toLowerCase());
-        return isRelevantRoute && matchesSearch;
+            endpoint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            endpoint.method?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            endpoint.collection?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
     });
 
     const filteredApiKeys = apiKeys.filter((apiKey) => apiKey.name.toLowerCase().includes(searchTerm.toLowerCase()));

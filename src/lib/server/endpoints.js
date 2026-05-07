@@ -139,6 +139,9 @@ export async function createAPIKey(apiKeyData) {
             key: apiKey,
             keyPreview: `${apiKey.substring(0, 20)}...${apiKey.slice(-4)}`,
             permissions: apiKeyData.permissions || ['READ'],
+            allowedCollections: apiKeyData.allowedCollections && apiKeyData.allowedCollections.length > 0
+                ? apiKeyData.allowedCollections
+                : ['*'], // '*' = all collections
             rateLimit: apiKeyData.rateLimit || 100,
             rateLimitWindow: apiKeyData.rateLimitWindow || 3600000,
             status: 'active',

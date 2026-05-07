@@ -79,12 +79,21 @@ export async function verifyCsrfToken(request) {
 }
 
 // Enhanced public access middleware
+// Map HTTP method to the required CRUD permission
+const METHOD_PERMISSION_MAP = {
+    GET: 'READ',
+    POST: 'WRITE',
+    PUT: 'WRITE',
+    PATCH: 'WRITE',
+    DELETE: 'DELETE'
+};
+
 export async function withPublicAccess(handler, options = {}) {
     const {
         requireApiKey = false,
         requireIpWhitelist = false,
         skipCsrfForApiKey = true,
-        requiredPermission = null,
+        requiredPermission = null, // kept for backward-compat; auto-derived from method when null
         logAccess = false
     } = options;
 
@@ -122,24 +131,54 @@ export async function withPublicAccess(handler, options = {}) {
 
                 // Validate API key against database
                 const validKey = apiKeys.find(
-                    (key) =>
-                        key.key === apiKey &&
-                        key.status === 'active' &&
-                        (!key.expiresAt || new Date(key.expiresAt) > new Date())
+                    (k) =>
+                        k.key === apiKey &&
+                        k.status === 'active' &&
+                        (!k.expiresAt || new Date(k.expiresAt) > new Date())
                 );
 
                 if (!validKey) {
                     return NextResponse.json({ error: 'Invalid or expired API key.' }, { status: 401 });
                 }
 
-                // Check permissions if required
-                if (requiredPermission && validKey.permissions && !validKey.permissions.includes(requiredPermission)) {
+                // Derive required permission from HTTP method when not explicitly provided
+                const neededPermission =
+                    requiredPermission === true || requiredPermission === null
+                        ? METHOD_PERMISSION_MAP[request.method] || 'READ'
+                        : requiredPermission;
+
+                // Check CRUD permission
+                if (neededPermission && validKey.permissions && !validKey.permissions.includes(neededPermission)) {
                     return NextResponse.json(
-                        { error: `API key lacks required permission: ${requiredPermission}` },
+                        { error: `API key lacks required permission: ${neededPermission}` },
                         { status: 403 }
                     );
                 }
 
+                // Check allowedCollections — extract slug from the URL path segment after /api/query/
+                if (validKey.allowedCollections && Array.isArray(validKey.allowedCollections) && validKey.allowedCollections.length > 0) {
+                    const url = new URL(request.url);
+                    const pathParts = url.pathname.split('/').filter(Boolean);
+                    // Path: /api/query/[slug] or /api/query/public/[slug]
+                    const slugIndex = pathParts.findIndex((p) => p === 'query');
+                    const slug = slugIndex !== -1 ? pathParts[slugIndex + 1] : null;
+                    const resolvedSlug = slug === 'public' ? pathParts[slugIndex + 2] : slug;
+
+                    if (
+                        resolvedSlug &&
+                        resolvedSlug !== 'public' &&
+                        !validKey.allowedCollections.includes('*') &&
+                        !validKey.allowedCollections.includes(resolvedSlug)
+                    ) {
+                        return NextResponse.json(
+                            { error: `API key does not have access to collection: ${resolvedSlug}` },
+                            { status: 403 }
+                        );
+                    }
+                }
+
+                // Attach validated key to request for handlers to use
+                request.apiKey = validKey;
                 hasValidApiKey = true;
             }
 

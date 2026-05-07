@@ -841,6 +841,122 @@ export async function getPendingOrdersCount() {
     }
 }
 
+// ============================================================================
+// PARTIAL PAYMENTS FUNCTIONS
+// ============================================================================
+
+/**
+ * Add a partial payment record to an order
+ * @param {string} orderId - ID of the order
+ * @param {Object} paymentData - Partial payment data { amount, note, paymentMethod }
+ * @returns {Promise<Object>} Created partial payment record
+ */
+export async function addPartialPayment(orderId, paymentData) {
+    try {
+        if (!orderId || !paymentData?.amount || parseFloat(paymentData.amount) <= 0) {
+            return { success: false, error: 'Order ID and a valid amount are required' };
+        }
+
+        const orderResult = await getOrder(orderId);
+        if (!orderResult.success) {
+            return { success: false, error: 'Order not found' };
+        }
+
+        const order = orderResult.data;
+        const existing = order.partialPayments;
+        const partialPayments = Array.isArray(existing)
+            ? existing
+            : typeof existing === 'string'
+              ? (() => { try { return JSON.parse(existing); } catch { return []; } })()
+              : [];
+
+        const newPayment = {
+            id: generateUID('PAY'),
+            amount: parseFloat(paymentData.amount),
+            paymentStatus: 'pending',
+            paymentMethod: paymentData.paymentMethod || '',
+            note: paymentData.note || '',
+            createdAt: new Date().toISOString(),
+            paidAt: null,
+            eupagoReference: '',
+            eupagoEntity: '',
+            eupagoMethod: '',
+            eupagoMobile: '',
+            eupagoTransactionId: ''
+        };
+
+        const updatedPartialPayments = [...partialPayments, newPayment];
+        const result = await updateOrder(orderId, { partialPayments: updatedPartialPayments });
+
+        if (!result.success) {
+            return { success: false, error: 'Failed to save partial payment' };
+        }
+
+        return { success: true, data: newPayment };
+    } catch (error) {
+        console.error('Error adding partial payment:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Update a partial payment record within an order
+ * @param {string} orderId - ID of the order
+ * @param {string} partialPaymentId - ID of the partial payment to update
+ * @param {Object} updateData - Fields to update on the partial payment
+ * @returns {Promise<Object>} Updated partial payment record
+ */
+export async function updatePartialPayment(orderId, partialPaymentId, updateData) {
+    try {
+        if (!orderId || !partialPaymentId) {
+            return { success: false, error: 'Order ID and partial payment ID are required' };
+        }
+
+        const orderResult = await getOrder(orderId);
+        if (!orderResult.success) {
+            return { success: false, error: 'Order not found' };
+        }
+
+        const order = orderResult.data;
+        const existing = order.partialPayments;
+        const partialPayments = Array.isArray(existing)
+            ? existing
+            : typeof existing === 'string'
+              ? (() => { try { return JSON.parse(existing); } catch { return []; } })()
+              : [];
+
+        const paymentIndex = partialPayments.findIndex((p) => p.id === partialPaymentId);
+        if (paymentIndex === -1) {
+            return { success: false, error: 'Partial payment record not found' };
+        }
+
+        partialPayments[paymentIndex] = { ...partialPayments[paymentIndex], ...updateData };
+
+        // Check if all paid partial payments cover the full order total → mark order as paid
+        const totalPaid = partialPayments
+            .filter((p) => p.paymentStatus === 'paid')
+            .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+        const orderTotal = parseFloat(order.finalTotal || order.total || 0);
+        const orderUpdates = { partialPayments };
+
+        if (orderTotal > 0 && totalPaid >= orderTotal) {
+            orderUpdates.paymentStatus = 'paid';
+            orderUpdates.paidAt = orderUpdates.paidAt || new Date().toISOString();
+        }
+
+        const result = await updateOrder(orderId, orderUpdates);
+        if (!result.success) {
+            return { success: false, error: 'Failed to update partial payment' };
+        }
+
+        return { success: true, data: partialPayments[paymentIndex] };
+    } catch (error) {
+        console.error('Error updating partial payment:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 /**
  * Automatically update delivered orders to complete status if older than 30 days
  * @returns {Promise<Object>} Result with count of updated orders

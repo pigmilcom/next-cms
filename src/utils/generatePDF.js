@@ -510,6 +510,20 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt', op
     const vatAmount = parseFloat(order.vatAmount || 0) || 0;
     const totalAmount = parseFloat(order.finalTotal || order.total || order.amount || 0) || 0;
 
+    // Partial payment context
+    const partialPayments = Array.isArray(order.partialPayments) ? order.partialPayments : [];
+    const partialPaymentId = typeof options === 'object' ? options.partialPaymentId || null : null;
+    const activePartialPayment = partialPaymentId
+        ? partialPayments.find((p) => p.id === partialPaymentId) || null
+        : null;
+    const totalPaidByPartials = partialPayments
+        .filter((p) => p.paymentStatus === 'paid')
+        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+    const remainingBalance = Math.max(0, totalAmount - totalPaidByPartials);
+    const paymentDueAmount = activePartialPayment
+        ? parseFloat(activePartialPayment.amount || 0)
+        : totalAmount;
+
     doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...line.dark);
@@ -556,6 +570,69 @@ export const generatePDF = async (order, settingsInput = null, locale = 'pt', op
     doc.setFont(undefined, 'bold');
     doc.text(t('total') + ':', 155, yPos, { align: 'right' });
     doc.text(formatCurrency(totalAmount), 188, yPos, { align: 'right' });
+
+    // Already paid by partials
+    if (totalPaidByPartials > 0) {
+        yPos += 6;
+        doc.setFontSize(8);
+        doc.setTextColor(22, 163, 74); // green-600
+        doc.text((t('alreadyPaid') || 'Already Paid') + ':', 155, yPos, { align: 'right' });
+        doc.text(`-${formatCurrency(totalPaidByPartials)}`, 188, yPos, { align: 'right' });
+        yPos += 5;
+        doc.setTextColor(...line.dark);
+        doc.setFont(undefined, 'bold');
+        doc.text((t('balanceDue') || 'Balance Due') + ':', 155, yPos, { align: 'right' });
+        doc.text(formatCurrency(remainingBalance), 188, yPos, { align: 'right' });
+    }
+
+    // Amount due for this specific partial invoice
+    if (activePartialPayment) {
+        yPos += 6;
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(180, 100, 0); // amber-700
+        doc.text((t('amountDue') || 'Amount Due') + ':', 155, yPos, { align: 'right' });
+        doc.text(formatCurrency(paymentDueAmount), 188, yPos, { align: 'right' });
+        doc.setTextColor(...line.dark);
+    }
+
+    // Payment history section
+    if (partialPayments.length > 0) {
+        yPos += 14;
+        if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+        }
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...line.medium);
+        doc.text((t('partialPayments') || 'Payment History') + ':', marginX, yPos);
+        yPos += 5;
+
+        doc.setFont(undefined, 'normal');
+        for (const payment of partialPayments) {
+            if (yPos > 260) {
+                doc.addPage();
+                yPos = 20;
+            }
+            const amount = parseFloat(payment.amount || 0);
+            const statusLabel = payment.paymentStatus !== 'paid' ? (payment.paymentStatus || 'pending') : '';
+            const dateLabel = payment.paidAt
+                ? `${t('paidOn') || 'Paid on'} ${new Date(payment.paidAt).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}`
+                : '';
+            const noteLabel = payment.note ? ` — ${payment.note}` : '';
+            const line1 = `${formatCurrency(amount)}${noteLabel} (${statusLabel}${dateLabel ? `${dateLabel}` : ''})`;
+            if (payment.paymentStatus === 'paid') {
+                doc.setTextColor(22, 163, 74);
+            } else {
+                doc.setTextColor(...line.dark);
+            }
+            doc.text(`• ${line1}`, marginX + 2, yPos);
+            yPos += 4.5;
+        }
+        doc.setTextColor(...line.dark);
+    }
 
     // ===== FOOTER =====
     yPos += 20;

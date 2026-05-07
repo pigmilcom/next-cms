@@ -423,7 +423,8 @@
                     "cash": "Cash",
                     "crypto": "Cryptocurrency",
                     "eupago_mb": "Multibanco (EuPago)",
-                    "eupago_mbway": "MB WAY (EuPago)"
+                    "eupago_mbway": "MB WAY (EuPago)",
+                    "stripe": "Stripe (Card)"
                 }
             },
             "actions": {
@@ -452,7 +453,9 @@
                 "updateStatus": "Update Status",
                 "updatePayment": "Update Payment",
                 "creating": "Creating...",
-                "createOrder": "Create Order"
+                "createOrder": "Create Order",
+                "save": "Save",
+                "edit": "Edit"
             },
             "errors": {
                 "connectionErrorTitle": "Connection Error",
@@ -691,6 +694,8 @@
                 "shipping": "Shipping",
                 "tax": "Tax",
                 "total": "Total",
+                "alreadyPaid": "Already Paid",
+                "balanceDue": "Balance Due",
                 "totalAmount": "Total Amount",
                 "thankYou": "Thank you for your business!",
                 "yourBusiness": "your business",
@@ -700,7 +705,17 @@
                 "emailInvoice": "Email Invoice",
                 "emailSubject": "Invoice for Order #{orderId}",
                 "emailBody": "Hello {customerName},\n\nPlease find your invoice details below:\n\nOrder: #{orderId}\nTotal: {total}\nDate: {date}\n\nThank you for your purchase.",
-                "generating": "Generating..."
+                "generating": "Generating...",
+                "partialPayments": "Partial Payments",
+                "createPartialInvoice": "Create Partial Invoice",
+                "partialAmount": "Amount",
+                "partialNote": "Note (optional)",
+                "partialInvoiceUrl": "Partial Invoice URL",
+                "copyPartialUrl": "Copy Partial URL",
+                "noPartialPayments": "No partial payments yet",
+                "addPartialPayment": "Create Partial Invoice",
+                "partialPaymentCreated": "Partial invoice created successfully",
+                "partialPaymentUpdated": "Partial payment updated successfully"
             },
             "csv": {
                 "dialog": {

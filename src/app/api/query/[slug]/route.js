@@ -1,4 +1,4 @@
-// app/api/query/public/[slug]/route.js
+// app/api/query/[slug]/route.js
 import { NextResponse } from 'next/server';
 import DBService from '@/data/rest.db.js';
 import { withPublicAccess } from '@/lib/server/auth.js';
@@ -143,39 +143,24 @@ async function checkApiAccess(request) {
     }
 }
 
-// Track API usage if API key is provided
+// Track API usage if API key is provided (increments DB counter)
 async function trackApiUsage(request) {
     try {
-        const url = new URL(request.url);
-        const authHeader = request.headers.get('authorization');
-        const apiKeyFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-        const apiKeyFromQuery = url.searchParams.get('api_key');
-        const apiKey = apiKeyFromHeader || apiKeyFromQuery;
+        // request.apiKey is attached by withPublicAccess when a valid key is present
+        const validKey = request.apiKey;
+        if (!validKey) return;
 
-        if (apiKey) {
-            // Log API usage for analytics (could be stored in a separate analytics collection)
-            console.log(`API Key used: ${apiKey.substring(0, 8)}... for ${request.method} ${url.pathname}`);
+        const keyId = validKey.id || validKey.key;
+        if (!keyId) return;
 
-            // Optional: Store usage statistics in a separate analytics collection
-            try {
-                await DBService.create(
-                    {
-                        apiKey: `${apiKey.substring(0, 8)}...`,
-                        method: request.method,
-                        endpoint: url.pathname,
-                        timestamp: new Date().toISOString(),
-                        userAgent: request.headers.get('user-agent') || 'unknown'
-                    },
-                    'api_usage_logs'
-                );
-            } catch (logError) {
-                // Ignore logging errors to not affect the main request
-                console.error('Failed to log API usage:', logError);
-            }
-        }
-    } catch (error) {
-        console.error('Error tracking API usage:', error);
-        // Don't fail the request if tracking fails
+        // Fire-and-forget: increment usage counter without blocking response
+        DBService.update(keyId, {
+            ...validKey,
+            usage: (validKey.usage || 0) + 1,
+            lastUsed: new Date().toISOString()
+        }, 'api_keys').catch(() => {});
+    } catch {
+        // Silently ignore tracking errors
     }
 }
 
@@ -203,12 +188,11 @@ async function handlePublicGet(request, { params }) {
         // Check cache first (only for GET requests without API key - authenticated requests skip cache)
         const authHeader = request.headers.get('authorization');
         const apiKeyFromQuery = url.searchParams.get('api_key');
-        const hasApiKey = authHeader?.startsWith('Bearer ') || apiKeyFromQuery;
+        const hasApiKey = request.apiKey || authHeader?.startsWith('Bearer ') || apiKeyFromQuery;
 
         if (!hasApiKey) {
             const cachedResponse = getPublicCachedResponse(cacheKey, cacheDuration);
             if (cachedResponse) {
-                // Return cached response with cache header
                 return NextResponse.json(cachedResponse, {
                     headers: {
                         'X-Cache': 'HIT',
@@ -218,16 +202,7 @@ async function handlePublicGet(request, { params }) {
             }
         }
 
-        // Check if API access is allowed
-        const accessCheck = await checkApiAccess(request);
-        if (!accessCheck.allowed) {
-            return NextResponse.json(
-                { error: accessCheck.error || 'API access denied' },
-                { status: accessCheck.status || 403 }
-            );
-        }
-
-        // Track API usage if API key provided
+        // Track API usage
         await trackApiUsage(request);
 
         let result;
@@ -374,19 +349,10 @@ async function handlePublicGet(request, { params }) {
     }
 }
 
-// POST create new item - public access with CSRF protection
+// POST create new item
 async function handlePublicPost(request, { params }) {
     try {
-        // Check if API access is allowed
-        const accessCheck = await checkApiAccess(request);
-        if (!accessCheck.allowed) {
-            return NextResponse.json(
-                { error: accessCheck.error || 'API access denied' },
-                { status: accessCheck.status || 403 }
-            );
-        }
-
-        // Track API usage if API key provided
+        // Track API usage
         await trackApiUsage(request);
 
         const { slug } = await params;
@@ -438,19 +404,10 @@ async function handlePublicPost(request, { params }) {
     }
 }
 
-// PUT update item - public access with CSRF protection
+// PUT update item
 async function handlePublicPut(request, { params }) {
     try {
-        // Check if API access is allowed
-        const accessCheck = await checkApiAccess(request);
-        if (!accessCheck.allowed) {
-            return NextResponse.json(
-                { error: accessCheck.error || 'API access denied' },
-                { status: accessCheck.status || 403 }
-            );
-        }
-
-        // Track API usage if API key provided
+        // Track API usage
         await trackApiUsage(request);
 
         const { slug } = await params;
@@ -502,19 +459,10 @@ async function handlePublicPut(request, { params }) {
     }
 }
 
-// DELETE item - public access with CSRF protection
+// DELETE item
 async function handlePublicDelete(request, { params }) {
     try {
-        // Check if API access is allowed
-        const accessCheck = await checkApiAccess(request);
-        if (!accessCheck.allowed) {
-            return NextResponse.json(
-                { error: accessCheck.error || 'API access denied' },
-                { status: accessCheck.status || 403 }
-            );
-        }
-
-        // Track API usage if API key provided
+        // Track API usage
         await trackApiUsage(request);
 
         const { slug } = await params;

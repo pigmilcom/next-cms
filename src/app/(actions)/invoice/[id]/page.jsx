@@ -156,7 +156,15 @@ const normalizeOrderForInvoice = (orderData, catalogLookup) => {
         eupagoTransactionId: orderData.eupagoTransactionId || orderData.tx || '',
         eupagoMethod: orderData.eupagoMethod || '',
         eupagoMobile: orderData.eupagoMobile || '',
-        expiryTime: orderData.expiryTime || null
+        expiryTime: orderData.expiryTime || null,
+        partialPayments: (() => {
+            const raw = orderData.partialPayments;
+            if (Array.isArray(raw)) return raw;
+            if (typeof raw === 'string') {
+                try { return JSON.parse(raw); } catch { return []; }
+            }
+            return [];
+        })()
     };
 };
 
@@ -203,6 +211,8 @@ const InvoicePage = async ({ params, searchParams }) => {
     const catalogData = Array.isArray(catalogResult?.data) ? catalogResult.data : [];
     const normalizedOrder = normalizeOrderForInvoice(orderResult.data, buildCatalogLookup(catalogData));
 
+    const activePartialPaymentId = String(resolvedSearchParams?.payment || '').trim() || null;
+
     return (
         <InvoicePageClient
             order={normalizedOrder}
@@ -212,6 +222,7 @@ const InvoicePage = async ({ params, searchParams }) => {
             availableInvoiceLanguages={availableInvoiceLanguages}
             initialSiteSettings={settings?.siteSettings || {}}
             initialStoreSettings={settings?.storeSettings || {}}
+            activePartialPaymentId={activePartialPaymentId}
         />
     );
 };

@@ -22,7 +22,8 @@ export const EmailHeader = ({ companyLogo = '', companyName = 'Your Company', cu
         display: 'block',
         width: '100%',
         maxWidth: '98px',
-        height: 'auto'
+        height: 'auto',
+        background: 'transparent'
     };
 
     const logoTextStyles = {

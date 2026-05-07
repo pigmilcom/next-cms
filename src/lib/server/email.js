@@ -209,7 +209,8 @@ const getOrderEmailTemplateData = (orderData = {}, settings = {}, resolvedLocale
         orderSummaryUrl: getOrderInvoiceUrl(baseUrl, orderData, resolvedLocale),
         locale: resolvedLocale,
         status: orderData.status || 'pending',
-        isServiceAppointment: orderData.isServiceAppointment || false
+        isServiceAppointment: orderData.isServiceAppointment || false,
+        partialPayments: Array.isArray(orderData.partialPayments) ? orderData.partialPayments : []
     };
 };
 let mailTransport = null;

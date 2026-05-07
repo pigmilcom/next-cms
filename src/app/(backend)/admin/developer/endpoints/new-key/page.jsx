@@ -1,9 +1,9 @@
-// @/app/(backend)/admin/developer/endpoints/new-key/page.jsx
+﻿// @/app/(backend)/admin/developer/endpoints/new-key/page.jsx
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, CheckCircle, Clock, Copy, Info, Key, Shield, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, CheckCircle, Clock, Copy, Database, Info, Key, Shield, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -13,44 +13,85 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { createAPIKey } from '@/lib/server/endpoints.js';
+import { createAPIKey, getDatabaseCollections } from '@/lib/server/endpoints.js';
 
 // Form validation schema
 const apiKeySchema = z.object({
     name: z.string().min(1, 'API key name is required').max(50, 'Name must be less than 50 characters'),
     description: z.string().optional(),
     permissions: z.array(z.string()).min(1, 'At least one permission must be selected'),
+    allowedCollections: z.array(z.string()).default([]),
     rateLimit: z.number().min(1, 'Rate limit must be at least 1').max(10000, 'Rate limit cannot exceed 10,000'),
     expiresAt: z.string().optional()
 });
+
+// System collections always available (even before DB loads)
+const SYSTEM_COLLECTIONS = [
+    { name: 'users', label: 'Users' },
+    { name: 'roles', label: 'Roles' },
+    { name: 'site_settings', label: 'Site Settings' },
+    { name: 'store_settings', label: 'Store Settings' },
+    { name: 'catalog', label: 'Catalog / Products' },
+    { name: 'categories', label: 'Categories' },
+    { name: 'collections', label: 'Collections' },
+    { name: 'orders', label: 'Orders' },
+    { name: 'customers', label: 'Customers' },
+    { name: 'coupons', label: 'Coupons' },
+    { name: 'reviews', label: 'Reviews' },
+    { name: 'blocks', label: 'Blocks' },
+    { name: 'newsletter_subscribers', label: 'Newsletter Subscribers' },
+    { name: 'newsletter_campaigns', label: 'Newsletter Campaigns' },
+    { name: 'notifications', label: 'Notifications' },
+    { name: 'favorites', label: 'Favorites' }
+];
 
 export default function NewKeyPage() {
     const [step, setStep] = useState(1);
     const [generatedKey, setGeneratedKey] = useState(null);
     const [isCopied, setIsCopied] = useState(false);
+    const [collections, setCollections] = useState(SYSTEM_COLLECTIONS);
+    const [allCollectionsSelected, setAllCollectionsSelected] = useState(true);
+
+    // Load database collections on mount
+    useEffect(() => {
+        getDatabaseCollections().then((res) => {
+            if (res?.success && res.data?.length > 0) {
+                // Merge DB collections with system ones (deduplicate by name)
+                const dbNames = new Set(res.data.map((c) => c.name));
+                const merged = [
+                    ...SYSTEM_COLLECTIONS.filter((c) => dbNames.has(c.name)),
+                    ...res.data
+                        .filter((c) => !SYSTEM_COLLECTIONS.some((s) => s.name === c.name))
+                        .map((c) => ({ name: c.name, label: c.name }))
+                ];
+                setCollections(merged);
+            }
+        }).catch(() => {});
+    }, []);
 
     // Available permissions
     const permissions = [
         {
             id: 'READ',
             label: 'Read Access',
-            description: 'View and retrieve data from all collections (users, products, orders, settings, etc.)'
+            description: 'Retrieve data from allowed collections (GET requests)'
         },
         {
             id: 'WRITE',
             label: 'Write Access',
-            description: 'Create and update records in all collections (users, products, orders, settings, etc.)'
+            description: 'Create and update records in allowed collections (POST / PUT requests)'
         },
         {
             id: 'DELETE',
             label: 'Delete Access',
-            description: 'Remove and delete records from all collections (users, products, orders, etc.)'
+            description: 'Remove records from allowed collections (DELETE requests)'
         },
         {
             id: 'UPLOAD',
             label: 'Upload Access',
-            description: 'Upload, manage, and delete files in the media storage system'
+            description: 'Upload and manage files in the media storage system'
         }
     ];
 
@@ -60,23 +101,23 @@ export default function NewKeyPage() {
             name: '',
             description: '',
             permissions: [],
+            allowedCollections: [],
             rateLimit: 100,
             expiresAt: ''
         }
     });
 
+    const handleAllCollectionsToggle = (checked) => {
+        setAllCollectionsSelected(checked);
+        if (checked) form.setValue('allowedCollections', []);
+    };
+
     const onSubmit = async (data) => {
         try {
-            // Generate a real API key
-            const timestamp = Date.now().toString(36);
-            const random = Math.random().toString(36).substring(2, 15);
-            const apiKey = `pk_live_${timestamp}_${random}`;
-
-            // Create the API key in the database
             const keyData = {
                 ...data,
-                key: apiKey,
-                keyPreview: `${apiKey.substring(0, 20)}...${apiKey.slice(-4)}`,
+                // empty allowedCollections = '*' (all) — handled in createAPIKey
+                allowedCollections: allCollectionsSelected ? [] : data.allowedCollections,
                 status: 'active',
                 usage: 0,
                 createdAt: new Date().toISOString(),
@@ -85,9 +126,15 @@ export default function NewKeyPage() {
 
             const result = await createAPIKey(keyData);
 
+            if (!result?.success) {
+                toast.error(result?.error || 'Failed to create API key');
+                return;
+            }
+
             setGeneratedKey({
                 ...keyData,
-                id: result?.data?.id || result?.id || Math.random().toString(36).substring(2, 9)
+                key: result.data?.key || result.data?.data?.key,
+                id: result.data?.id || result.data?.data?.id || Math.random().toString(36).substring(2, 9)
             });
 
             setStep(2);
@@ -131,8 +178,8 @@ export default function NewKeyPage() {
                             </div>
                             <CardTitle>API Key Created Successfully</CardTitle>
                             <CardDescription>
-                                Your new API key has been generated. Make sure to copy it now as you won't be able to
-                                see it again.
+                                Your new API key has been generated. Make sure to copy it now as you won&apos;t be
+                                able to see it again.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -141,10 +188,7 @@ export default function NewKeyPage() {
                                 <Label className="font-medium text-sm">Your API Key</Label>
                                 <div className="flex gap-2">
                                     <Input value={generatedKey.key} readOnly className="font-mono text-sm" />
-                                    <Button
-                                        variant="outline"
-                                        onClick={copyToClipboard}
-                                        className="flex items-center gap-2">
+                                    <Button variant="outline" onClick={copyToClipboard} className="flex items-center gap-2">
                                         {isCopied ? (
                                             <>
                                                 <CheckCircle className="h-4 w-4" />
@@ -163,25 +207,21 @@ export default function NewKeyPage() {
                             {/* Key Details */}
                             <div className="space-y-4 rounded-lg bg-gray-50 p-4">
                                 <h3 className="font-medium">Key Details</h3>
-
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
                                         <p className="text-muted-foreground text-sm">Name</p>
                                         <p className="font-medium">{generatedKey.name}</p>
                                     </div>
-
                                     <div>
                                         <p className="text-muted-foreground text-sm">Rate Limit</p>
                                         <p className="font-medium">{generatedKey.rateLimit} requests/hour</p>
                                     </div>
-
                                     <div>
                                         <p className="text-muted-foreground text-sm">Created</p>
                                         <p className="font-medium">
                                             {new Date(generatedKey.createdAt).toLocaleString()}
                                         </p>
                                     </div>
-
                                     <div>
                                         <p className="text-muted-foreground text-sm">Status</p>
                                         <Badge className="bg-green-100 text-green-800">Active</Badge>
@@ -205,16 +245,29 @@ export default function NewKeyPage() {
                                         ))}
                                     </div>
                                 </div>
+
+                                <div>
+                                    <p className="mb-2 text-muted-foreground text-sm">Collection Access</p>
+                                    {!generatedKey.allowedCollections?.length ? (
+                                        <Badge variant="outline" className="text-xs">All Collections</Badge>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-1">
+                                            {generatedKey.allowedCollections.map((col) => (
+                                                <Badge key={col} variant="outline" className="text-xs">{col}</Badge>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Security Warning */}
                             <div className="flex gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-                                <Info className="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600" />
+                                <Info className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600" />
                                 <div className="text-sm">
                                     <p className="font-medium text-yellow-800">Important Security Information</p>
                                     <ul className="mt-2 space-y-1 text-yellow-700">
                                         <li>• Store this API key securely and never share it publicly</li>
-                                        <li>• This key won't be shown again - copy it now</li>
+                                        <li>• This key won&apos;t be shown again — copy it now</li>
                                         <li>• Use environment variables to store the key in your applications</li>
                                         <li>• Monitor usage and revoke the key if compromised</li>
                                     </ul>
@@ -298,7 +351,7 @@ export default function NewKeyPage() {
                                                     />
                                                 </FormControl>
                                                 <FormDescription>
-                                                    Optional description to help you remember this key's purpose
+                                                    Optional description to help you remember this key&apos;s purpose
                                                 </FormDescription>
                                                 <FormMessage />
                                             </FormItem>
@@ -347,9 +400,8 @@ export default function NewKeyPage() {
                                         Permissions
                                     </h3>
                                     <p className="text-muted-foreground text-sm">
-                                        Select the access levels this API key should have. These permissions apply to
-                                        all data collections and resources. Choose only the minimum required permissions
-                                        for security.
+                                        Select the CRUD operations this API key should be allowed to perform.
+                                        Choose only the minimum required permissions for security.
                                     </p>
 
                                     <FormField
@@ -363,43 +415,30 @@ export default function NewKeyPage() {
                                                             key={permission.id}
                                                             control={form.control}
                                                             name="permissions"
-                                                            render={({ field }) => {
-                                                                return (
-                                                                    <FormItem
-                                                                        key={permission.id}
-                                                                        className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                                                                        <FormControl>
-                                                                            <Checkbox
-                                                                                checked={field.value?.includes(
-                                                                                    permission.id
-                                                                                )}
-                                                                                onCheckedChange={(checked) => {
-                                                                                    return checked
-                                                                                        ? field.onChange([
-                                                                                              ...field.value,
-                                                                                              permission.id
-                                                                                          ])
-                                                                                        : field.onChange(
-                                                                                              field.value?.filter(
-                                                                                                  (value) =>
-                                                                                                      value !==
-                                                                                                      permission.id
-                                                                                              )
-                                                                                          );
-                                                                                }}
-                                                                            />
-                                                                        </FormControl>
-                                                                        <div className="flex-1 space-y-2 leading-none">
-                                                                            <FormLabel className="cursor-pointer font-medium text-sm">
-                                                                                {permission.label}
-                                                                            </FormLabel>
-                                                                            <FormDescription className="text-muted-foreground text-xs">
-                                                                                {permission.description}
-                                                                            </FormDescription>
-                                                                        </div>
-                                                                    </FormItem>
-                                                                );
-                                                            }}
+                                                            render={({ field }) => (
+                                                                <FormItem
+                                                                    key={permission.id}
+                                                                    className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                                                                    <FormControl>
+                                                                        <Checkbox
+                                                                            checked={field.value?.includes(permission.id)}
+                                                                            onCheckedChange={(checked) =>
+                                                                                checked
+                                                                                    ? field.onChange([...field.value, permission.id])
+                                                                                    : field.onChange(field.value?.filter((v) => v !== permission.id))
+                                                                            }
+                                                                        />
+                                                                    </FormControl>
+                                                                    <div className="flex-1 space-y-1 leading-none">
+                                                                        <FormLabel className="cursor-pointer font-medium text-sm">
+                                                                            {permission.label}
+                                                                        </FormLabel>
+                                                                        <FormDescription className="text-xs">
+                                                                            {permission.description}
+                                                                        </FormDescription>
+                                                                    </div>
+                                                                </FormItem>
+                                                            )}
                                                         />
                                                     ))}
                                                 </div>
@@ -407,6 +446,78 @@ export default function NewKeyPage() {
                                             </FormItem>
                                         )}
                                     />
+                                </div>
+
+                                {/* Collection Access */}
+                                <div className="space-y-4">
+                                    <h3 className="flex items-center gap-2 font-medium text-lg">
+                                        <Database className="h-5 w-5" />
+                                        Collection Access
+                                    </h3>
+                                    <p className="text-muted-foreground text-sm">
+                                        Restrict this key to specific data collections. Leave &quot;All
+                                        Collections&quot; selected to allow access to every collection.
+                                    </p>
+
+                                    {/* All collections toggle */}
+                                    <div className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border bg-muted/30 p-4">
+                                        <Checkbox
+                                            id="all-collections"
+                                            checked={allCollectionsSelected}
+                                            onCheckedChange={handleAllCollectionsToggle}
+                                        />
+                                        <div className="flex-1 space-y-1 leading-none">
+                                            <Label
+                                                htmlFor="all-collections"
+                                                className="cursor-pointer font-medium text-sm">
+                                                All Collections
+                                            </Label>
+                                            <p className="text-muted-foreground text-xs">
+                                                Grant access to every current and future collection
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Individual collections (shown when All is unchecked) */}
+                                    {!allCollectionsSelected && (
+                                        <FormField
+                                            control={form.control}
+                                            name="allowedCollections"
+                                            render={() => (
+                                                <FormItem>
+                                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                        {collections.map((col) => (
+                                                            <FormField
+                                                                key={col.name}
+                                                                control={form.control}
+                                                                name="allowedCollections"
+                                                                render={({ field }) => (
+                                                                    <FormItem
+                                                                        key={col.name}
+                                                                        className="flex flex-row items-center space-x-3 space-y-0 rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                                                                        <FormControl>
+                                                                            <Checkbox
+                                                                                checked={field.value?.includes(col.name)}
+                                                                                onCheckedChange={(checked) =>
+                                                                                    checked
+                                                                                        ? field.onChange([...field.value, col.name])
+                                                                                        : field.onChange(field.value?.filter((v) => v !== col.name))
+                                                                                }
+                                                                            />
+                                                                        </FormControl>
+                                                                        <FormLabel className="cursor-pointer font-normal text-sm">
+                                                                            {col.label || col.name}
+                                                                        </FormLabel>
+                                                                    </FormItem>
+                                                                )}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    )}
                                 </div>
 
                                 {/* Expiration */}
