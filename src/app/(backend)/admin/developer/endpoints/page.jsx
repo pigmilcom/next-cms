@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Activity, CheckCircle, Clock, Code, Copy, Eye, Key, Plus, Search, Shield, XCircle, Zap } from 'lucide-react';
+import { Activity, BookOpen, CheckCircle, Clock, Code, Copy, Eye, Key, Plus, Search, Shield, XCircle, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -293,6 +293,10 @@ export default function EndpointsPage() {
                     <TabsTrigger value="settings" className="flex items-center gap-2">
                         <Shield className="h-4 w-4" />
                         API Settings
+                    </TabsTrigger>
+                    <TabsTrigger value="docs" className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" />
+                        Documentation
                     </TabsTrigger>
                 </TabsList>
 
@@ -686,6 +690,329 @@ export default function EndpointsPage() {
                                         </p>
                                     </div>
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* API Documentation Tab */}
+                <TabsContent value="docs" className="space-y-6">
+                    {/* Overview */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <BookOpen className="h-5 w-5" />
+                                API Reference
+                            </CardTitle>
+                            <CardDescription>
+                                How to authenticate and interact with the REST API from any external server or client
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+                                <p className="font-medium text-blue-800">Base URL</p>
+                                <code className="mt-1 block font-mono text-blue-700">{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}/api/query/[collection]</code>
+                            </div>
+                            <p className="text-muted-foreground text-sm">
+                                All endpoints require an <strong>API Key</strong> passed as a Bearer token in the
+                                <code className="mx-1 rounded bg-muted px-1 py-0.5 font-mono text-xs">Authorization</code> header.
+                                The key must have the corresponding permission for the HTTP method used.
+                            </p>
+                            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                                {[
+                                    { method: 'GET', permission: 'READ', color: 'bg-green-100 text-green-800' },
+                                    { method: 'POST', permission: 'WRITE', color: 'bg-blue-100 text-blue-800' },
+                                    { method: 'PUT', permission: 'WRITE', color: 'bg-orange-100 text-orange-800' },
+                                    { method: 'DELETE', permission: 'DELETE', color: 'bg-red-100 text-red-800' }
+                                ].map(({ method, permission, color }) => (
+                                    <div key={method} className="rounded-lg border p-3 text-center">
+                                        <Badge className={`mb-1 ${color}`}>{method}</Badge>
+                                        <p className="text-muted-foreground text-xs">Requires <strong>{permission}</strong></p>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Authentication */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Key className="h-5 w-5" />
+                                Authentication
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-muted-foreground text-sm">Pass your API key using the <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">Authorization</code> header:</p>
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`Authorization: Bearer pk_live_your_api_key_here`}</code></pre>
+                            </div>
+                            <p className="text-muted-foreground text-sm">Or pass it as a query parameter (less secure, avoid in production):</p>
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`GET /api/query/catalog?api_key=pk_live_your_api_key_here`}</code></pre>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* GET - Read */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Badge className="bg-green-100 text-green-800">GET</Badge>
+                                Read Records
+                            </CardTitle>
+                            <CardDescription>Retrieve all records or a single record from any collection</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {/* Fetch all */}
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Fetch all records</h4>
+                                <div className="rounded-lg bg-muted p-4">
+                                    <pre className="overflow-x-auto text-xs"><code>{`// JavaScript (fetch)
+const res = await fetch('https://your-domain.com/api/query/catalog', {
+  headers: {
+    'Authorization': 'Bearer pk_live_your_api_key_here'
+  }
+});
+const data = await res.json();
+// data.success, data.data[], data.pagination`}</code></pre>
+                                </div>
+                                <div className="rounded-lg bg-muted p-4">
+                                    <pre className="overflow-x-auto text-xs"><code>{`# cURL
+curl -X GET 'https://your-domain.com/api/query/catalog' \\
+  -H 'Authorization: Bearer pk_live_your_api_key_here'`}</code></pre>
+                                </div>
+                            </div>
+                            {/* Fetch by ID */}
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Fetch single record by ID</h4>
+                                <div className="rounded-lg bg-muted p-4">
+                                    <pre className="overflow-x-auto text-xs"><code>{`GET /api/query/catalog?id=RECORD_ID
+
+// JavaScript
+const res = await fetch('/api/query/catalog?id=abc123', {
+  headers: { 'Authorization': 'Bearer pk_live_...' }
+});
+const { data } = await res.json();`}</code></pre>
+                                </div>
+                            </div>
+                            {/* Pagination & search */}
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Pagination &amp; Search</h4>
+                                <div className="rounded-lg bg-muted p-4">
+                                    <pre className="overflow-x-auto text-xs"><code>{`GET /api/query/catalog?page=1&limit=20&search=shoes
+
+// Response
+{
+  "success": true,
+  "data": [ ... ],
+  "pagination": {
+    "currentPage": 1,
+    "totalItems": 120,
+    "totalPages": 6,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}`}</code></pre>
+                                </div>
+                            </div>
+                            {/* Filter by field */}
+                            <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Filter by field value</h4>
+                                <div className="rounded-lg bg-muted p-4">
+                                    <pre className="overflow-x-auto text-xs"><code>{`GET /api/query/orders?key=status&value=pending`}</code></pre>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* POST - Create */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Badge className="bg-blue-100 text-blue-800">POST</Badge>
+                                Create Record
+                            </CardTitle>
+                            <CardDescription>Create a new record in any collection. Requires WRITE permission.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`// JavaScript
+const res = await fetch('https://your-domain.com/api/query/orders', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer pk_live_your_api_key_here',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    customerId: 'cust_123',
+    total: 49.99,
+    status: 'pending',
+    items: [{ productId: 'prod_1', qty: 2 }]
+  })
+});
+const { success, data } = await res.json();
+// data.id — ID of the newly created record`}</code></pre>
+                            </div>
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`# cURL
+curl -X POST 'https://your-domain.com/api/query/orders' \\
+  -H 'Authorization: Bearer pk_live_your_api_key_here' \\
+  -H 'Content-Type: application/json' \\
+  -d '{"customerId":"cust_123","total":49.99,"status":"pending"}'`}</code></pre>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* PUT - Update */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Badge className="bg-orange-100 text-orange-800">PUT</Badge>
+                                Update Record
+                            </CardTitle>
+                            <CardDescription>Update an existing record. The request body must include the record <code className="font-mono text-xs">id</code>. Requires WRITE permission.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`// JavaScript
+const res = await fetch('https://your-domain.com/api/query/orders', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer pk_live_your_api_key_here',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    id: 'order_abc123',   // required
+    status: 'shipped',
+    trackingNumber: 'TRK999'
+  })
+});
+const { success, data } = await res.json();`}</code></pre>
+                            </div>
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`# cURL
+curl -X PUT 'https://your-domain.com/api/query/orders' \\
+  -H 'Authorization: Bearer pk_live_your_api_key_here' \\
+  -H 'Content-Type: application/json' \\
+  -d '{"id":"order_abc123","status":"shipped"}'`}</code></pre>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* DELETE */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Badge className="bg-red-100 text-red-800">DELETE</Badge>
+                                Delete Record
+                            </CardTitle>
+                            <CardDescription>Delete a record by ID from any collection. Requires DELETE permission.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`// JavaScript
+const res = await fetch('https://your-domain.com/api/query/orders?id=order_abc123', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer pk_live_your_api_key_here'
+  }
+});
+const { success, message } = await res.json();`}</code></pre>
+                            </div>
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`# cURL
+curl -X DELETE 'https://your-domain.com/api/query/orders?id=order_abc123' \\
+  -H 'Authorization: Bearer pk_live_your_api_key_here'`}</code></pre>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Response format */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Code className="h-5 w-5" />
+                                Response Format
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <h4 className="font-medium text-sm text-green-700">Success</h4>
+                                    <div className="rounded-lg bg-muted p-4">
+                                        <pre className="overflow-x-auto text-xs"><code>{`{
+  "success": true,
+  "data": { ... } | [ ... ],
+  "message": "Optional message",
+  "pagination": {        // GET list only
+    "currentPage": 1,
+    "totalItems": 50,
+    "totalPages": 3,
+    "hasNext": true,
+    "hasPrev": false
+  }
+}`}</code></pre>
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-medium text-sm text-red-700">Error</h4>
+                                    <div className="rounded-lg bg-muted p-4">
+                                        <pre className="overflow-x-auto text-xs"><code>{`{
+  "error": "Human-readable message",
+  "message": "Optional detail"
+}
+
+// Common status codes:
+// 400 — Bad request / missing params
+// 401 — Invalid or missing API key
+// 403 — Permission denied
+// 404 — Record not found
+// 429 — Rate limit exceeded
+// 500 — Server error`}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Node.js SDK-style helper */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Zap className="h-5 w-5" />
+                                Node.js Helper Example
+                            </CardTitle>
+                            <CardDescription>A reusable helper for your Node.js / Next.js server</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-lg bg-muted p-4">
+                                <pre className="overflow-x-auto text-xs"><code>{`// lib/api-client.js
+const BASE = 'https://your-domain.com/api/query';
+const KEY  = process.env.API_KEY; // store in .env
+
+const headers = () => ({
+  'Authorization': \`Bearer \${KEY}\`,
+  'Content-Type': 'application/json'
+});
+
+export const api = {
+  getAll:  (col, params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return fetch(\`\${BASE}/\${col}\${qs ? '?' + qs : ''}\`, { headers: headers() }).then(r => r.json());
+  },
+  getById: (col, id)         => fetch(\`\${BASE}/\${col}?id=\${id}\`, { headers: headers() }).then(r => r.json()),
+  create:  (col, body)       => fetch(\`\${BASE}/\${col}\`, { method: 'POST',   headers: headers(), body: JSON.stringify(body) }).then(r => r.json()),
+  update:  (col, body)       => fetch(\`\${BASE}/\${col}\`, { method: 'PUT',    headers: headers(), body: JSON.stringify(body) }).then(r => r.json()),
+  remove:  (col, id)         => fetch(\`\${BASE}/\${col}?id=\${id}\`, { method: 'DELETE', headers: headers() }).then(r => r.json()),
+};
+
+// Usage:
+const { data } = await api.getAll('catalog', { page: 1, limit: 20 });
+const order    = await api.getById('orders', 'order_123');
+const created  = await api.create('orders', { total: 49.99, status: 'pending' });
+const updated  = await api.update('orders', { id: 'order_123', status: 'shipped' });
+const deleted  = await api.remove('orders', 'order_123');`}</code></pre>
                             </div>
                         </CardContent>
                     </Card>
