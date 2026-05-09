@@ -107,7 +107,7 @@ async function checkApiAccess(request) {
     try {
         // Get API settings from database
         const apiSettingsResponse = await DBService.readAll('api_settings');
-        const apiSettings = Object.values(apiSettingsResponse || {})[0];
+        const apiSettings = Object.values(apiSettingsResponse?.data || {})[0];
 
         // If no settings exist, allow access (fail open)
         if (!apiSettings) {
@@ -202,6 +202,12 @@ async function handlePublicGet(request, { params }) {
             }
         }
 
+        // Check if API access is enabled
+        const accessCheck = await checkApiAccess(request);
+        if (!accessCheck.allowed) {
+            return NextResponse.json({ error: accessCheck.error }, { status: accessCheck.status || 503 });
+        }
+
         // Track API usage
         await trackApiUsage(request);
 
@@ -209,14 +215,14 @@ async function handlePublicGet(request, { params }) {
 
         // Get single item by ID
         if (id) {
-            result = await DBService.read(id, slug);
-            if (!result) {
+            const readResult = await DBService.read(id, slug);
+            if (!readResult?.success || !readResult?.data) {
                 return NextResponse.json({ error: 'Record not found' }, { status: 404 });
             }
 
             const responseData = {
                 success: true,
-                data: result
+                data: readResult.data
             };
 
             // Cache the single item response
@@ -237,14 +243,18 @@ async function handlePublicGet(request, { params }) {
         else if (key && value) {
             const kvResult = await DBService.readByAll(key, value, slug);
             if (!kvResult?.success || !kvResult?.data) {
-                return NextResponse.json({ error: 'No records found' }, { status: 404 });
+                return NextResponse.json({
+                    success: true,
+                    data: [],
+                    pagination: { currentPage: page, totalItems: 0, totalPages: 0, hasNext: false, hasPrev: false }
+                });
             }
             result = kvResult.data;
         }
         // Get all items
         else {
             const allResult = await DBService.readAll(slug);
-            if (!allResult || allResult?.success === false) {
+            if (!allResult?.success || !allResult.data) {
                 return NextResponse.json({
                     success: true,
                     data: [],
@@ -257,7 +267,7 @@ async function handlePublicGet(request, { params }) {
                     }
                 });
             }
-            result = allResult?.data ?? allResult;
+            result = allResult.data;
         }
 
         // Convert result to array format for pagination and search
@@ -350,6 +360,12 @@ async function handlePublicGet(request, { params }) {
 // POST create new item
 async function handlePublicPost(request, { params }) {
     try {
+        // Check if API access is enabled
+        const accessCheck = await checkApiAccess(request);
+        if (!accessCheck.allowed) {
+            return NextResponse.json({ error: accessCheck.error }, { status: accessCheck.status || 503 });
+        }
+
         // Track API usage
         await trackApiUsage(request);
 
@@ -373,19 +389,19 @@ async function handlePublicPost(request, { params }) {
             updatedBy: request.user?.id || 'anonymous'
         };
 
-        const newItem = await DBService.create(createData, slug);
+        const createResult = await DBService.create(createData, slug);
 
-        if (!newItem) {
+        if (!createResult?.success) {
             return NextResponse.json({ error: 'Failed to create record.' }, { status: 500 });
         }
+
+        const createdItem = createResult.data || {};
+        const itemId = createdItem.id || createdItem.key || createData.id || Date.now().toString();
 
         return NextResponse.json(
             {
                 success: true,
-                data: {
-                    id: newItem.id || newItem.key || Date.now().toString(),
-                    ...createData
-                },
+                data: { ...createdItem, id: itemId },
                 message: 'Record created successfully!'
             },
             { status: 201 }
@@ -405,6 +421,12 @@ async function handlePublicPost(request, { params }) {
 // PUT update item
 async function handlePublicPut(request, { params }) {
     try {
+        // Check if API access is enabled
+        const accessCheck = await checkApiAccess(request);
+        if (!accessCheck.allowed) {
+            return NextResponse.json({ error: accessCheck.error }, { status: accessCheck.status || 503 });
+        }
+
         // Track API usage
         await trackApiUsage(request);
 
@@ -420,29 +442,29 @@ async function handlePublicPut(request, { params }) {
         }
 
         // Check if item exists
-        const existingItem = await DBService.read(data.id, slug);
-        if (!existingItem) {
+        const readResult = await DBService.read(data.id, slug);
+        if (!readResult?.success || !readResult?.data) {
             return NextResponse.json({ error: 'Record not found' }, { status: 404 });
         }
 
         // Prepare update data
         const { id, ...updateFields } = data;
         const updateData = {
-            ...existingItem,
+            ...readResult.data,
             ...updateFields,
             updatedAt: new Date().toISOString(),
             updatedBy: request.user?.id || 'anonymous'
         };
 
-        const updatedItem = await DBService.update(id, updateData, slug);
+        const updateResult = await DBService.update(id, updateData, slug);
 
-        if (!updatedItem) {
+        if (!updateResult?.success) {
             return NextResponse.json({ error: 'Failed to update record.' }, { status: 500 });
         }
 
         return NextResponse.json({
             success: true,
-            data: { id, ...updateData },
+            data: updateResult.data || { id, ...updateData },
             message: 'Record updated successfully!'
         });
     } catch (error) {
@@ -460,6 +482,12 @@ async function handlePublicPut(request, { params }) {
 // DELETE item
 async function handlePublicDelete(request, { params }) {
     try {
+        // Check if API access is enabled
+        const accessCheck = await checkApiAccess(request);
+        if (!accessCheck.allowed) {
+            return NextResponse.json({ error: accessCheck.error }, { status: accessCheck.status || 503 });
+        }
+
         // Track API usage
         await trackApiUsage(request);
 
@@ -476,14 +504,14 @@ async function handlePublicDelete(request, { params }) {
         }
 
         // Check if item exists
-        const existingItem = await DBService.read(id, slug);
-        if (!existingItem) {
+        const readResult = await DBService.read(id, slug);
+        if (!readResult?.success || !readResult?.data) {
             return NextResponse.json({ error: 'Record not found' }, { status: 404 });
         }
 
-        const deleted = await DBService.delete(id, slug);
+        const deleteResult = await DBService.delete(id, slug);
 
-        if (!deleted) {
+        if (!deleteResult?.success) {
             return NextResponse.json({ error: 'Failed to delete record.' }, { status: 500 });
         }
 
@@ -508,7 +536,7 @@ async function handlePublicDelete(request, { params }) {
 export const GET = withPublicAccess(handlePublicGet, {
     requireApiKey: true,
     requireIpWhitelist: false,
-    skipCsrfForApiKey: false,
+    skipCsrfForApiKey: true,
     requiredPermission: true,
     logAccess: true
 });
@@ -516,7 +544,7 @@ export const GET = withPublicAccess(handlePublicGet, {
 export const POST = withPublicAccess(handlePublicPost, {
     requireApiKey: true,
     requireIpWhitelist: false,
-    skipCsrfForApiKey: false,
+    skipCsrfForApiKey: true,
     requiredPermission: true,
     logAccess: true
 });
@@ -524,7 +552,7 @@ export const POST = withPublicAccess(handlePublicPost, {
 export const PUT = withPublicAccess(handlePublicPut, {
     requireApiKey: true,
     requireIpWhitelist: false,
-    skipCsrfForApiKey: false,
+    skipCsrfForApiKey: true,
     requiredPermission: true,
     logAccess: true
 });
@@ -532,7 +560,7 @@ export const PUT = withPublicAccess(handlePublicPut, {
 export const DELETE = withPublicAccess(handlePublicDelete, {
     requireApiKey: true,
     requireIpWhitelist: false,
-    skipCsrfForApiKey: false,
+    skipCsrfForApiKey: true,
     requiredPermission: true,
     logAccess: true
 });

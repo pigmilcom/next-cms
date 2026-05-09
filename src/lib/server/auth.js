@@ -1,5 +1,4 @@
 // @/lib/server/auth.js
-'use server';
 
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
@@ -88,7 +87,7 @@ const METHOD_PERMISSION_MAP = {
     DELETE: 'DELETE'
 };
 
-export async function withPublicAccess(handler, options = {}) {
+export function withPublicAccess(handler, options = {}) {
     const {
         requireApiKey = false,
         requireIpWhitelist = false,
@@ -118,15 +117,18 @@ export async function withPublicAccess(handler, options = {}) {
                 }
 
                 // Get API keys from database
-                const apiKeysData = await DBService.readAll('api_keys');
+                const apiKeysResult = await DBService.readAll('api_keys');
                 let apiKeys = [];
-                if (Array.isArray(apiKeysData)) {
-                    apiKeys = apiKeysData;
-                } else if (apiKeysData && typeof apiKeysData === 'object') {
-                    apiKeys = Object.entries(apiKeysData).map(([key, value]) => ({
-                        id: key,
-                        ...value
-                    }));
+                if (apiKeysResult?.success && apiKeysResult.data) {
+                    const rawKeys = apiKeysResult.data;
+                    if (Array.isArray(rawKeys)) {
+                        apiKeys = rawKeys;
+                    } else if (typeof rawKeys === 'object') {
+                        apiKeys = Object.entries(rawKeys).map(([id, value]) => ({
+                            id,
+                            ...value
+                        }));
+                    }
                 }
 
                 // Validate API key against database
@@ -351,14 +353,17 @@ export async function validateIpAndDomain(request) {
         }
 
         // Get whitelisted IPs and domains from database
-        const whitelistData = await DBService.readAll('ip_whitelist');
+        const whitelistResult = await DBService.readAll('ip_whitelist');
         let whitelistedEntries = [];
-        if (Array.isArray(whitelistData)) {
-            whitelistedEntries = whitelistData.filter((entry) => entry.active);
-        } else if (whitelistData && typeof whitelistData === 'object') {
-            whitelistedEntries = Object.entries(whitelistData)
-                .map(([key, value]) => ({ id: key, ...value }))
-                .filter((entry) => entry.active);
+        if (whitelistResult?.success && whitelistResult.data) {
+            const rawData = whitelistResult.data;
+            if (Array.isArray(rawData)) {
+                whitelistedEntries = rawData.filter((entry) => entry.active);
+            } else if (typeof rawData === 'object') {
+                whitelistedEntries = Object.entries(rawData)
+                    .map(([key, value]) => ({ id: key, ...value }))
+                    .filter((entry) => entry.active);
+            }
         }
 
         // Check IP whitelist
