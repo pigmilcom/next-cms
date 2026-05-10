@@ -9,9 +9,9 @@ import { useEffect } from 'react';
  * and restores the original title when they return.
  */
 const DynamicPageTitle = ({titles = null, data = null}) => {
-    if(!titles && !data) return;
-    const attractiveTitles = titles || data;
+    const attractiveTitles = titles || data || [];
     useEffect(() => {
+        if (!attractiveTitles?.length) return;
         let originalTitle = document.title;
         let currentTitleIndex = 0;
         let titleInterval = null;
@@ -61,7 +61,7 @@ const DynamicPageTitle = ({titles = null, data = null}) => {
             }
             observer.disconnect();
         };
-    }, []);
+    }, [attractiveTitles]);
 
     return null; // This component doesn't render anything
 };
