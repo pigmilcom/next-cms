@@ -320,9 +320,9 @@ function startPeriodicCleanup(instanceName, interval = 5 * 60 * 1000) {
             cleaned++;
         });
 
-        if (cleaned > 0) {
+        /* if (cleaned > 0) {
             console.log(`[${instance.name}] Cleaned ${cleaned} expired entries`);
-        }
+        } */
     }, interval);
 
     // Store interval ID for potential cleanup later
@@ -343,7 +343,7 @@ function stopPeriodicCleanup(instanceName) {
     if (instance.cleanupIntervalId) {
         clearInterval(instance.cleanupIntervalId);
         instance.cleanupIntervalId = null;
-        console.log(`[${instance.name}] Stopped periodic cleanup`);
+        /* console.log(`[${instance.name}] Stopped periodic cleanup`); */
     }
 }
 
@@ -368,7 +368,7 @@ function triggerPathRevalidation(instanceNames) {
         for (const path of pathsToRevalidate) {
             try {
                 revalidatePath(path, 'layout');
-                console.log(`[Cache] Revalidated path: ${path}`);
+                /* console.log(`[Cache] Revalidated path: ${path}`); */
             } catch (error) {
                 console.error(`[Cache] Failed to revalidate path ${path}:`, error.message);
             }
@@ -654,7 +654,7 @@ export async function cacheFunctions() {
             totalCleared += cleared;
         }
 
-        console.log(`[Cache] Cleared ${totalCleared} total entries from instance(s): ${instanceNames.join(', ')}`);
+       /* console.log(`[Cache] Cleared ${totalCleared} total entries from instance(s): ${instanceNames.join(', ')}`); */
 
         // Trigger path revalidation for affected instances
         triggerPathRevalidation(instanceNames);
@@ -689,9 +689,9 @@ export async function cacheFunctions() {
             totalCleared += cleared;
         }
 
-        console.log(
+        /* console.log(
             `[Cache] Cleared ${totalCleared} entries for key(s) [${keyList.join(', ')}] from instance: ${instanceName}`
-        );
+        ); */
 
         // Trigger path revalidation for affected instance
         triggerPathRevalidation([instanceName]);
@@ -720,7 +720,7 @@ export async function cacheFunctions() {
             allInstances.push(instanceName);
         }
 
-        console.log(`[Cache] Cleared ${totalCleared} total entries from ALL instances`);
+        /* console.log(`[Cache] Cleared ${totalCleared} total entries from ALL instances`); */
 
         // Trigger path revalidation for all instances
         triggerPathRevalidation(allInstances);

@@ -675,6 +675,79 @@ export async function sendCustomerMessage(to, subject, messageContent, customerN
 }
 
 /**
+ * Send ticket created notification emails (customer confirmation + admin notification)
+ * @param {Object} options
+ * @param {Object} options.ticketData - Ticket fields: ticketId, ticketNumber, subject, description, type, priority, userName, userEmail, userPhone
+ * @param {string} options.customerLocale - Locale for customer email (optional, falls back to site language)
+ * @param {string} options.adminLocale - Locale for admin email (optional, falls back to siteSettings.language)
+ * @param {boolean} options.sendCustomerEmail - Whether to send customer email (requires userEmail in ticketData)
+ */
+export async function sendTicketCreatedEmail({ ticketData, customerLocale = null, adminLocale = null, sendCustomerEmail = true }) {
+    const emailSettings = await getEmailSettings();
+    const { siteSettings, adminSiteSettings } = await getSettings();
+    const companyName = emailSettings.siteName || emailSettings.companyName || 'Support';
+    const baseUrl = siteSettings?.baseUrl || process.env.NEXTAUTH_URL || '';
+    const adminEmail = process.env.ADMIN_EMAIL || adminSiteSettings?.siteEmail || emailSettings.siteEmail || emailSettings.emailUser || '';
+    const resolvedCustomerLocale = resolveEmailLocale(customerLocale, siteSettings);
+    const resolvedAdminLocale = resolveEmailLocale(
+        adminLocale || adminSiteSettings?.language || siteSettings?.language || null,
+        adminSiteSettings || siteSettings
+    );
+    const { ticketId, ticketNumber, subject, description, type, priority, userName, userEmail, userPhone } = ticketData;
+
+    // --- Customer confirmation email ---
+    if (sendCustomerEmail && userEmail) {
+        try {
+            const tCustomer = await loadEmailTranslations(resolvedCustomerLocale);
+            const tc = tCustomer.ticket || {};
+            const customerSubject = (tc.createdSubject || 'Your request has been received: {ticketNumber}')
+                .replace('{ticketNumber}', ticketNumber);
+            const customerHtml = `
+                <h2>${tc.createdTitle || 'Request Received!'}</h2>
+                <p>${tc.createdMessage || 'We have received your request and will get back to you shortly.'}</p>
+                <br/>
+                <p><strong>${tc.ticketNumber || 'Request Number'}:</strong> ${ticketNumber}</p>
+                <p><strong>${tc.subject || 'Subject'}:</strong> ${subject}</p>
+                ${description ? `<p><strong>${tc.description || 'Message'}:</strong> ${description}</p>` : ''}
+                ${ticketId ? `<p><a href="${baseUrl}/account?tab=tickets&ticket=${ticketId}">${tc.viewTicket || 'View my request'}</a></p>` : ''}
+                <br/><p>${tc.thankYou || 'Thank you for contacting us!'}</p>
+            `;
+            await sendCustomerMessage(userEmail, customerSubject, customerHtml, userName || 'Customer', resolvedCustomerLocale);
+        } catch (emailError) {
+            console.error('Failed to send customer ticket email:', emailError);
+        }
+    }
+
+    // --- Admin notification email ---
+    if (adminEmail) {
+        try {
+            const tAdmin = await loadEmailTranslations(resolvedAdminLocale);
+            const ta = tAdmin.ticket || {};
+            const adminSubject = (ta.adminSubject || 'New support request: {ticketNumber} — {userName}')
+                .replace('{ticketNumber}', ticketNumber)
+                .replace('{userName}', userName || '');
+            const adminHtml = `
+                <h2>${ta.adminTitle || 'New Support Request!'}</h2>
+                <p>${ta.adminMessage || 'A new support request has been submitted. Details:'}</p>
+                <hr/>
+                <p><strong>${ta.ticketNumber || 'Request Number'}:</strong> ${ticketNumber}</p>
+                <p><strong>${ta.subject || 'Subject'}:</strong> ${subject}</p>
+                <p><strong>${ta.adminName || 'Name'}:</strong> ${userName || ''}</p>
+                ${userEmail ? `<p><strong>${ta.adminEmail || 'Email'}:</strong> ${userEmail}</p>` : ''}
+                ${userPhone ? `<p><strong>${ta.adminPhone || 'Phone'}:</strong> ${userPhone}</p>` : ''}
+                ${type ? `<p><strong>${ta.adminType || 'Type'}:</strong> ${type}</p>` : ''}
+                ${priority ? `<p><strong>${ta.adminPriority || 'Priority'}:</strong> ${priority}</p>` : ''}
+                ${description ? `<p><strong>${ta.description || 'Message'}:</strong><br/>${description}</p>` : ''}
+                ${ticketId ? `<p><a href="${baseUrl}/admin/tickets/${ticketId}">${ta.viewInAdmin || 'View in Admin Panel'}</a></p>` : ''}
+            `;
+            await sendCustomerMessage(adminEmail, adminSubject, adminHtml, companyName, resolvedAdminLocale);
+        } catch (emailError) {
+            console.error('Failed to send admin ticket notification email:', emailError);
+        }
+    }
+}
+
+/**
  * Send password reset email
  * @param {string} to - Recipient email address
  * @param {string} resetCode - 6-digit reset code

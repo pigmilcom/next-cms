@@ -267,6 +267,25 @@
         "customerMessage": {
             "subject": "Mensagem de {companyName}",
             "preview": "Tens uma nova mensagem de {companyName}"
+        },
+        "ticket": {
+            "createdSubject": "O seu pedido foi recebido: {ticketNumber}",
+            "createdTitle": "Pedido Recebido!",
+            "createdMessage": "Recebemos o seu pedido e entraremos em contacto brevemente.",
+            "ticketNumber": "Número do pedido",
+            "subject": "Assunto",
+            "description": "Mensagem",
+            "viewTicket": "Ver o meu pedido",
+            "adminSubject": "Novo pedido de suporte: {ticketNumber} — {userName}",
+            "adminTitle": "Novo Pedido de Suporte!",
+            "adminMessage": "Um novo pedido de suporte foi submetido. Detalhes:",
+            "adminName": "Nome",
+            "adminEmail": "Email",
+            "adminPhone": "Telefone",
+            "adminType": "Tipo",
+            "adminPriority": "Prioridade",
+            "viewInAdmin": "Ver no Painel Admin",
+            "thankYou": "Obrigado por nos contactar!"
         }
     }
 }

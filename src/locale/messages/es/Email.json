@@ -267,6 +267,25 @@
         "customerMessage": {
             "subject": "Mensagem de {companyName}",
             "preview": "Tem uma nova mensagem de {companyName}"
+        },
+        "ticket": {
+            "createdSubject": "Su solicitud ha sido recibida: {ticketNumber}",
+            "createdTitle": "¡Solicitud Recibida!",
+            "createdMessage": "Hemos recibido su solicitud y le responderemos en breve.",
+            "ticketNumber": "Número de solicitud",
+            "subject": "Asunto",
+            "description": "Mensaje",
+            "viewTicket": "Ver mi solicitud",
+            "adminSubject": "Nueva solicitud de soporte: {ticketNumber} — {userName}",
+            "adminTitle": "¡Nueva Solicitud de Soporte!",
+            "adminMessage": "Se ha enviado una nueva solicitud de soporte. Detalles:",
+            "adminName": "Nombre",
+            "adminEmail": "Email",
+            "adminPhone": "Teléfono",
+            "adminType": "Tipo",
+            "adminPriority": "Prioridad",
+            "viewInAdmin": "Ver en el Panel Admin",
+            "thankYou": "¡Gracias por contactarnos!"
         }
     }
 }

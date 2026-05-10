@@ -3,7 +3,7 @@
 
 import { auth } from '@/auth.js';
 import DBService from '@/data/rest.db.js';
-import { sendCustomerMessage, sendEmail } from '@/lib/server/email.js';
+import { sendTicketCreatedEmail } from '@/lib/server/email.js';
 import { sendPhoneVerification } from '@/lib/server/sms.js';
 import { cacheFunctions, initCache } from '@/lib/shared/cache.js';
 import { generateUID } from '@/lib/shared/helpers.js';
@@ -176,7 +176,8 @@ export async function createTicket(ticketData) {
             orderData = null,
             notifications = {},
             files = null,
-            userPhone = ''
+            userPhone = '',
+            locale = null
         } = ticketData;
 
         if (!subject || !description) {
@@ -234,59 +235,28 @@ export async function createTicket(ticketData) {
         const result = await createWithCacheClear(newTicket, 'tickets', ['tickets']);
 
         if (result.success) {
-            // Send notification email to admin (optional)
-            try {
-                await sendEmail({
-                    to: process.env.ADMIN_EMAIL || 'admin@example.com',
-                    subject: `New Support Ticket: ${ticketNumber}`,
-                    html: `
-                        <h2>New Support Ticket Created</h2>
-                        <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
-                        <p><strong>User:</strong> ${newTicket.userName} (${newTicket.userEmail})</p>
-                        <p><strong>Type:</strong> ${type}</p>
-                        <p><strong>Priority:</strong> ${priority}</p>
-                        <p><strong>Subject:</strong> ${subject}</p>
-                        <p><strong>Description:</strong></p>
-                        <p>${description}</p>
-                        ${orderData ? `<p><strong>Related Order:</strong> ${orderData.orderNumber || orderData.id}</p>` : ''}
-                        <p><a href="${process.env.NEXTAUTH_URL}/admin/tickets/${result.data.id}">View Ticket in Admin Panel</a></p>
-                    `
-                });
-            } catch (emailError) {
-                console.error('Failed to send admin notification email:', emailError);
-                // Don't fail the ticket creation if email fails
-            }
-
-            // Send customer notification if requested
-            if (notifications?.sendEmail && userEmail) {
-                try {
-                    await sendCustomerMessage(
-                        userEmail,
-                        `Your Support Ticket: ${ticketNumber}`,
-                        `
-                        <h2>Thank you for contacting support!</h2>
-                        <p>Your support ticket has been created successfully.</p>
-                        <p><strong>Ticket Number:</strong> ${ticketNumber}</p>
-                        <p><strong>Subject:</strong> ${subject}</p>
-                        <p><strong>Type:</strong> ${type}</p>
-                        <p><strong>Priority:</strong> ${priority}</p>
-                        <p>We'll get back to you as soon as possible. You can track your ticket in your account dashboard.</p>
-                        <p><a href="${process.env.NEXTAUTH_URL}/account?tab=tickets&ticket=${result.data.id}">View Your Ticket</a></p>
-                        `,
-                        userName
-                    );
-                } catch (emailError) {
-                    console.error('Failed to send customer notification email:', emailError);
-                }
-            }
+            // Send ticket notification emails (customer confirmation + admin notification)
+            await sendTicketCreatedEmail({
+                ticketData: {
+                    ticketId: ticketId,
+                    ticketNumber,
+                    subject,
+                    description,
+                    type,
+                    priority,
+                    userName: newTicket.userName,
+                    userEmail: newTicket.userEmail,
+                    userPhone: newTicket.userPhone
+                },
+                customerLocale: locale,
+                adminLocale: null, // resolved from siteSettings.language inside sendTicketCreatedEmail
+                sendCustomerEmail: !!(notifications?.sendEmail && newTicket.userEmail)
+            });
 
             // Send customer SMS notification if requested (placeholder for future implementation)
             if (notifications?.sendSMS && newTicket.userPhone) {
                 try {
-                    // For now, we'll use a simple SMS implementation
-                    // In a full implementation, you'd create a proper SMS template for ticket creation
                     console.log('SMS notification would be sent to:', newTicket.userPhone);
-                    // await sendTicketCreatedSMS(newTicket.userPhone, ticketNumber, userName);
                 } catch (smsError) {
                     console.error('Failed to send customer SMS notification:', smsError);
                 }

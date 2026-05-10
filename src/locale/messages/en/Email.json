@@ -267,6 +267,25 @@
         "customerMessage": {
             "subject": "Message from {companyName}",
             "preview": "You have a new message from {companyName}"
+        },
+        "ticket": {
+            "createdSubject": "Your request has been received: {ticketNumber}",
+            "createdTitle": "Request Received!",
+            "createdMessage": "We have received your request and will get back to you shortly.",
+            "ticketNumber": "Request Number",
+            "subject": "Subject",
+            "description": "Message",
+            "viewTicket": "View my request",
+            "adminSubject": "New support request: {ticketNumber} — {userName}",
+            "adminTitle": "New Support Request!",
+            "adminMessage": "A new support request has been submitted. Details:",
+            "adminName": "Name",
+            "adminEmail": "Email",
+            "adminPhone": "Phone",
+            "adminType": "Type",
+            "adminPriority": "Priority",
+            "viewInAdmin": "View in Admin Panel",
+            "thankYou": "Thank you for contacting us!"
         }
     }
 }
