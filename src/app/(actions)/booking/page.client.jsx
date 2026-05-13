@@ -3,7 +3,7 @@
 'use client';
 
 import { FaClock, FaFaceGrinStars, FaLocationDot } from 'react-icons/fa6';
-import BookingForm from './BookingForm'; 
+import BookingForm from './BookingForm';
 
 const companyData = {}; // Replace with actual company data
 
@@ -18,8 +18,7 @@ const PageClient = () => {
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat'
-                    }}
-                >
+                    }}>
                     <div className="absolute w-full h-full inset-0 bg-linear-to-t from-background via-background/30 to-transparent" />
                 </div>
 
@@ -32,7 +31,7 @@ const PageClient = () => {
                             <p className="text-muted font-semibold">
                                 Choisissez votre appareil, votre date et votre heure. Nous confirmons rapidement votre
                                 demande pour une intervention a domicile a {companyData?.serviceArea?.primary}.
-                            </p> 
+                            </p>
 
                             <div className="flex gap-1 nowrap items-center muted smaller mt-6">
                                 <div className="online-dot" />
@@ -49,7 +48,8 @@ const PageClient = () => {
                                 <p className="flex leading-relaxed text-sm text-accent-hover gap-2 items-center">
                                     <FaLocationDot className="primary" />
                                     <span>
-                                        {companyData?.serviceArea?.primary} et {companyData?.serviceArea?.radius}km autour
+                                        {companyData?.serviceArea?.primary} et {companyData?.serviceArea?.radius}km
+                                        autour
                                     </span>
                                 </p>
                                 <p className="flex leading-relaxed text-sm text-accent-hover gap-2 items-center">
@@ -59,9 +59,8 @@ const PageClient = () => {
                             </div>
                         </div>
                         <div className="card-description max-w-full overflow-x-hidden! px-2">
-                             <BookingForm /> 
+                            <BookingForm />
                         </div>
-
                     </div>
 
                     <aside className="sticky top-10 mt-0 max-w-full">

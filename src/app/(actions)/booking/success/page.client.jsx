@@ -190,8 +190,7 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="text-center space-y-4"
-                >
+                    className="text-center space-y-4">
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-green-500 to-emerald-600 text-white shadow-lg">
                         <CheckCircle className="h-11 w-11" />
                     </div>
@@ -205,7 +204,8 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                         </div>
                     </div>
                     <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-                        Votre réservation a été enregistrée avec succès. Vous recevrez un email de confirmation sous peu.
+                        Votre réservation a été enregistrée avec succès. Vous recevrez un email de confirmation sous
+                        peu.
                     </p>
                 </motion.div>
 
@@ -214,11 +214,13 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
                             <h2 className="text-xl md:text-2xl font-bold text-foreground">Détails de la réservation</h2>
                             <div className="flex flex-wrap gap-2">
-                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${statusBadgeClass}`}>
+                                <span
+                                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${statusBadgeClass}`}>
                                     <CheckCircle className="h-3.5 w-3.5" />
                                     Réservation: {bookingStatus === 'confirmed' ? 'Confirmée' : 'En attente'}
                                 </span>
-                                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${paymentBadgeClass}`}>
+                                <span
+                                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${paymentBadgeClass}`}>
                                     <CheckCircle className="h-3.5 w-3.5" />
                                     Paiement: {paymentStatus === 'paid' ? 'Payé' : 'En attente'}
                                 </span>
@@ -231,33 +233,55 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                                     <div className="h-8 w-8 rounded-lg bg-blue-500 flex items-center justify-center">
                                         <Calendar className="h-4 w-4 text-white" />
                                     </div>
-                                    <h3 className="font-semibold text-lg text-foreground">Informations de réservation</h3>
+                                    <h3 className="font-semibold text-lg text-foreground">
+                                        Informations de réservation
+                                    </h3>
                                 </div>
                                 <div className="space-y-2.5">
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Référence:</span>
-                                        <span className="text-sm font-semibold text-foreground">{bookingDetails.id}</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Référence:
+                                        </span>
+                                        <span className="text-sm font-semibold text-foreground">
+                                            {bookingDetails.id}
+                                        </span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Créé le:</span>
-                                        <span className="text-sm text-foreground">{formatDateTime(bookingDetails.createdAt)}</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Créé le:
+                                        </span>
+                                        <span className="text-sm text-foreground">
+                                            {formatDateTime(bookingDetails.createdAt)}
+                                        </span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Intervention:</span>
-                                        <span className="text-sm font-semibold text-primary">{formatDateTime(bookingDetails.dateTime)}</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Intervention:
+                                        </span>
+                                        <span className="text-sm font-semibold text-primary">
+                                            {formatDateTime(bookingDetails.dateTime)}
+                                        </span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Appareil:</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Appareil:
+                                        </span>
                                         <span className="text-sm text-foreground">{bookingDetails.device || '-'}</span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Option:</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Option:
+                                        </span>
                                         <span className="text-sm text-foreground">
-                                            {bookingDetails.paymentOption === 'pay_now' ? 'Payer maintenant' : 'Payer plus tard'}
+                                            {bookingDetails.paymentOption === 'pay_now'
+                                                ? 'Payer maintenant'
+                                                : 'Payer plus tard'}
                                         </span>
                                     </div>
                                     <div className="flex items-start gap-2 pt-2 border-t border-blue-200">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Montant:</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Montant:
+                                        </span>
                                         <span className="text-base font-bold text-primary">
                                             {formatCurrency(bookingDetails.amount, bookingDetails.currency)}
                                         </span>
@@ -275,18 +299,28 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                                 <div className="space-y-2.5">
                                     <div className="flex items-start gap-2">
                                         <span className="text-sm font-medium text-muted-foreground min-w-25">Nom:</span>
-                                        <span className="text-sm font-semibold text-foreground">{bookingDetails.name || '-'}</span>
+                                        <span className="text-sm font-semibold text-foreground">
+                                            {bookingDetails.name || '-'}
+                                        </span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Email:</span>
-                                        <span className="text-sm text-foreground break-all">{bookingDetails.email || '-'}</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Email:
+                                        </span>
+                                        <span className="text-sm text-foreground break-all">
+                                            {bookingDetails.email || '-'}
+                                        </span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Téléphone:</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Téléphone:
+                                        </span>
                                         <span className="text-sm text-foreground">{bookingDetails.phone || '-'}</span>
                                     </div>
                                     <div className="flex items-start gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground min-w-25">Adresse:</span>
+                                        <span className="text-sm font-medium text-muted-foreground min-w-25">
+                                            Adresse:
+                                        </span>
                                         <span className="text-sm text-foreground">{bookingDetails.address || '-'}</span>
                                     </div>
                                 </div>
@@ -301,7 +335,9 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                                     </div>
                                     <h3 className="font-semibold text-lg text-foreground">Problème décrit</h3>
                                 </div>
-                                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed pl-10">{bookingDetails.issue}</p>
+                                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed pl-10">
+                                    {bookingDetails.issue}
+                                </p>
                             </div>
                         ) : null}
 
@@ -312,7 +348,7 @@ const BookingSuccessPageClient = ({ initialBookingDetails, initialError, booking
                                 </Button>
                                 <Button variant="outline" onClick={handleShare} className="w-full" size="lg">
                                     <Share2 className="mr-2 h-4 w-4" /> Partager
-                                </Button> 
+                                </Button>
                                 <Button variant="outline" asChild className="w-full" size="lg">
                                     <Link href="/">
                                         <Home className="mr-2 h-4 w-4" /> Accueil

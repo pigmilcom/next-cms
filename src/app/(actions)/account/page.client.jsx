@@ -8,9 +8,9 @@ import {
     CheckCircle,
     ChevronDown,
     ChevronLeft,
-    CircleChevronLeft,
     ChevronRight,
     ChevronUp,
+    CircleChevronLeft,
     CircleX,
     Clock,
     Copy,
@@ -21,33 +21,34 @@ import {
     Filter,
     Grid3X3,
     Heart,
+    KeyRound,
     List,
-    Lock, 
+    Lock,
     LogOut,
     MessageSquare,
     Package,
+    RefreshCw,
     Search,
-    Shield,
-    KeyRound,
     Share2,
+    Shield,
     ShoppingBag,
     Star,
     Trash2,
     User,
-    Users,
-    RefreshCw
+    Users
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner'; 
+import { toast } from 'sonner';
 import TicketDialog from '@/components/common/TicketDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { CountryDropdown } from '@/components/ui/country-dropdown';
 import {
     Dialog,
     DialogContent,
@@ -58,8 +59,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth, useSettings } from '@/context/providers';
 import { loadTranslations } from '@/lib/client/translations';
 import { getCountryName as getCountryNameFromI18n } from '@/lib/i18n';
@@ -74,7 +77,7 @@ import {
 } from '@/lib/server/users';
 
 const AccountPageClient = ({
-    userData, 
+    userData,
     favorites: initialFavorites,
     orders: initialOrders,
     reviews: initialReviews
@@ -90,7 +93,7 @@ const AccountPageClient = ({
     const [favorites, setFavorites] = useState(initialFavorites || []);
     const [userOrders, setUserOrders] = useState(initialOrders || []);
     const allOrders = userOrders; // Use state instead of props for dynamic updates
-    const clubProfile = userData?.club || {}; 
+    const clubProfile = userData?.club || {};
     const [isRefreshingPayment, setIsRefreshingPayment] = useState({});
     const [isRefreshingOrders, setIsRefreshingOrders] = useState(false);
 
@@ -108,7 +111,14 @@ const AccountPageClient = ({
         currentPassword: ''
     });
     const [profileForm, setProfileForm] = useState({
-        displayName: userData?.displayName || ''
+        displayName: userData?.displayName || '',
+        firstName: userData?.firstName || '',
+        lastName: userData?.lastName || '',
+        birthdate: userData?.birthdate || '',
+        phone: userData?.phone || '',
+        country: userData?.country || '',
+        timezone: userData?.timezone || '',
+        bio: userData?.bio || ''
     });
     const [changingPassword, setChangingPassword] = useState(false);
     const [deletingAccount, setDeletingAccount] = useState(false);
@@ -129,7 +139,7 @@ const AccountPageClient = ({
     const [orderNotFound, setOrderNotFound] = useState(false);
 
     // Referral states
-    const [referrals, setReferrals] = useState([]); 
+    const [referrals, setReferrals] = useState([]);
     const [showReferralsDialog, setShowReferralsDialog] = useState(false);
     const [paymentRefreshCooldown, setPaymentRefreshCooldown] = useState({});
     const [ordersRefreshCooldown, setOrdersRefreshCooldown] = useState(0);
@@ -213,7 +223,7 @@ const AccountPageClient = ({
 
     // Auto-load referrals as soon as the referral code is available
     useEffect(() => {
-        if (!userData?.referralCode) return; 
+        if (!userData?.referralCode) return;
         getUserReferrals(userData.referralCode)
             .then((result) => {
                 if (result?.success) setReferrals(result.data || []);
@@ -268,7 +278,7 @@ const AccountPageClient = ({
             toast.error(t('toast.failedToUpdateOrders'));
         } finally {
             setIsRefreshingOrders(false);
-        }   
+        }
     };
 
     // Update URL when tab changes
@@ -349,9 +359,7 @@ const AccountPageClient = ({
             const result = await deleteUserAccount(userKey, deleteForm.currentPassword);
 
             if (result.success) {
-                toast.success(
-                    t('toast.accountSuspended')
-                );
+                toast.success(t('toast.accountSuspended'));
                 setDeleteForm({ currentPassword: '' });
                 setDeleteDialogOpen(false);
                 // Redirect to logout after 3 seconds
@@ -407,7 +415,14 @@ const AccountPageClient = ({
         setUpdatingProfile(true);
         try {
             const result = await updateUserProfile(userKey, {
-                displayName: profileForm.displayName
+                displayName: profileForm.displayName,
+                firstName: profileForm.firstName,
+                lastName: profileForm.lastName,
+                birthdate: profileForm.birthdate,
+                phone: profileForm.phone,
+                country: profileForm.country,
+                timezone: profileForm.timezone,
+                bio: profileForm.bio
             });
 
             if (result.success) {
@@ -415,7 +430,14 @@ const AccountPageClient = ({
                 // Update current user state
                 setCurrentUser((prev) => ({
                     ...prev,
-                    displayName: profileForm.displayName
+                    displayName: profileForm.displayName,
+                    firstName: profileForm.firstName,
+                    lastName: profileForm.lastName,
+                    birthdate: profileForm.birthdate,
+                    phone: profileForm.phone,
+                    country: profileForm.country,
+                    timezone: profileForm.timezone,
+                    bio: profileForm.bio
                 }));
                 setEditProfileDialogOpen(false);
             } else {
@@ -570,9 +592,7 @@ const AccountPageClient = ({
                             toast.info(t('toast.orderStatusUpdated'));
                         }
                     } else {
-                        toast.info(
-                            t('toast.paymentStillPending')
-                        );
+                        toast.info(t('toast.paymentStillPending'));
                     }
                 } else {
                     toast.info(t('toast.paymentStatusVerified'));
@@ -717,9 +737,9 @@ const AccountPageClient = ({
     };
 
     // Load user referrals
-    const loadReferrals = async () => { 
-         console.log('Loading referrals for code:', userData);
-        if (!userData?.referralCode) return; 
+    const loadReferrals = async () => {
+        console.log('Loading referrals for code:', userData);
+        if (!userData?.referralCode) return;
         try {
             const result = await getUserReferrals(userData.referralCode);
             if (result.success) {
@@ -729,7 +749,7 @@ const AccountPageClient = ({
             }
         } catch (error) {
             console.error('Error loading referrals:', error);
-        }  
+        }
     };
 
     // Handle view referrals
@@ -775,7 +795,7 @@ const AccountPageClient = ({
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 <h1 className="text-3xl font-bold flex flex-nowrap items-center gap-4">
                     <Link href="/" className="hover:text-primary transition-colors duration-200">
-                    <CircleChevronLeft className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors duration-200" />
+                        <CircleChevronLeft className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors duration-200" />
                     </Link>
                     {t('pageTitle')}
                 </h1>
@@ -821,11 +841,11 @@ const AccountPageClient = ({
                     </TabsTrigger>
                     <TabsTrigger value="preferences">
                         <Bell className="h-4 w-4" />
-                        {t('tabs.notifications')} 
+                        {t('tabs.notifications')}
                     </TabsTrigger>
                     <TabsTrigger value="security">
                         <KeyRound className="h-4 w-4" />
-                        {t('tabs.security')} 
+                        {t('tabs.security')}
                     </TabsTrigger>
                 </TabsList>
 
@@ -879,7 +899,14 @@ const AccountPageClient = ({
                                     size="sm"
                                     onClick={() => {
                                         setProfileForm({
-                                            displayName: currentUser?.displayName || userData?.displayName || ''
+                                            displayName: currentUser?.displayName || userData?.displayName || '',
+                                            firstName: currentUser?.firstName || userData?.firstName || '',
+                                            lastName: currentUser?.lastName || userData?.lastName || '',
+                                            birthdate: currentUser?.birthdate || userData?.birthdate || '',
+                                            phone: currentUser?.phone || userData?.phone || '',
+                                            country: currentUser?.country || userData?.country || '',
+                                            timezone: currentUser?.timezone || userData?.timezone || '',
+                                            bio: currentUser?.bio || userData?.bio || ''
                                         });
                                         setEditProfileDialogOpen(true);
                                     }}
@@ -899,58 +926,88 @@ const AccountPageClient = ({
                                     <Label className="text-muted-foreground">{t('overview.yourEmail')}</Label>
                                     <p className="text-lg font-medium">{currentUser?.email || userData?.email}</p>
                                 </div>
-                            </CardContent>
-                        </Card> 
-                        
-                        {/* Referral Section */}
-                        {userData?.referralCode && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Users className="h-5 w-5" />
-                                    {t('overview.referralTitle')}
-                                </CardTitle>
-                                <CardDescription>
-                                    {t('overview.referralDescription')}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="p-4 bg-muted/50 rounded-lg">
-                                    <Label className="text-sm font-medium mb-2">{t('overview.yourReferralLink')}</Label>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <Input
-                                            value={`${typeof window !== 'undefined' ? window.location.origin : ''}/?ref=${userData.referralCode}`}
-                                            readOnly
-                                            className="flex-1"
-                                        />
-                                        <Button variant="outline" size="sm" onClick={handleCopyReferralLink}>
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={handleShareReferralLink}>
-                                            <Share2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        {t('overview.referralCode')}{' '}
-                                        <span className="font-mono font-bold">{userData.referralCode}</span>
-                                    </p>
-                                </div>
-                                <div className="flex flex-col gap-2">
+                                {(currentUser?.firstName || userData?.firstName) && (
                                     <div>
-                                        <p className="text-sm font-medium">{t('overview.friendsReferred')}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t('overview.friendsReferredDescription')}
+                                        <Label className="text-muted-foreground">{t('overview.firstName')}</Label>
+                                        <p className="text-lg font-medium">
+                                            {currentUser?.firstName || userData?.firstName}
                                         </p>
                                     </div>
-                                    <Button variant="ghost" size="sm" onClick={handleViewReferrals}>
-                                        <ExternalLink className="h-4 w-4" />
-                                        {t('overview.viewInvites')} ({referrals.length})
-                                    </Button>
-                                </div>
+                                )}
+                                {(currentUser?.lastName || userData?.lastName) && (
+                                    <div>
+                                        <Label className="text-muted-foreground">{t('overview.lastName')}</Label>
+                                        <p className="text-lg font-medium">
+                                            {currentUser?.lastName || userData?.lastName}
+                                        </p>
+                                    </div>
+                                )}
+                                {(currentUser?.phone || userData?.phone) && (
+                                    <div>
+                                        <Label className="text-muted-foreground">{t('overview.phone')}</Label>
+                                        <p className="text-lg font-medium">{currentUser?.phone || userData?.phone}</p>
+                                    </div>
+                                )}
+                                {(currentUser?.country || userData?.country) && (
+                                    <div>
+                                        <Label className="text-muted-foreground">{t('overview.country')}</Label>
+                                        <p className="text-lg font-medium">
+                                            {currentUser?.country || userData?.country}
+                                        </p>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
+
+                        {/* Referral Section */}
+                        {userData?.referralCode && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Users className="h-5 w-5" />
+                                        {t('overview.referralTitle')}
+                                    </CardTitle>
+                                    <CardDescription>{t('overview.referralDescription')}</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="p-4 bg-muted/50 rounded-lg">
+                                        <Label className="text-sm font-medium mb-2">
+                                            {t('overview.yourReferralLink')}
+                                        </Label>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Input
+                                                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/?ref=${userData.referralCode}`}
+                                                readOnly
+                                                className="flex-1"
+                                            />
+                                            <Button variant="outline" size="sm" onClick={handleCopyReferralLink}>
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <Button variant="outline" size="sm" onClick={handleShareReferralLink}>
+                                                <Share2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            {t('overview.referralCode')}{' '}
+                                            <span className="font-mono font-bold">{userData.referralCode}</span>
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <div>
+                                            <p className="text-sm font-medium">{t('overview.friendsReferred')}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('overview.friendsReferredDescription')}
+                                            </p>
+                                        </div>
+                                        <Button variant="ghost" size="sm" onClick={handleViewReferrals}>
+                                            <ExternalLink className="h-4 w-4" />
+                                            {t('overview.viewInvites')} ({referrals.length})
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         )}
-                    </div> 
+                    </div>
 
                     {allOrders.length > 0 && (
                         <Card>
@@ -965,7 +1022,9 @@ const AccountPageClient = ({
                                             key={order.id}
                                             className="flex items-center justify-between border-b pb-4 last:border-0 border-border">
                                             <div>
-                                                <p className="font-medium">{t('orders.order')} #{order.id.slice(0, 8)}</p>
+                                                <p className="font-medium">
+                                                    {t('orders.order')} #{order.id.slice(0, 8)}
+                                                </p>
                                                 <p className="text-sm text-muted-foreground">
                                                     {new Date(order.createdAt).toLocaleDateString()}
                                                 </p>
@@ -981,7 +1040,7 @@ const AccountPageClient = ({
                                     variant="outline"
                                     className="w-full mt-4"
                                     onClick={() => handleTabChange('orders')}>
-                                    {t('overview.viewAll')} 
+                                    {t('overview.viewAll')}
                                 </Button>
                             </CardContent>
                         </Card>
@@ -1009,22 +1068,20 @@ const AccountPageClient = ({
                             ) : (
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
                                     {favorites.map((product) => (
-                                        <Card
-                                            key={`${product.id}`} 
-                                        > 
-                                                <CardHeader>
-                                                    <CardTitle className="text-sm">{product.name}</CardTitle>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm font-medium">
-                                                        {Number(product.price || 0).toFixed(2)}€
-                                                    </p>
-                                                    <button
-                                                        onClick={() => handleFavoriteChange(product.id)}
-                                                        className="absolute top-2 right-2 text-red-500 hover:text-red-600">
-                                                        <HeartFilled className="h-5 w-5" />
-                                                    </button>
-                                                </CardContent> 
+                                        <Card key={`${product.id}`}>
+                                            <CardHeader>
+                                                <CardTitle className="text-sm">{product.name}</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <p className="text-sm font-medium">
+                                                    {Number(product.price || 0).toFixed(2)}€
+                                                </p>
+                                                <button
+                                                    onClick={() => handleFavoriteChange(product.id)}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-600">
+                                                    <HeartFilled className="h-5 w-5" />
+                                                </button>
+                                            </CardContent>
                                         </Card>
                                     ))}
                                 </div>
@@ -1051,21 +1108,20 @@ const AccountPageClient = ({
                                         ) : (
                                             <Grid3X3 className="h-4 w-4" />
                                         )}
-                                    </Button> 
+                                    </Button>
                                     <Button
-                                        variant="outline" 
+                                        variant="outline"
                                         size="sm"
                                         title="Refresh orders"
                                         disabled={isRefreshingOrders}
-                                        onClick={() => handleOrdersRefresh()}
-                                    > 
+                                        onClick={() => handleOrdersRefresh()}>
                                         {isRefreshingOrders ? (
-                                            <span className="flex items-center gap-1"> 
-                                                <RefreshCw className="h-4 w-4 animate-spin" /> 
+                                            <span className="flex items-center gap-1">
+                                                <RefreshCw className="h-4 w-4 animate-spin" />
                                             </span>
                                         ) : (
                                             <span className="flex items-center gap-1">
-                                                <RefreshCw className="h-4 w-4" /> 
+                                                <RefreshCw className="h-4 w-4" />
                                             </span>
                                         )}
                                     </Button>
@@ -1105,13 +1161,15 @@ const AccountPageClient = ({
                                             <SelectContent>
                                                 <SelectItem value="all">{t('orders.statusAll')}</SelectItem>
                                                 <SelectItem value="pending">{t('orders.statusPending')}</SelectItem>
-                                                <SelectItem value="processing">{t('orders.statusProcessing')}</SelectItem>
+                                                <SelectItem value="processing">
+                                                    {t('orders.statusProcessing')}
+                                                </SelectItem>
                                                 <SelectItem value="delivered">{t('orders.statusShipped')}</SelectItem>
                                                 <SelectItem value="complete">{t('orders.statusComplete')}</SelectItem>
                                                 <SelectItem value="cancelled">{t('orders.statusCancelled')}</SelectItem>
                                             </SelectContent>
                                         </Select>
-                                    </div> 
+                                    </div>
                                 </div>
 
                                 {/* Active Filters Display */}
@@ -1165,9 +1223,7 @@ const AccountPageClient = ({
                             </div>
                             {orderNotFound && (
                                 <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
-                                    <p className="text-destructive font-medium">
-                                        {t('orders.orderNotFoundTitle')}
-                                    </p>
+                                    <p className="text-destructive font-medium">{t('orders.orderNotFoundTitle')}</p>
                                 </div>
                             )}
                             {allOrders.length === 0 ? (
@@ -1220,7 +1276,8 @@ const AccountPageClient = ({
                                                             <div className="flex justify-between items-start gap-4">
                                                                 <div className="flex-1">
                                                                     <CardTitle className="text-lg">
-                                                                        {t('orders.order')} #{order.id.slice(0, 8).toUpperCase()}
+                                                                        {t('orders.order')} #
+                                                                        {order.id.slice(0, 8).toUpperCase()}
                                                                     </CardTitle>
                                                                     <CardDescription>
                                                                         {t('orders.placedOn')}{' '}
@@ -1243,7 +1300,8 @@ const AccountPageClient = ({
                                                                     ) : (
                                                                         order.paymentStatus !== 'canceled' && (
                                                                             <Badge variant="warning">
-                                                                                <Clock className="h-3 w-3 mr-1" />{t('orders.awaitingPayment')}
+                                                                                <Clock className="h-3 w-3 mr-1" />
+                                                                                {t('orders.awaitingPayment')}
                                                                             </Badge>
                                                                         )
                                                                     )}
@@ -1381,27 +1439,29 @@ const AccountPageClient = ({
                                                                                         ) || 'Pending'}
                                                                                     </span>
                                                                                 </p>
-                                                                            </div> 
+                                                                            </div>
 
                                                                             {/* Payment Instructions - Only show if not paid and user clicked Pay Now */}
                                                                             {order.paymentStatus !== 'paid' &&
                                                                                 order.paymentMethod && (
-                                                                                    <div className="flex-1 space-y-2"> 
-
+                                                                                    <div className="flex-1 space-y-2">
                                                                                         {/* Payment-specific instructions */}
                                                                                         {order.paymentMethod ===
                                                                                             'bank_transfer' && (
                                                                                             <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
                                                                                                 <p className="font-medium">
-                                                                                                    Bank Transfer Instructions:
+                                                                                                    Bank Transfer
+                                                                                                    Instructions:
                                                                                                 </p>
                                                                                                 <p>
-                                                                                                    Please make the bank transfer to:
+                                                                                                    Please make the bank
+                                                                                                    transfer to:
                                                                                                 </p>
                                                                                                 <div className="mt-2 p-2 bg-white dark:bg-gray-900 rounded border border-amber-300 dark:border-amber-800 font-mono text-xs">
                                                                                                     <p>
-                                                                                                        IBAN: PT50 0000 0000
-                                                                                                        0000 0000 0000 0
+                                                                                                        IBAN: PT50 0000
+                                                                                                        0000 0000 0000
+                                                                                                        0000 0
                                                                                                     </p>
                                                                                                     <p>
                                                                                                         Reference: #
@@ -1413,66 +1473,83 @@ const AccountPageClient = ({
                                                                                             </div>
                                                                                         )}
 
-                                                                                        {(order.paymentMethod === 'eupago' ||
+                                                                                        {(order.paymentMethod ===
+                                                                                            'eupago' ||
                                                                                             order.paymentMethod ===
                                                                                                 'eupago_mb') &&
                                                                                             order.eupagoReference && (
-                                                                                            <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1"> 
-                                                                                                <div className="mt-2 p-2 bg-white dark:bg-gray-900 rounded border border-amber-300 dark:border-amber-800">
-                                                                                                    {order.eupagoEntity && (
+                                                                                                <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
+                                                                                                    <div className="mt-2 p-2 bg-white dark:bg-gray-900 rounded border border-amber-300 dark:border-amber-800">
+                                                                                                        {order.eupagoEntity && (
+                                                                                                            <p className="font-mono">
+                                                                                                                Entity:{' '}
+                                                                                                                {
+                                                                                                                    order.eupagoEntity
+                                                                                                                }
+                                                                                                            </p>
+                                                                                                        )}
+                                                                                                        {order.eupagoReference && (
+                                                                                                            <p className="font-mono">
+                                                                                                                Reference:{' '}
+                                                                                                                {
+                                                                                                                    order.eupagoReference
+                                                                                                                }
+                                                                                                            </p>
+                                                                                                        )}
                                                                                                         <p className="font-mono">
-                                                                                                            Entity:{' '}
-                                                                                                            {
-                                                                                                                order.eupagoEntity
-                                                                                                            }
+                                                                                                            Amount:{' '}
+                                                                                                            {Number(
+                                                                                                                order.total ||
+                                                                                                                    0
+                                                                                                            ).toFixed(
+                                                                                                                2
+                                                                                                            )}
+                                                                                                            €
                                                                                                         </p>
-                                                                                                    )}
-                                                                                                    {order.eupagoReference && (
-                                                                                                        <p className="font-mono">
-                                                                                                            Reference:{' '}
-                                                                                                            {
-                                                                                                                order.eupagoReference
-                                                                                                            }
-                                                                                                        </p>
-                                                                                                    )}
-                                                                                                    <p className="font-mono">
-                                                                                                        Amount:{' '}
-                                                                                                        {Number(
-                                                                                                            order.total || 0
-                                                                                                        ).toFixed(2)}
-                                                                                                        €
-                                                                                                    </p>
+                                                                                                    </div>
                                                                                                 </div>
-                                                                                            </div>
-                                                                                        )}
+                                                                                            )}
 
                                                                                         {order.paymentMethod ===
                                                                                             'eupago_mbway' &&
                                                                                             order.eupagoReference && (
-                                                                                                <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1"> 
+                                                                                                <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
                                                                                                     <p>
-                                                                                                        A payment request has been sent to your phone number.
+                                                                                                        A payment
+                                                                                                        request has been
+                                                                                                        sent to your
+                                                                                                        phone number.
                                                                                                     </p>
                                                                                                     <p>
-                                                                                                        Please confirm the payment in the MB WAY app.
+                                                                                                        Please confirm
+                                                                                                        the payment in
+                                                                                                        the MB WAY app.
                                                                                                     </p>
                                                                                                 </div>
-                                                                                        )}
+                                                                                            )}
 
                                                                                         {order.paymentMethod ===
                                                                                             'pay_on_delivery' && (
                                                                                             <div className="text-sm text-amber-800 dark:text-amber-200">
                                                                                                 <p>
-                                                                                                    Payment will be collected upon delivery. Please have the exact amount ready.
+                                                                                                    Payment will be
+                                                                                                    collected upon
+                                                                                                    delivery. Please
+                                                                                                    have the exact
+                                                                                                    amount ready.
                                                                                                 </p>
                                                                                             </div>
                                                                                         )}
 
-                                                                                        {(order.paymentMethod === 'stripe' ||
-                                                                                            order.paymentMethod === 'card') && (
+                                                                                        {(order.paymentMethod ===
+                                                                                            'stripe' ||
+                                                                                            order.paymentMethod ===
+                                                                                                'card') && (
                                                                                             <div className="text-sm text-amber-800 dark:text-amber-200">
                                                                                                 <p>
-                                                                                                    Click "Pay Now" to complete the card payment.
+                                                                                                    Click "Pay Now" to
+                                                                                                    complete the card
+                                                                                                    payment.
                                                                                                 </p>
                                                                                             </div>
                                                                                         )}
@@ -1480,7 +1557,8 @@ const AccountPageClient = ({
                                                                                         {/* Already Paid Button - Show for applicable payment methods */}
                                                                                         {(order.paymentMethod ===
                                                                                             'bank_transfer' ||
-                                                                                            order.paymentMethod === 'eupago' ||
+                                                                                            order.paymentMethod ===
+                                                                                                'eupago' ||
                                                                                             order.paymentMethod ===
                                                                                                 'eupago_mb' ||
                                                                                             order.paymentMethod ===
@@ -1510,16 +1588,19 @@ const AccountPageClient = ({
                                                                                                     ) : (
                                                                                                         <>
                                                                                                             <CheckCircle className="h-4 w-4 mr-2" />
-                                                                                                            I Already Paid
+                                                                                                            I Already
+                                                                                                            Paid
                                                                                                         </>
                                                                                                     )}
                                                                                                 </Button>
                                                                                                 <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-                                                                                                    Click if you've already paid to check the status
+                                                                                                    Click if you've
+                                                                                                    already paid to
+                                                                                                    check the status
                                                                                                 </p>
                                                                                             </div>
                                                                                         )}
-                                                                                    </div> 
+                                                                                    </div>
                                                                                 )}
                                                                         </div>
 
@@ -1655,14 +1736,10 @@ const AccountPageClient = ({
                                                                                     variant="default"
                                                                                     size="sm"
                                                                                     onClick={() =>
-                                                                                        handlePaymentRefresh(
-                                                                                            order.id
-                                                                                        )
+                                                                                        handlePaymentRefresh(order.id)
                                                                                     }
-                                                                                    className="flex-1 sm:flex-none"> 
-                                                                                    {isRefreshingPayment[
-                                                                                        order.id
-                                                                                    ] ? (
+                                                                                    className="flex-1 sm:flex-none">
+                                                                                    {isRefreshingPayment[order.id] ? (
                                                                                         <>
                                                                                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
                                                                                             Verifying...
@@ -1674,7 +1751,6 @@ const AccountPageClient = ({
                                                                                         </>
                                                                                     )}
                                                                                 </Button>
-                                                                                
                                                                             )}
                                                                     </div>
                                                                 </div>
@@ -1701,8 +1777,12 @@ const AccountPageClient = ({
                                                 {/* Mobile/Tablet Header */}
                                                 <div className="grid grid-cols-4 sm:grid-cols-6 md:hidden gap-2 p-3 font-medium text-xs border-b bg-muted/50">
                                                     <div className="col-span-1">{t('orders.tableHeaders.id')}</div>
-                                                    <div className="col-span-1 sm:col-span-2">{t('orders.tableHeaders.totalStatus')}</div>
-                                                    <div className="col-span-1 sm:col-span-2">{t('orders.tableHeaders.payment')}</div>
+                                                    <div className="col-span-1 sm:col-span-2">
+                                                        {t('orders.tableHeaders.totalStatus')}
+                                                    </div>
+                                                    <div className="col-span-1 sm:col-span-2">
+                                                        {t('orders.tableHeaders.payment')}
+                                                    </div>
                                                     <div className="col-span-1">{t('orders.tableHeaders.actions')}</div>
                                                 </div>
 
@@ -2108,10 +2188,12 @@ const AccountPageClient = ({
                                                                                         'bank_transfer' && (
                                                                                         <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
                                                                                             <p className="font-medium">
-                                                                                                Bank Transfer Instructions:
+                                                                                                Bank Transfer
+                                                                                                Instructions:
                                                                                             </p>
                                                                                             <p>
-                                                                                                Please make the bank transfer to:
+                                                                                                Please make the bank
+                                                                                                transfer to:
                                                                                             </p>
                                                                                             <div className="mt-2 p-2 bg-white dark:bg-gray-900 rounded border border-amber-300 dark:border-amber-800 font-mono text-xs">
                                                                                                 <p>
@@ -2135,7 +2217,8 @@ const AccountPageClient = ({
                                                                                         order.eupagoReference && (
                                                                                             <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
                                                                                                 <p className="font-medium">
-                                                                                                    Multibanco Reference:
+                                                                                                    Multibanco
+                                                                                                    Reference:
                                                                                                 </p>
                                                                                                 <div className="mt-2 p-2 bg-white dark:bg-gray-900 rounded border border-amber-300 dark:border-amber-800">
                                                                                                     {order.eupagoEntity && (
@@ -2174,10 +2257,14 @@ const AccountPageClient = ({
                                                                                                     MB WAY Payment:
                                                                                                 </p>
                                                                                                 <p>
-                                                                                                    A payment request has been sent to your phone number.
+                                                                                                    A payment request
+                                                                                                    has been sent to
+                                                                                                    your phone number.
                                                                                                 </p>
                                                                                                 <p>
-                                                                                                    Please confirm the payment in the MB WAY app.
+                                                                                                    Please confirm the
+                                                                                                    payment in the MB
+                                                                                                    WAY app.
                                                                                                 </p>
                                                                                             </div>
                                                                                         )}
@@ -2238,9 +2325,10 @@ const AccountPageClient = ({
                                     {totalOrderPages > 1 && (
                                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mx-2 sm:mx-0 mt-4 border-t border-border">
                                             <p className="text-sm text-muted-foreground">
-                                                {t('orders.showing')} {(currentOrderPage - 1) * ordersPerPage + 1} {t('orders.to')}{' '}
-                                                {Math.min(currentOrderPage * ordersPerPage, filteredOrders.length)} {t('orders.of')}{' '}
-                                                {filteredOrders.length} {t('orders.ordersLabel')}
+                                                {t('orders.showing')} {(currentOrderPage - 1) * ordersPerPage + 1}{' '}
+                                                {t('orders.to')}{' '}
+                                                {Math.min(currentOrderPage * ordersPerPage, filteredOrders.length)}{' '}
+                                                {t('orders.of')} {filteredOrders.length} {t('orders.ordersLabel')}
                                                 {orderSearchTerm ||
                                                 orderStatusFilter !== 'all' ||
                                                 paymentStatusFilter !== 'all'
@@ -2254,7 +2342,9 @@ const AccountPageClient = ({
                                                     onClick={() => setCurrentOrderPage((prev) => Math.max(1, prev - 1))}
                                                     disabled={currentOrderPage === 1}>
                                                     <ChevronLeft className="h-4 w-4" />
-                                                    <span className="hidden sm:inline ml-1">{t('orders.previous')}</span>
+                                                    <span className="hidden sm:inline ml-1">
+                                                        {t('orders.previous')}
+                                                    </span>
                                                 </Button>
                                                 <div className="flex items-center gap-1">
                                                     {Array.from({ length: totalOrderPages }, (_, i) => i + 1).map(
@@ -2358,14 +2448,16 @@ const AccountPageClient = ({
                                                 {review.status === 'pending' && (
                                                     <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
                                                         <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                                                            <AlertCircle className="h-4 w-4 inline mr-2" />{t('reviews.awaitingApproval')}
+                                                            <AlertCircle className="h-4 w-4 inline mr-2" />
+                                                            {t('reviews.awaitingApproval')}
                                                         </p>
                                                     </div>
                                                 )}
                                                 {review.status === 'rejected' && (
                                                     <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
                                                         <p className="text-sm text-red-800 dark:text-red-200">
-                                                            <CircleX className="h-4 w-4 inline mr-2" />{t('reviews.rejected')}
+                                                            <CircleX className="h-4 w-4 inline mr-2" />
+                                                            {t('reviews.rejected')}
                                                         </p>
                                                     </div>
                                                 )}
@@ -2445,7 +2537,9 @@ const AccountPageClient = ({
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-medium">{t('preferences.newsletter')}</p>
-                                        <p className="text-sm text-muted-foreground">{t('preferences.newsletterDesc')}</p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {t('preferences.newsletterDesc')}
+                                        </p>
                                     </div>
                                     <Checkbox
                                         checked={preferences.newsletter}
@@ -2484,10 +2578,9 @@ const AccountPageClient = ({
                         </CardContent>
                     </Card>
                 </TabsContent>
-                
+
                 {/* Security Tab */}
                 <TabsContent value="security" className="space-y-6">
-
                     {/* Account Security Card */}
                     <Card className="p-0 bg-transparent border-none shadow-none">
                         <CardHeader className="p-0">
@@ -2504,9 +2597,7 @@ const AccountPageClient = ({
                                         <Lock className="h-4 w-4" />
                                         {t('security.password')}
                                     </h4>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        {t('security.passwordDesc')}
-                                    </p>
+                                    <p className="text-sm text-muted-foreground mt-1">{t('security.passwordDesc')}</p>
                                 </div>
                                 <Button
                                     variant="outline"
@@ -2543,14 +2634,14 @@ const AccountPageClient = ({
                 <DialogContent className="sm:max-w-106.25">
                     <DialogHeader>
                         <DialogTitle>{t('dialogs.changePassword.title')}</DialogTitle>
-                        <DialogDescription>
-                            {t('dialogs.changePassword.description')}
-                        </DialogDescription>
+                        <DialogDescription>{t('dialogs.changePassword.description')}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handlePasswordChange}>
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label htmlFor="dialog-currentPassword">{t('dialogs.changePassword.currentPassword')}</Label>
+                                <Label htmlFor="dialog-currentPassword">
+                                    {t('dialogs.changePassword.currentPassword')}
+                                </Label>
                                 <Input
                                     id="dialog-currentPassword"
                                     type="password"
@@ -2586,7 +2677,9 @@ const AccountPageClient = ({
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="dialog-confirmPassword">{t('dialogs.changePassword.confirmPassword')}</Label>
+                                <Label htmlFor="dialog-confirmPassword">
+                                    {t('dialogs.changePassword.confirmPassword')}
+                                </Label>
                                 <Input
                                     id="dialog-confirmPassword"
                                     type="password"
@@ -2615,7 +2708,9 @@ const AccountPageClient = ({
                                 {t('dialogs.changePassword.cancel')}
                             </Button>
                             <Button type="submit" disabled={changingPassword}>
-                                {changingPassword ? t('dialogs.changePassword.submitting') : t('dialogs.changePassword.submit')}
+                                {changingPassword
+                                    ? t('dialogs.changePassword.submitting')
+                                    : t('dialogs.changePassword.submit')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -2630,7 +2725,10 @@ const AccountPageClient = ({
                         <DialogDescription className="space-y-2">
                             <span className="font-medium">{t('dialogs.deleteAccount.description')}</span>
                             <span>
-                                {t('dialogs.deleteAccount.dataRetention')} <strong>{t('dialogs.deleteAccount.days')}</strong>, {t('dialogs.deleteAccount.dataRetentionContinued')} <strong>{t('dialogs.deleteAccount.permanentlyDeleted')}</strong>.
+                                {t('dialogs.deleteAccount.dataRetention')}{' '}
+                                <strong>{t('dialogs.deleteAccount.days')}</strong>,{' '}
+                                {t('dialogs.deleteAccount.dataRetentionContinued')}{' '}
+                                <strong>{t('dialogs.deleteAccount.permanentlyDeleted')}</strong>.
                             </span>
                             <span className="text-sm">{t('dialogs.deleteAccount.confirmMessage')}</span>
                         </DialogDescription>
@@ -2665,8 +2763,15 @@ const AccountPageClient = ({
                                 disabled={deletingAccount}>
                                 {t('dialogs.deleteAccount.cancel')}
                             </Button>
-                            <Button type="submit" variant="destructive" disabled={deletingAccount || currentUser?.role === 'admin'}>
-                                {deletingAccount ? t('dialogs.deleteAccount.submitting') : currentUser?.role === 'admin' ? t('dialogs.deleteAccount.notAllowed') : t('dialogs.deleteAccount.submit')}
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                disabled={deletingAccount || currentUser?.role === 'admin'}>
+                                {deletingAccount
+                                    ? t('dialogs.deleteAccount.submitting')
+                                    : currentUser?.role === 'admin'
+                                      ? t('dialogs.deleteAccount.notAllowed')
+                                      : t('dialogs.deleteAccount.submit')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -2699,24 +2804,203 @@ const AccountPageClient = ({
                     </DialogHeader>
                     <form onSubmit={handleProfileUpdate}>
                         <div className="space-y-4 py-4">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-displayName">{t('dialogs.editProfile.displayName')}</Label>
+                                    <Input
+                                        id="edit-displayName"
+                                        type="text"
+                                        value={profileForm.displayName}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                displayName: e.target.value
+                                            })
+                                        }
+                                        required
+                                        minLength={2}
+                                        maxLength={50}
+                                        placeholder={t('dialogs.editProfile.displayNamePlaceholder')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-email">{t('dialogs.editProfile.email')}</Label>
+                                    <Input
+                                        id="edit-email"
+                                        type="email"
+                                        value={user?.email || ''}
+                                        disabled
+                                        className="bg-muted"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('dialogs.editProfile.emailCannotChange')}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-firstName">{t('dialogs.editProfile.firstName')}</Label>
+                                    <Input
+                                        id="edit-firstName"
+                                        type="text"
+                                        value={profileForm.firstName}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                firstName: e.target.value
+                                            })
+                                        }
+                                        placeholder={t('dialogs.editProfile.firstNamePlaceholder')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-lastName">{t('dialogs.editProfile.lastName')}</Label>
+                                    <Input
+                                        id="edit-lastName"
+                                        type="text"
+                                        value={profileForm.lastName}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                lastName: e.target.value
+                                            })
+                                        }
+                                        placeholder={t('dialogs.editProfile.lastNamePlaceholder')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-birthdate">{t('dialogs.editProfile.birthdate')}</Label>
+                                    <Input
+                                        id="edit-birthdate"
+                                        type="date"
+                                        value={profileForm.birthdate}
+                                        onChange={(e) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                birthdate: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-phone">{t('dialogs.editProfile.phone')}</Label>
+                                    <PhoneInput
+                                        value={profileForm.phone}
+                                        onChange={(value) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                phone: value
+                                            })
+                                        }
+                                        placeholder={t('dialogs.editProfile.phonePlaceholder')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-country">{t('dialogs.editProfile.country')}</Label>
+                                    <CountryDropdown
+                                        defaultValue={profileForm.country}
+                                        onChange={(country) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                country: country.name
+                                            })
+                                        }
+                                        placeholder={t('dialogs.editProfile.countryPlaceholder')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="edit-timezone">{t('dialogs.editProfile.timezone')}</Label>
+                                    <Select
+                                        value={profileForm.timezone}
+                                        onValueChange={(value) =>
+                                            setProfileForm({
+                                                ...profileForm,
+                                                timezone: value
+                                            })
+                                        }>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('dialogs.editProfile.timezonePlaceholder')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="UTC-12:00">
+                                                (UTC-12:00) International Date Line West
+                                            </SelectItem>
+                                            <SelectItem value="UTC-11:00">
+                                                (UTC-11:00) Coordinated Universal Time-11
+                                            </SelectItem>
+                                            <SelectItem value="UTC-10:00">(UTC-10:00) Hawaii</SelectItem>
+                                            <SelectItem value="UTC-09:00">(UTC-09:00) Alaska</SelectItem>
+                                            <SelectItem value="UTC-08:00">
+                                                (UTC-08:00) Pacific Time (US & Canada)
+                                            </SelectItem>
+                                            <SelectItem value="UTC-07:00">
+                                                (UTC-07:00) Mountain Time (US & Canada)
+                                            </SelectItem>
+                                            <SelectItem value="UTC-06:00">
+                                                (UTC-06:00) Central Time (US & Canada)
+                                            </SelectItem>
+                                            <SelectItem value="UTC-05:00">
+                                                (UTC-05:00) Eastern Time (US & Canada)
+                                            </SelectItem>
+                                            <SelectItem value="UTC-04:00">
+                                                (UTC-04:00) Atlantic Time (Canada)
+                                            </SelectItem>
+                                            <SelectItem value="UTC-03:00">(UTC-03:00) Brasilia</SelectItem>
+                                            <SelectItem value="UTC-02:00">
+                                                (UTC-02:00) Coordinated Universal Time-02
+                                            </SelectItem>
+                                            <SelectItem value="UTC-01:00">(UTC-01:00) Azores</SelectItem>
+                                            <SelectItem value="UTC+00:00">
+                                                (UTC+00:00) Dublin, Edinburgh, Lisbon, London
+                                            </SelectItem>
+                                            <SelectItem value="UTC+01:00">
+                                                (UTC+01:00) Amsterdam, Berlin, Bern, Rome
+                                            </SelectItem>
+                                            <SelectItem value="UTC+02:00">
+                                                (UTC+02:00) Athens, Bucharest, Istanbul
+                                            </SelectItem>
+                                            <SelectItem value="UTC+03:00">(UTC+03:00) Kuwait, Riyadh</SelectItem>
+                                            <SelectItem value="UTC+04:00">(UTC+04:00) Abu Dhabi, Muscat</SelectItem>
+                                            <SelectItem value="UTC+05:00">(UTC+05:00) Islamabad, Karachi</SelectItem>
+                                            <SelectItem value="UTC+06:00">(UTC+06:00) Astana, Dhaka</SelectItem>
+                                            <SelectItem value="UTC+07:00">
+                                                (UTC+07:00) Bangkok, Hanoi, Jakarta
+                                            </SelectItem>
+                                            <SelectItem value="UTC+08:00">
+                                                (UTC+08:00) Beijing, Chongqing, Hong Kong
+                                            </SelectItem>
+                                            <SelectItem value="UTC+09:00">(UTC+09:00) Osaka, Sapporo, Tokyo</SelectItem>
+                                            <SelectItem value="UTC+10:00">
+                                                (UTC+10:00) Canberra, Melbourne, Sydney
+                                            </SelectItem>
+                                            <SelectItem value="UTC+11:00">
+                                                (UTC+11:00) Magadan, Solomon Is., New Caledonia
+                                            </SelectItem>
+                                            <SelectItem value="UTC+12:00">(UTC+12:00) Auckland, Wellington</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
                             <div className="space-y-2">
-                                <Label htmlFor="edit-displayName">{t('dialogs.editProfile.yourName')}</Label>
-                                <Input
-                                    id="edit-displayName"
-                                    type="text"
-                                    value={profileForm.displayName}
+                                <Label htmlFor="edit-bio">{t('dialogs.editProfile.bio')}</Label>
+                                <Textarea
+                                    id="edit-bio"
+                                    value={profileForm.bio}
                                     onChange={(e) =>
                                         setProfileForm({
                                             ...profileForm,
-                                            displayName: e.target.value
+                                            bio: e.target.value
                                         })
                                     }
-                                    required
-                                    minLength={2}
-                                    maxLength={50}
-                                    placeholder={t('dialogs.editProfile.yourNamePlaceholder')}
+                                    placeholder={t('dialogs.editProfile.bioPlaceholder')}
+                                    rows={4}
                                 />
-                                <p className="text-xs text-muted-foreground">{t('dialogs.editProfile.nameRequirements')}</p>
                             </div>
                         </div>
                         <DialogFooter>
@@ -2726,14 +3010,38 @@ const AccountPageClient = ({
                                 onClick={() => {
                                     setEditProfileDialogOpen(false);
                                     setProfileForm({
-                                        displayName: currentUser?.displayName || userData?.displayName || ''
+                                        displayName: currentUser?.displayName || userData?.displayName || '',
+                                        firstName: currentUser?.firstName || userData?.firstName || '',
+                                        lastName: currentUser?.lastName || userData?.lastName || '',
+                                        birthdate: currentUser?.birthdate || userData?.birthdate || '',
+                                        phone: currentUser?.phone || userData?.phone || '',
+                                        country: currentUser?.country || userData?.country || '',
+                                        timezone: currentUser?.timezone || userData?.timezone || '',
+                                        bio: currentUser?.bio || userData?.bio || ''
                                     });
                                 }}
                                 disabled={updatingProfile}>
                                 {t('dialogs.editProfile.cancel')}
                             </Button>
-                            <Button type="submit" disabled={updatingProfile || profileForm.displayName.trim() === currentUser?.displayName}>
-                                {updatingProfile ? t('dialogs.editProfile.submitting') : t('dialogs.editProfile.submit')}
+                            <Button
+                                type="submit"
+                                disabled={
+                                    updatingProfile ||
+                                    (profileForm.displayName ===
+                                        (currentUser?.displayName || userData?.displayName || '') &&
+                                        profileForm.firstName ===
+                                            (currentUser?.firstName || userData?.firstName || '') &&
+                                        profileForm.lastName === (currentUser?.lastName || userData?.lastName || '') &&
+                                        profileForm.birthdate ===
+                                            (currentUser?.birthdate || userData?.birthdate || '') &&
+                                        profileForm.phone === (currentUser?.phone || userData?.phone || '') &&
+                                        profileForm.country === (currentUser?.country || userData?.country || '') &&
+                                        profileForm.timezone === (currentUser?.timezone || userData?.timezone || '') &&
+                                        profileForm.bio === (currentUser?.bio || userData?.bio || ''))
+                                }>
+                                {updatingProfile
+                                    ? t('dialogs.editProfile.submitting')
+                                    : t('dialogs.editProfile.submit')}
                             </Button>
                         </DialogFooter>
                     </form>
@@ -2748,9 +3056,7 @@ const AccountPageClient = ({
                             <Users className="h-5 w-5" />
                             {t('dialogs.referrals.title')} ({referrals.length})
                         </DialogTitle>
-                        <DialogDescription>
-                            {t('dialogs.referrals.description')}
-                        </DialogDescription>
+                        <DialogDescription>{t('dialogs.referrals.description')}</DialogDescription>
                     </DialogHeader>
                     <div className="max-h-100 overflow-y-auto">
                         {referrals.length > 0 ? (
@@ -2763,7 +3069,9 @@ const AccountPageClient = ({
                                             <User className="h-4 w-4 text-primary" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="font-medium">{referral.name || t('dialogs.referrals.user')}</p>
+                                            <p className="font-medium">
+                                                {referral.name || t('dialogs.referrals.user')}
+                                            </p>
                                             <p className="text-sm text-muted-foreground">{referral.email}</p>
                                             {referral.createdAt && (
                                                 <p className="text-xs text-muted-foreground">
@@ -2797,9 +3105,7 @@ const AccountPageClient = ({
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{t('dialogs.deleteReview.title')}</DialogTitle>
-                        <DialogDescription>
-                            {t('dialogs.deleteReview.description')}
-                        </DialogDescription>
+                        <DialogDescription>{t('dialogs.deleteReview.description')}</DialogDescription>
                     </DialogHeader>
                     {reviewToDelete && (
                         <div className="py-4">

@@ -1,6 +1,6 @@
 // @/app/(actions)/account/page.jsx (Server Component)
 
-import { auth } from '@/auth'; 
+import { auth } from '@/auth';
 import { getAllOrders } from '@/lib/server/orders';
 import { getCatalog, getFavorites, getReviews } from '@/lib/server/store';
 import { getUser } from '@/lib/server/users';
@@ -40,7 +40,7 @@ const AccountPage = async () => {
         getUserFavorites?.success && getUserFavorites?.data && getUserFavorites.data?.length > 0
             ? getUserFavorites.data
             : null;
- 
+
     // Fetch full product data for user favorites
     let favoritesWithProducts = [];
     if (userFavorites) {
@@ -72,7 +72,7 @@ const AccountPage = async () => {
 
     return (
         <AccountPageClient
-            userData={userData} 
+            userData={userData}
             favorites={favoritesWithProducts}
             orders={userOrders}
             reviews={userReviews}
