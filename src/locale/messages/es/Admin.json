@@ -1637,6 +1637,7 @@
                 "contactEmail": "Email de Contacto *",
                 "contactEmailPlaceholder": "contacto@ejemplo.com",
                 "contactPhone": "Teléfono de Contacto",
+                "whatsappPhone": "Teléfono de WhatsApp",
                 "contactPhonePlaceholder": "+351912345678",
                 "siteLogo": "Logo del Sitio",
                 "uploadLogo": "Subir Logo",

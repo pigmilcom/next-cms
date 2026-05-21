@@ -13,12 +13,22 @@ import Providers from '@/context/providers';
 import { getSettings } from '@/lib/server/settings';
 import { getAvailableLanguages } from '@/lib/server/locale';
 import { generateSiteMetadata } from '@/utils/metadata';
-import '@/app/globals.css'; 
+import './globals.css';
 
 // Function to check if setup path exists
 function checkSetupPath() {
     const setupPath = join(process.cwd(), 'src', 'app', 'setup');
     return existsSync(setupPath);
+}
+// Function to check if setup is valid
+async function checkSetupValid() {
+    if(!checkSetupPath){
+        return false;
+    } 
+    const headersList = await headers();
+    const currentPath = headersList.get('x-pathname') || '/';
+    const validatePath =  currentPath !== '/setup' && !siteSettings?.setup_complete ? true : false; 
+    return validatePath;
 }
 
 // Generate metadata (with server settings)
@@ -75,15 +85,11 @@ export default async function RootLayout({ children }) {
     // Single auth check at root level to avoid multiple calls
     const session = await auth(); 
 
-        // determine current pathname for redirect logic
-    const headersList = await headers();
-    const currentPath = headersList.get('x-pathname') || '/';
-
     // Evaluate once whether setup directory exists
-    const setupExists = checkSetupPath();
+    const setupExists = await checkSetupValid();
 
     // Check if setup path exists and redirect if it does, avoiding loops
-    if (setupExists && currentPath !== '/setup' && !siteSettings?.setup_complete) { 
+    if (setupExists) {
         // server-side redirect avoids client-only hooks
         redirect('/setup');
     }
@@ -102,16 +108,16 @@ export default async function RootLayout({ children }) {
                 </div>
 
                 <NextIntlClientProvider locale={locale} messages={messages}>
-                    <Providers 
-                        siteSettings={siteSettings} 
-                        storeSettings={storeSettings} 
-                        session={session} 
+                    <Providers
+                        siteSettings={siteSettings}
+                        storeSettings={storeSettings}
+                        session={session}
                         setupExists={setupExists}
                         availableFrontendLanguages={availableFrontendLanguages}
-                    >  
-                    <InitialLoadingHandler firstLoadOnly={true}>
-                        {children}
-                    </InitialLoadingHandler>
+                    >
+                        <InitialLoadingHandler firstLoadOnly={true}>
+                            {children}
+                        </InitialLoadingHandler>
                     </Providers>
                 </NextIntlClientProvider>
             </body>

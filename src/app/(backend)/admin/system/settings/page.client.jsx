@@ -163,6 +163,7 @@ export default function SystemSettingsPageClient({ initialSettings, backendLangu
             siteName: initialSettings?.siteName || '',
             siteEmail: initialSettings?.siteEmail || '',
             sitePhone: initialSettings?.sitePhone || '',
+            whatsappPhone: initialSettings?.whatsappPhone || '', 
             businessAddress: initialSettings?.businessAddress || '',
             businessCity: initialSettings?.businessCity || '',
             businessCp: initialSettings?.businessCp || '',
@@ -1766,6 +1767,24 @@ function SiteSettingsTab({ form, t, getCurrentLocation, isSubmitting }) {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>{t('site.contactPhone')}</FormLabel>
+                                <FormControl>
+                                    <PhoneInput
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        disabled={isSubmitting}
+                                        placeholder={t('site.contactPhonePlaceholder')}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="whatsappPhone"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>{t('site.whatsappPhone')}</FormLabel>
                                 <FormControl>
                                     <PhoneInput
                                         value={field.value}

@@ -1629,6 +1629,7 @@
                 "contactEmail": "Email de Contacto *",
                 "contactEmailPlaceholder": "contacto@exemplo.com",
                 "contactPhone": "Telefone de Contacto",
+                "whatsappPhone": "Telefone de WhatsApp",
                 "contactPhonePlaceholder": "+351912345678",
                 "siteLogo": "Logo do Site",
                 "uploadLogo": "Carregar Logo",

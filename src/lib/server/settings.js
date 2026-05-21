@@ -84,19 +84,20 @@ export const getSiteSettings = async (params = {}, includeAdminData = false) => 
             ? settings.adminLanguage 
             : selectedBackendLanguages[0];
 
-        const isNewSetup = !settings.key;
+        const setupCheck = settings.key || settings.id ? true : false;
 
         // Determine which settings to return based on includeAdminData flag
         let processedSettings = {
             key: settings.key || settings.id || 'site_settings',
             id: settings.id || 'site_settings',
-            setup_complete: !isNewSetup,
+            setup_complete: setupCheck,
             siteName: settings.siteName || '',
             siteTitle: settings.siteTitle || '',
             siteKeywords: settings.siteKeywords || '',
             siteDescription: settings.siteDescription || '',
             siteEmail: settings.siteEmail || '',
             sitePhone: settings.sitePhone || '',
+            whatsappPhone: settings.whatsappPhone || '',
             businessAddress: settings.businessAddress || '',
             businessCity: settings.businessCity || '',
             businessCp: settings.businessCp || '',

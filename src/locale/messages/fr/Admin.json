@@ -1628,6 +1628,7 @@
                 "contactEmail": "E-mail de Contact *",
                 "contactEmailPlaceholder": "contact@exemple.com",
                 "contactPhone": "Téléphone de Contact",
+                "whatsappPhone": "Téléphone de WhatsApp",
                 "contactPhonePlaceholder": "+351912345678",
                 "siteLogo": "Logo du Site",
                 "uploadLogo": "Télécharger le Logo",
