@@ -21,13 +21,11 @@ function checkSetupPath() {
     return existsSync(setupPath);
 }
 // Function to check if setup is valid
-async function checkSetupValid() {
+async function checkSetupValid(thisPath) {
     if(!checkSetupPath){
         return false;
     } 
-    const headersList = await headers();
-    const currentPath = headersList.get('x-pathname') || '/';
-    const validatePath =  currentPath !== '/setup' && !siteSettings?.setup_complete ? true : false; 
+    const validatePath =  thisPath !== '/setup' && !siteSettings?.setup_complete ? true : false; 
     return validatePath;
 }
 
@@ -85,8 +83,11 @@ export default async function RootLayout({ children }) {
     // Single auth check at root level to avoid multiple calls
     const session = await auth(); 
 
+    const headersList = await headers();
+    const currentPath = headersList.get('x-pathname') || '/';
+
     // Evaluate once whether setup directory exists
-    const setupExists = await checkSetupValid();
+    const setupExists = await checkSetupValid(currentPath);
 
     // Check if setup path exists and redirect if it does, avoiding loops
     if (setupExists) {
